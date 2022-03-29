@@ -44,7 +44,7 @@ To control the behavior of `deepCopy`, you can pass an options object (for a typ
 {
   customizer: (params: DCCustomizerParams) => DCCustomizerReturn
   accumulator?: any // default is {} (empty object)
-  mode: 'simple' | 'verbose' // default is 'simple'
+  mode?: 'simple' | 'verbose' // default is 'simple'
 }
 ```
 
@@ -373,7 +373,7 @@ console.log(JSON.stringify(copy, null, 4))
 
 ### T.6. Using the accumulator to calculate the sum of the numeric nodes of the original object.
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 
 // Let's say a sports coach gave us his gym inventory results as a Javascript object.
 // We should copy this object (the coach won't let us keep the original).
@@ -410,8 +410,7 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
   // It takes one parameter: object. A full description of all fields of this object is 
   // provided in the README.
   // To solve the task, we need two field: "accumulator" and "value".
-  const { value } = params
-  let { accumulator } = params
+  const { value, accumulator } = params
 
   // We will calculate the sum of the values of all numerical nodes
   if ('number' === typeof value) {
@@ -435,6 +434,113 @@ console.log('copy: ', JSON.stringify(copy, null, 4))
 console.log(`Total number of item: ${ accumulator.count }`) // 40
 ```
 
-(c) 2022 Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
+### T.7 Using an originalToCopy Map for post-processing. 
+```typescript
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
+
+// Imagine that you are the director of a zoo.
+// Wolves, hares and foxes live and breed in your zoo. Each animal is 
+// settled in a separate single aviary or cage.
+// You asked your assistant to count the number of animals of each species.
+// He  conscientiously walked around the zoo, but arithmetic is too
+// difficult for him, so he brought you this report:
+const original = {
+  aviaries: {
+    northern: {
+      'the one where the boy fell last year': 'wolf',
+      'where the crocodile lived': 'fox',
+    },
+    western: {
+      'where I would like to live': 'hare',
+      'named after Monty Python': 'fox',
+      'the aviaries we built on credit': {
+        'first': 'hare',
+        'second': `I don't know who it is but it's creepy!`,
+        'I always forget about this aviary': 'hare',
+        'damn, there are too many!': 'wolf',
+      }
+    },
+  },
+  cages: {
+    'warm': 'hare',
+    'skewed': '?',
+    'new': 'this cage is empty',
+    'cages that Alice gave us': {
+      'blue': `it's definitely not an elephant`,
+      'who has a holey ': `it hid and I couldn't see who it was`,
+      'woodens': {
+        'old': 'hare',
+        'older': 'sorry, I forgot to check it',
+        'oldest': 'hare',
+      },
+      'first time I see this cage!': 'fox'
+    },
+  },
+}
+
+console.log('original: ', JSON.stringify(original, null, 4))
+
+// Let's copy this report, and at the same time still count the animals. 
+// And if we have more hares than wolves, then we will exchange all our 
+// hares for beavers in the neighboring zoo.
+// In order not to do the job twice, we will remember the places where each 
+// of the biological species is located during copying.
+// We can easily do this because the customizer receives a reference to the
+// parent node of the current node and a key in the parent node on each call.
+// But be careful: this is a link to the parent node of the original, not a copy!
+
+function customizer(params: DCCustomizerParams): DCCustomizerReturn {
+  // It takes one parameter: object. A full description of all fields of this object is 
+  // provided in the README.
+  const { 
+    value,       // value of the current node
+    parent,      // reference to parent node (OF ORIGINAL!)
+    key,         // key of parent node for current node
+    accumulator, // the value of this object is preserved between calls, so we will
+                 // remember the places of occupation here. 
+  } = params
+
+
+  // we will remember places only for hares, foxes and wolves
+  if (['wolf', 'fox', 'hare'].includes(value)) {
+    accumulator[value].push({ parent, key })
+  }
+
+  return {
+    processed: false,
+  }
+} 
+
+// Get copy.
+const { copy, accumulator, originalToCopy } = deepCopy(original, { 
+  customizer,
+  accumulator: { wolf: [], hare: [], fox: [] },
+  mode: 'verbose',
+})
+
+// Let's check how many hares, foxes and wolves we have.
+for (const [name, places] of Object.entries(accumulator)) {
+  console.log(`${name}: ${places.length}`)
+}
+
+// if there were more hares than wolves, then we will exchange all hares for beavers.
+const { hare, wolf } = accumulator
+if (hare.length > wolf.length) {
+  // Oh, stop! We have kept the places of the hares in the ORIGINAL, but we want to
+  // exchange in a COPY!
+  // Don't worry. Fortunately, this is easy to do. In verbose mode, the function 
+  // returns "originalToCopy" field. This is a Map whose keys are links to each of
+  // the nodes of the original, and whose values are links to the corresponding 
+  // nodes of the copy.
+  // So, let's do it!
+  for (const { parent, key } of hare) {
+    const placeInCopy = originalToCopy.get(parent)
+    placeInCopy[key] = 'beaver'
+  }
+}
+
+console.log('copy: ', JSON.stringify(copy, null, 4))
+```
+
+(c) 2022 Licensed under the Apache License, Version 2.0.
    You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0

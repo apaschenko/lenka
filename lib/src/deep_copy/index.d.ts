@@ -1,7 +1,12 @@
-export interface DCCustomizerReturn {
-    processed: boolean;
+interface DCCustomizerReturnProcessed {
+    processed: true;
     result: any;
 }
+interface DCCustomizerReturnUnrocessed {
+    processed: false;
+    result?: any;
+}
+export declare type DCCustomizerReturn = DCCustomizerReturnProcessed | DCCustomizerReturnUnrocessed;
 export interface DCCustomizerParams {
     accumulator: Record<string, any>;
     value: any;

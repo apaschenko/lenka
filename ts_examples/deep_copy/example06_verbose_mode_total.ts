@@ -35,8 +35,7 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
   // It takes one parameter: object. A full description of all fields of this object is 
   // provided in the README.
   // To solve the task, we need two field: "accumulator" and "value".
-  const { value } = params
-  let { accumulator } = params
+  const { value, accumulator } = params
 
   // We will calculate the sum of the values of all numerical nodes
   if ('number' === typeof value) {

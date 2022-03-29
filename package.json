@@ -1,6 +1,6 @@
 {
   "name": "lenka",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "Typescript and javascript utilities. deepCopy: deep clone the objects with support circular references and customizing.",
   "main": "./lib/src/index.js",
   "types": "./lib/src/index.d.ts",
