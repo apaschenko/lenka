@@ -39,8 +39,16 @@ const copy = deepCopy(original, options)
 When `deepCopy` invoked without options, it works just like regular deep copy utilities, with one exception:
 if the original object contains circular dependencies, then all these dependencies will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
 
-To control the behavior of `deepCopy`, you can pass an options object.
-Currently this object only includes one field (`customizer`) which should be a reference to your customization function:
+To control the behavior of `deepCopy`, you can pass an options object (for a typescript, the Lenka package exports a service type **DCOptions** that describes the fields of this object).
+```
+{
+  customizer: (params: DCCustomizerParams) => DCCustomizerReturn
+  accumulator?: any // default is {} (empty object)
+}
+```
+`customizer` is a reference to your customizer function.
+`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will default to an empty object.
+
 ```
 function customizer(params) {
   ...
@@ -53,11 +61,11 @@ This customizer will be called for the each node of an original object (for each
 The customizer takes one parameter: this is an object (for a typescript, the Lenka package exports a service type **DCCustomizerParams** that describes the fields of this object).
 ```
 {
-  accumulator: {}        // An object where you can save some data between customizer calls, if necessary. 
-  value: any             // value of the current node in the original 
-  parent: object | any[] // reference to parent node of the original
-  key: string | number   // key of parent node for cureent node (index of array item or key of object) 
-  root: any              // reference to root of the original object
+  accumulator: any       // Place where you can save some data between customizer calls, if necessary (see options.accumulator)
+  value: any             // Value of the current node in the original 
+  parent: object | any[] // Reference to parent node of the original
+  key: string | number   // Key of parent node for cureent node (index of array item or key of object) 
+  root: any              // Reference to root of the original object
   level: number          // Nesting level of the current node (root level is 0)
   isItACycle: boolean    // Whether the current node is a circular dependency
 }

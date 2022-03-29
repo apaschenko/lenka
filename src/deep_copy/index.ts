@@ -14,7 +14,9 @@ export interface DCCustomizerParams {
 }
 
 export interface DCOptions {
-  customizer: (params: DCCustomizerParams) => DCCustomizerReturn 
+  customizer: (params: DCCustomizerParams) => DCCustomizerReturn
+  accumulator?: any
+  mode?: 'simple' | 'verbose'
 }
 
 interface InternalData {
@@ -26,16 +28,38 @@ interface InternalData {
     parentKey: string | number
     original: object
   }[]
-  customizerData: Record<string, any>
+  accumulator: any
 }
 
-export const deepCopy = (original, options?: DCOptions) => {
+export function deepCopy(
+  original: any,
+  options: { 
+    customizer: (DCCustomizerParams) => DCCustomizerReturn
+    accumulator?: any
+    mode?: 'simple'
+  }
+): any
+
+export function deepCopy(
+  original: any,
+  options: { 
+    customizer: (DCCustomizerParams) => DCCustomizerReturn
+    accumulator?: any
+    mode: 'verbose'
+  }
+): { 
+  result: any
+  accumulator: DCOptions['accumulator']
+  originalToCopy: InternalData['processedObjects']
+
+}
+export function deepCopy (original, options?: DCOptions) {
   const internalData: InternalData = {
     root: original,
     originalItems: [],
     processedObjects: new Map(),
     circulars: [],
-    customizerData: {}
+    accumulator: options.accumulator || {},
   }
 
   const result = deepCopyInternal(original, internalData, 0, original, 0, options)
@@ -46,7 +70,13 @@ export const deepCopy = (original, options?: DCOptions) => {
     parentCopyObject[parentKey] = processedObjects.get(original)
   }
 
-  return result
+  return options?.mode === 'verbose'
+  ? { 
+    result,
+    accumulator: internalData.accumulator,
+    originalToCopy: internalData.processedObjects,
+  } 
+  : result
 }
 
 function customCopy(params: {
@@ -81,7 +111,7 @@ function customCopy(params: {
 
   if (options?.customizer) {
     const maybeCustomized = options.customizer({
-      accumulator: internalData.customizerData,
+      accumulator: internalData.accumulator,
       value: original,
       parent: parentOriginalObject,
       key: parentKey,
