@@ -105,12 +105,14 @@ Verbose mode allows you to perform the necessary post-processing of a copy or or
 
 - **Typescript examples**
   - ["simple" (default) mode](#simple-default-mode)
-    - [Simple usage](#T1-simple-usage)
-    - [Copy an object with circular dependencies](#T2-copy-an-object-with-circular-dependencies)
-    - [Customization to limit copy levels](#T3-customization-to-limit-copy-levels)
-    - [Customization to remove circular dependencies](#T4-customization-to-remove-circular-dependencies)
-    - [Customization to change value of some field](#T5-customization-to-change-value-of-some-field)
+    - [Simple usage](#t1-simple-usage)
+    - [Copy an object with circular dependencies](#t2-copy-an-object-with-circular-dependencies)
+    - [Customization to limit copy levels](#t3-customization-to-limit-copy-levels)
+    - [Customization to remove circular dependencies](#t4-customization-to-remove-circular-dependencies)
+    - [Customization to change value of some field](#t5-customization-to-change-value-of-some-field)
   - ["verbose" mode](#verbose-mode)
+    - [Using the accumulator to calculate the sum of numeric nodes](#t6-using-the-accumulator-to-calculate-the-sum-of-the-numeric-nodes-of-the-original-object)
+    - [Using originalToCopy Map for post-processing](#t7-using-an-originaltocopy-map-for-post-processing)
 
 ### Simple (default) mode
 ### T.1. Simple usage
