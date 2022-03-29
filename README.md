@@ -144,7 +144,7 @@ console.log(
 ) // false
 ```
 
-3. Customization to limit copy levels
+### 3. Customization to limit copy levels
 ```
 import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
 
@@ -221,7 +221,7 @@ console.log('copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac) // fal
 console.log('copy.a.ac.acb === original.a.ac.acb: ', copy.a.ac.acb === original.a.ac.acb) // true
 ```
 
-4. Customization to remove circular dependencies
+### 4. Customization to remove circular dependencies
 ```
 import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
 
@@ -272,7 +272,7 @@ const copy = deepCopy(original, { customizer })
 console.log(JSON.stringify(copy, null, 4))
 ```
 
-5. Customization to change value of some field
+### 5. Customization to change value of some field
 ```
 import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
 
@@ -322,4 +322,6 @@ const copy = deepCopy(original, { customizer })
 console.log(JSON.stringify(copy, null, 4))
 ```
 
-(c) 2022 All right reserved
+(c) 2022 Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0

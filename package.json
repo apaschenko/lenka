@@ -1,7 +1,7 @@
 {
   "name": "lenka",
-  "version": "0.2.3",
-  "description": "Typescript utilities",
+  "version": "0.2.4",
+  "description": "Typescript utilities. deepCopy: deep clone the objects with support circular dependencies and customizing",
   "main": "index.js",
   "typings": "./lib/index.d.ts",
   "files": [
@@ -26,7 +26,7 @@
     "typescript"
   ],
   "author": "Alexander Paschenko",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/apaschenko/lenka/issues"
   },
