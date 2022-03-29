@@ -3,7 +3,7 @@
   "version": "0.2.7",
   "description": "Typescript and javascript utilities. deepCopy: deep clone the objects with support circular dependencies and customizing.",
   "main": "./lib/src/index.js",
-  "typings": "./lib/src/index.d.ts",
+  "types": "./lib/src/index.d.ts",
   "files": [
     "/lib",
     "/src"
