@@ -15,10 +15,10 @@ NodeJS version >= v6.4.0
 ## deepCopy
 
 ### Motivation:
-There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular dependencies, they crashes with stack overflow, and their customization options are extremely limited.
+There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited.
 These shortcomings I tried to correct in `deepCopy`.
 ### Features:
-- ![done](./docs/icons8-check-mark-18.png) Correct copying of objects that contain cyclic dependencies.
+- ![done](./docs/icons8-check-mark-18.png) Correct copying of objects that contain cyclic references.
 - ![done](./docs/icons8-check-mark-18.png) Advanced customization ability.
 
 ### Including to your code:
@@ -37,7 +37,7 @@ const copy = deepCopy(original, options)
 ```
 
 When `deepCopy` invoked without options, it works just like regular deep copy utilities, with one exception:
-if the original object contains circular dependencies, then all these dependencies will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
+if the original object contains circular referenceses, then all these references will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
 
 To control the behavior of `deepCopy`, you can pass an options object (for a typescript, the Lenka package exports a service type **DCOptions** that describes the fields of this object).
 ```javascript
