@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2017", "dom"],
+    "incremental": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "lib",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*", 
+    "tests/**/*",
+    "ts_examples/**/*"
+  ]
+}
