@@ -13,5 +13,32 @@ export interface DCCustomizerParams {
 }
 export interface DCOptions {
     customizer: (params: DCCustomizerParams) => DCCustomizerReturn;
+    accumulator?: Record<string, any>;
+    mode?: 'simple' | 'verbose';
 }
-export declare const deepCopy: (original: any, options?: DCOptions) => any;
+interface InternalData {
+    root: any;
+    originalItems: object[];
+    originalToCopy: Map<object, object>;
+    circulars: {
+        parentOriginalObject: object;
+        parentKey: string | number;
+        original: object;
+    }[];
+    accumulator: Record<string, any>;
+}
+export declare function deepCopy(original: any, options?: {
+    customizer: (DCCustomizerParams: any) => DCCustomizerReturn;
+    accumulator?: Record<string, any>;
+    mode?: 'simple';
+}): any;
+export declare function deepCopy(original: any, options?: {
+    customizer: (DCCustomizerParams: any) => DCCustomizerReturn;
+    accumulator?: Record<string, any>;
+    mode: 'verbose';
+}): {
+    copy: any;
+    accumulator: DCOptions['accumulator'];
+    originalToCopy: InternalData['originalToCopy'];
+};
+export {};

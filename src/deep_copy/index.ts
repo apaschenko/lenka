@@ -15,68 +15,69 @@ export interface DCCustomizerParams {
 
 export interface DCOptions {
   customizer: (params: DCCustomizerParams) => DCCustomizerReturn
-  accumulator?: any
+  accumulator?: Record<string, any>
   mode?: 'simple' | 'verbose'
 }
 
 interface InternalData {
   root: any
   originalItems: object[]
-  processedObjects: Map<object, object>
+  originalToCopy: Map<object, object>
   circulars: {
     parentOriginalObject: object
     parentKey: string | number
     original: object
   }[]
-  accumulator: any
+  accumulator: Record<string, any>
 }
 
 export function deepCopy(
   original: any,
-  options: { 
+  options?: { 
     customizer: (DCCustomizerParams) => DCCustomizerReturn
-    accumulator?: any
+    accumulator?: Record<string, any>
     mode?: 'simple'
   }
 ): any
 
 export function deepCopy(
   original: any,
-  options: { 
+  options?: { 
     customizer: (DCCustomizerParams) => DCCustomizerReturn
-    accumulator?: any
+    accumulator?: Record<string, any>
     mode: 'verbose'
   }
 ): { 
-  result: any
+  copy: any
   accumulator: DCOptions['accumulator']
-  originalToCopy: InternalData['processedObjects']
+  originalToCopy: InternalData['originalToCopy']
 
 }
 export function deepCopy (original, options?: DCOptions) {
   const internalData: InternalData = {
     root: original,
     originalItems: [],
-    processedObjects: new Map(),
+    originalToCopy: new Map(),
     circulars: [],
-    accumulator: options.accumulator || {},
+    accumulator: (options && 'accumulator' in options) ? options.accumulator : {},
   }
 
-  const result = deepCopyInternal(original, internalData, 0, original, 0, options)
-  const { processedObjects, circulars } = internalData
+  const copy = deepCopyInternal(original, internalData, 0, original, 0, options)
+
+  const { originalToCopy, circulars } = internalData
 
   for (const { parentOriginalObject, parentKey, original } of circulars) {
-    const parentCopyObject = processedObjects.get(parentOriginalObject)
-    parentCopyObject[parentKey] = processedObjects.get(original)
+    const parentCopyObject = originalToCopy.get(parentOriginalObject)
+    parentCopyObject[parentKey] = originalToCopy.get(original)
   }
 
   return options?.mode === 'verbose'
   ? { 
-    result,
+    copy,
     accumulator: internalData.accumulator,
-    originalToCopy: internalData.processedObjects,
+    originalToCopy: internalData.originalToCopy,
   } 
-  : result
+  : copy
 }
 
 function customCopy(params: {
@@ -167,7 +168,7 @@ function deepCopyInternal(
       )
     )
 
-    internalData.processedObjects.set(original, copy)
+    internalData.originalToCopy.set(original, copy)
 
     return copy
   } else if (typeof original === 'object' && original !== null) {
@@ -202,7 +203,7 @@ function deepCopyInternal(
       }, {}
     )
 
-    internalData.processedObjects.set(original, copy)
+    internalData.originalToCopy.set(original, copy)
 
     return copy 
   } else {
@@ -212,7 +213,7 @@ function deepCopyInternal(
       level,
       parentOriginalObject,
       parentKey,
-      isItObject: true,
+      isItObject: false,
       options,
     })
 

@@ -30,7 +30,7 @@ These shortcomings I tried to correct in `deepCopy`.
 `const { deepCopy } = require('lenka')`
 
 ### Usage:
-```
+```typescript
 const copy = deepCopy(original)
 - or -
 const copy = deepCopy(original, options)
@@ -40,16 +40,16 @@ When `deepCopy` invoked without options, it works just like regular deep copy ut
 if the original object contains circular dependencies, then all these dependencies will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
 
 To control the behavior of `deepCopy`, you can pass an options object (for a typescript, the Lenka package exports a service type **DCOptions** that describes the fields of this object).
-```
+```javascript
 {
   customizer: (params: DCCustomizerParams) => DCCustomizerReturn
   accumulator?: any // default is {} (empty object)
+  mode: 'simple' | 'verbose' // default is 'simple'
 }
 ```
-`customizer` is a reference to your customizer function.
-`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will default to an empty object.
 
-```
+`customizer` is a reference to your customizer function.
+```typescript
 function customizer(params) {
   ...
 }
@@ -59,20 +59,20 @@ const copy = deepCopy(original, { customizer })
 This customizer will be called for the each node of an original object (for each key of object, each array item and each atomic values).
 
 The customizer takes one parameter: this is an object (for a typescript, the Lenka package exports a service type **DCCustomizerParams** that describes the fields of this object).
-```
+```typescript
 {
-  accumulator: any       // Place where you can save some data between customizer calls, if necessary (see options.accumulator)
+  accumulator: object    // Place where you can save some data between customizer calls, if necessary (see options.accumulator)
   value: any             // Value of the current node in the original 
   parent: object | any[] // Reference to parent node of the original
-  key: string | number   // Key of parent node for cureent node (index of array item or key of object) 
+  key: string | number   // Key of parent node for current node (index of array item or key of object) 
   root: any              // Reference to root of the original object
   level: number          // Nesting level of the current node (root level is 0)
   isItACycle: boolean    // Whether the current node is a circular dependency
 }
 ```
 
-The customizer shoul return an object with two fields (for a typescript, the Lenka package exports a service type **DCCustomizerReturn** that describes the fields of this object):
-```
+The customizer should return an object with two fields (for a typescript, the Lenka package exports a service type **DCCustomizerReturn** that describes the fields of this object):
+```typescript
 {
   processed: boolean
   result: any
@@ -82,18 +82,57 @@ The customizer shoul return an object with two fields (for a typescript, the Len
 If `processed = false`, the customizer gives `deepCopy` the ability to handle the current node by default. The returned `result` value is ignored in this case.
 If `processed = true`, the returned `result` value is used as value of corresponding node in the copy.
 
-## A few use cases
-(You can find all these examples in `/src/examples` folder):
+`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will default to an empty object.
 
-### 1. Simple usage
+`mode` can have one of two values: `simple` or `verbose`.
+In a simple mode, `deepCopy` returns a copy of the original object.
+In verbose mode, the function returns an object with three properties:
+```typescript
+{
+  copy: any                                       // a copy of the original object
+  accumulator: DCOptions['accumulator']           // resulting accumulator value
+  originalToCopy: InternalData['originalToCopy']  // A plan whose keys are references to the nodes of the
+              // original object and values of these keys are references to the corresponding nodes of the copy.
+}
 ```
-import { deepCopy } from '../../src'
+
+Verbose mode allows you to perform the necessary post-processing of a copy or original after copying is completed.
+
+-----
+
+## A few use cases
+(You can find all these examples in `/src/examples` folder)
+
+- **Typescript examples**
+  - ["simple" (default) mode](#simple-default-mode)
+    - [Simple usage](#T1-simple-usage)
+    - [Copy an object with circular dependencies](#T2-copy-an-object-with-circular-dependencies)
+    - [Customization to limit copy levels](#T3-customization-to-limit-copy-levels)
+    - [Customization to remove circular dependencies](#T4-customization-to-remove-circular-dependencies)
+    - [Customization to change value of some field](#T5-customization-to-change-value-of-some-field)
+  - ["verbose" mode](#verbose-mode)
+
+### Simple (default) mode
+### T.1. Simple usage
+```typescript
+import { deepCopy } from 'lenka'
 
 // Let's define a some complex object...
 const original: any = {
   a: {
     aa: 1,
-    ab: [{ aba: '1', abb: '2' }, { abc: 3, abd: { abda: 18 } }]
+    ab: [
+      { 
+        aba: '1',
+        abb: '2' 
+      },
+      {
+        abc: 3,
+        abd: {
+          abda: 18,
+        },
+      },
+    ]
   },
   b: 33
 }
@@ -111,9 +150,9 @@ console.log('copy === original: ', copy === original) // false
 console.log('original.a.ab[1] === copy.a.ab[1]: ', original.a.ab[1] === copy.a.ab[1]) // false
 ```
 
-### 2. Copy an object with circular dependencies
-```
-import { deepCopy } from '../../src'
+### T.2. Copy an object with circular dependencies
+```typescript
+import { deepCopy } from 'lenka'
 
 // Let's define a some complex object.
 const original: any = {
@@ -152,9 +191,9 @@ console.log(
 ) // false
 ```
 
-### 3. Customization to limit copy levels
-```
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+### T.3. Customization to limit copy levels
+```typescript
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 
 // Let's take the some object:
 const original: any = {
@@ -229,9 +268,9 @@ console.log('copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac) // fal
 console.log('copy.a.ac.acb === original.a.ac.acb: ', copy.a.ac.acb === original.a.ac.acb) // true
 ```
 
-### 4. Customization to remove circular dependencies
-```
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+### T.4. Customization to remove circular dependencies
+```typescript
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 
 // Let's define a some complex object.
 const original: any = {
@@ -280,9 +319,9 @@ const copy = deepCopy(original, { customizer })
 console.log(JSON.stringify(copy, null, 4))
 ```
 
-### 5. Customization to change value of some field
-```
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+### T.5. Customization to change value of some field
+```typescript
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 
 // Let's define a some object.
 const original: any = {
@@ -328,6 +367,72 @@ const copy = deepCopy(original, { customizer })
 
 // The value of "updatedAt" has been changed.
 console.log(JSON.stringify(copy, null, 4))
+```
+
+### Verbose mode
+
+### T.6. Using the accumulator to calculate the sum of the numeric nodes of the original object.
+```typescript
+import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+
+// Let's say a sports coach gave us his gym inventory results as a Javascript object.
+// We should copy this object (the coach won't let us keep the original).
+// Let's count at the same time how many items are in the gym.
+const original: any = {
+  balls: 3,
+  hulaHoops: 7,
+  skateboards: {
+    red: 2,
+    yellow: 5,
+    green: 3,
+  },
+  kettlebells: {
+    '8kg': 6,
+    '16kg': 4,
+  },
+  barbells: {
+    forChildren: 2,
+    forAdults: {
+      new: 1,
+      other: {
+        rusty: 6,
+        broken: 1,
+      }
+    }
+  }
+}
+
+// To do this, we use three features of deep copying: the customizer function, the
+// accumulator and the verbose mode (so that after copying we get access to the accumulator 
+// in which we will accumulate the total number of items.
+
+function customizer(params: DCCustomizerParams): DCCustomizerReturn {
+  // It takes one parameter: object. A full description of all fields of this object is 
+  // provided in the README.
+  // To solve the task, we need two field: "accumulator" and "value".
+  const { value } = params
+  let { accumulator } = params
+
+  // We will calculate the sum of the values of all numerical nodes
+  if ('number' === typeof value) {
+    accumulator.count = accumulator.count + value
+  }
+
+  return {
+    processed: false,
+    result: 'If we return "processed: false", the value of result will be ignored.',
+  }
+} 
+
+// Get copy.
+const { copy, accumulator } = deepCopy(original, { 
+  customizer,
+  accumulator: { count: 0 },
+  mode: 'verbose',
+})
+
+console.log('copy: ', JSON.stringify(copy, null, 4))
+console.log(`Total number of item: ${ accumulator.count }`) // 40
 ```
 
 (c) 2022 Licensed under the Apache License, Version 2.0 (the "License");
