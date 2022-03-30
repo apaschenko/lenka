@@ -32,7 +32,7 @@ These shortcomings I tried to correct in `deepCopy`.
 ### Usage:
 ```typescript
 const copy = deepCopy(original)
-- or -
+// or
 const copy = deepCopy(original, options)
 ```
 
@@ -40,7 +40,7 @@ When `deepCopy` invoked without options, it works just like regular deep copy ut
 if the original object contains circular referenceses, then all these references will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
 
 To control the behavior of `deepCopy`, you can pass an options object (for a typescript, the Lenka package exports a service type **DCOptions** that describes the fields of this object).
-```javascript
+```typescript
 {
   customizer: (params: DCCustomizerParams) => DCCustomizerReturn
   accumulator?: any // default is {} (empty object)
@@ -51,7 +51,7 @@ To control the behavior of `deepCopy`, you can pass an options object (for a typ
 `customizer` is a reference to your customizer function.
 ```typescript
 function customizer(params) {
-  ...
+  // ...
 }
 
 const copy = deepCopy(original, { customizer })
@@ -149,7 +149,10 @@ console.log('copy: ', JSON.stringify(copy, null, 4), '\n')
 console.log('copy === original: ', copy === original) // false
 
 // ...and that it's not a shallow copy.
-console.log('original.a.ab[1] === copy.a.ab[1]: ', original.a.ab[1] === copy.a.ab[1]) // false
+console.log(
+  'original.a.ab[1] === copy.a.ab[1]: ', 
+  original.a.ab[1] === copy.a.ab[1]
+) // false
 ```
 
 ### T.2. Copy an object with circular dependencies
@@ -174,7 +177,7 @@ const original: any = {
   b: 33
 }
 
-// Let's mess it up by adding two cyclic dependencies...
+// Let's mess it up by adding two cyclic references...
 original.c = original
 original.a.ab[1].abd.abdb = original.a
 
@@ -182,10 +185,12 @@ original.a.ab[1].abd.abdb = original.a
 const copy = deepCopy(original)
 
 // Let's make sure the result still contains the circular dependencies
-// (we can't use JSON.stringify here because it's not supports objects with loops!)
+// (we can't use JSON.stringify here because it's not supports objects 
+// with loops!)
 console.log(copy)
 
-// Cyclic dependencies in the copy are reproduced correctly, they do not point to the original. 
+// Cyclic dependencies in the copy are reproduced correctly, they do not
+// point to the original. 
 console.log('copy.c === original.c: ', copy.c === original.c) // false
 console.log(
   'copy.a.ab[1].abd.abdb === original.a.ab[1].abd.abdb: ',
@@ -224,29 +229,34 @@ const original: any = {
   b: 33,
 }
 
-// Let's say we want to get something between a deep and a shallow copy: let the top N levels 
-// of the original be copied, while the deeper levels of nesting remain references to the nodes
-// of the original object.
+// Let's say we want to get something between a deep and a shallow copy:
+// let the top N levels of the original be copied, while the deeper 
+// levels of nesting remain references to the nodes of the original 
+// object.
 
 const MAX_LEVEL = 3
 
-// To do this, we need to define a customizer function (note that the package provides service
-// types to describe the parameters and return the customizer).
+// To do this, we need to define a customizer function (note that the 
+// package provides service types to describe the parameters and return
+// the customizer).
 // This function will be called for each node of the original object.
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
-  // To solve the task, we need only two fields: the current nesting level and value of the
-  // current original node.
+  // It takes one parameter: object. A full description of all fields 
+  // of this object is provided in the README.
+  // To solve the task, we need only two fields: the current nesting 
+  // level and value of the current original node.
   const { level, value } = params
 
-  // For nesting levels less than the threshold, let the deepCopy process the data (for this we 
-  // will return "{ processed: false }"), and when the specified depth is reached, we will 
-  // interrupt processing, returning processed: true and link to the original.
+  // For nesting levels less than the threshold, let the deepCopy 
+  // process the data (for this we will return "{ processed: false }"),
+  // and when the specified depth is reached, we will interrupt 
+  // processing, returning processed: true and link to the original.
   return (level < MAX_LEVEL)
   ? { 
       processed: false,
-      result: 'If we return "processed: false", then the value will be ignored.',
+      result: 
+        'If we return "processed: false", then the "result" is ' +
+          `optional and it's value will be ignored.`,
     }
   : {
       processed: true,
@@ -263,11 +273,19 @@ console.log('copy === original: ', copy === original) // false
 console.log('copy.a === original.a: ', copy.a === original.a) // false
 
 // Second level (level=1) copied too.
-console.log('copy.a.ab === original.a.ab: ', copy.a.ab === original.a.ab) // false
-console.log('copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac) // false
+console.log(
+  'copy.a.ab === original.a.ab: ', copy.a.ab === original.a.ab
+) // false
+
+console.log(
+  'copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac
+) // false
 
 // Third level didn't copied.
-console.log('copy.a.ac.acb === original.a.ac.acb: ', copy.a.ac.acb === original.a.ac.acb) // true
+console.log(
+  'copy.a.ac.acb === original.a.ac.acb: ', 
+  copy.a.ac.acb === original.a.ac.acb
+) // true
 ```
 
 ### T.4. Customization to remove circular dependencies
@@ -290,27 +308,29 @@ original.a.ab[1].abd.abdb = original.a
 // We want to replace all cyclic dependencies in the copy 
 // with the string "Death to cycles!"
 
-// To do this, we need to define a customizer function (note that the package provides service
-// types to describe the parameters and return the customizer).
+// To do this, we need to define a customizer function (note that the 
+// package provides service types to describe the parameters and 
+// return the customizer).
 // This function will be called for each node of the original object.
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
-  // To solve the task, we need only one field: boolean flag "isItACycle".
+  // It takes one parameter: object. A full description of all fields 
+  // of this object you can see in the README.
+
+  // To solve the task, we need only one field: boolean flag 
+  // "isItACycle".
   const { isItACycle } = params
 
-  // If the node on which the customizer is called is not a cyclic dependency,
-  // let the deepCopy process the data (for this we 
-  // will return "{ processed: false }"), and for circular deps. we will 
+  // If the node on which the customizer is called is not a cyclic 
+  // dependency, let the deepCopy process the data (for this we 
+  // will return "{ processed: false }"), and for circular deps. we will
   // interrupt processing, returning processed: true and the result.
   return (isItACycle)
   ? { 
       processed: true,
-      result: 'Death to cycles!',
+      result: 'Kill the cycles!',
     }
   : {
       processed: false,
-      result: 'If we return "processed: false", then the value will be ignored.',
     }
 } 
 
@@ -337,16 +357,19 @@ const original: any = {
   }
 }
 
-// Suppose that when copying an object, we want to update the "updatedAt" field
-// with current data.
+// Suppose that when copying an object, we want to update the 
+// "updatedAt" field with current data.
 
-// To do this, we need to define a customizer function (note that the package provides service
-// types to describe the parameters and return the customizer).
+// To do this, we need to define a customizer function (note 
+// that the package provides service types to describe the 
+// parameters and return the customizer).
 // This function will be called for each node of the original object.
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
-  // To solve the task, we need only one field: "key" that contains a name of the field.
+  // It takes one parameter: object. A full description of all fields 
+  // of this object is provided in the README.
+
+  // To solve the task, we need only one field: "key" that contains a 
+  // name of the field.
   const { key } = params
 
   // If the node on which the customizer is not "updatedAt",
@@ -360,7 +383,6 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
     }
   : {
       processed: false,
-      result: 'If we return "processed: false", then the value will be ignored.',
     }
 } 
 
@@ -377,7 +399,8 @@ console.log(JSON.stringify(copy, null, 4))
 ```typescript
 import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 
-// Let's say a sports coach gave us his gym inventory results as a Javascript object.
+// Let's say a sports coach gave us his gym inventory results as 
+// Javascript object.
 // We should copy this object (the coach won't let us keep the original).
 // Let's count at the same time how many items are in the gym.
 const original: any = {
@@ -404,13 +427,14 @@ const original: any = {
   }
 }
 
-// To do this, we use three features of deep copying: the customizer function, the
-// accumulator and the verbose mode (so that after copying we get access to the accumulator 
-// in which we will accumulate the total number of items.
+// To do this, we use three features of deep copying: the customizer 
+// function, the accumulator and the verbose mode (so that after copying
+// we get access to the accumulator in which we will accumulate the 
+// total number of items).
 
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
+  // It takes one parameter: object. A full description of all fields
+  // of this object is provided in the README.
   // To solve the task, we need two field: "accumulator" and "value".
   const { value, accumulator } = params
 
@@ -421,7 +445,6 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
 
   return {
     processed: false,
-    result: 'If we return "processed: false", the value of result will be ignored.',
   }
 } 
 
@@ -443,7 +466,8 @@ import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
 // Imagine that you are the director of a zoo.
 // Wolves, hares and foxes live and breed in your zoo. Each animal is 
 // settled in a separate single aviary or cage.
-// You asked your assistant to count the number of animals of each species.
+// You asked your assistant to count the number of animals of each 
+// species.
 // He  conscientiously walked around the zoo, but arithmetic is too
 // difficult for him, so he brought you this report:
 const original = {
@@ -483,23 +507,25 @@ const original = {
 console.log('original: ', JSON.stringify(original, null, 4))
 
 // Let's copy this report, and at the same time still count the animals. 
-// And if we have more hares than wolves, then we will exchange all our 
+// And if we have more hares than wolves, then we will exchange all our
 // hares for beavers in the neighboring zoo.
-// In order not to do the job twice, we will remember the places where each 
-// of the biological species is located during copying.
-// We can easily do this because the customizer receives a reference to the
-// parent node of the current node and a key in the parent node on each call.
-// But be careful: this is a link to the parent node of the original, not a copy!
+// In order not to do the job twice, we will remember the places where 
+// each of the biological species is located during copying.
+// We can easily do this because the customizer receives a reference to 
+// the parent node of the current node and a key in the parent node on 
+// each call.
+// But be careful: this is a link to the parent node of the original, 
+// not a copy!
 
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
+  // It takes one parameter: object. A full description of all fields 
+  // of this object is provided in the README.
   const { 
     value,       // value of the current node
     parent,      // reference to parent node (OF ORIGINAL!)
     key,         // key of parent node for current node
-    accumulator, // the value of this object is preserved between calls, so we will
-                 // remember the places of occupation here. 
+    accumulator, // the value of this object is preserved between calls,
+                 // so we will remember the places of occupation here. 
   } = params
 
 
@@ -525,15 +551,16 @@ for (const [name, places] of Object.entries(accumulator)) {
   console.log(`${name}: ${places.length}`)
 }
 
-// if there were more hares than wolves, then we will exchange all hares for beavers.
+// if there were more hares than wolves, then we will exchange all 
+// hares for beavers.
 const { hare, wolf } = accumulator
 if (hare.length > wolf.length) {
-  // Oh, stop! We have kept the places of the hares in the ORIGINAL, but we want to
-  // exchange in a COPY!
-  // Don't worry. Fortunately, this is easy to do. In verbose mode, the function 
-  // returns "originalToCopy" field. This is a Map whose keys are links to each of
-  // the nodes of the original, and whose values are links to the corresponding 
-  // nodes of the copy.
+  // Oh, stop! We have kept the places of the hares in the ORIGINAL, but
+  // we want to exchange in a COPY!
+  // Don't worry. Fortunately, this is easy to do. In verbose mode, the 
+  // function returns "originalToCopy" field. This is a Map whose keys 
+  // are links to each of the nodes of the original, and whose values 
+  // are references to the corresponding nodes of the copy.
   // So, let's do it!
   for (const { parent, key } of hare) {
     const placeInCopy = originalToCopy.get(parent)
