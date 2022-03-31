@@ -35,11 +35,19 @@ const original = {
         'older': 'sorry, I forgot to check it',
         'oldest': 'hare',
       },
-      'first time I see this cage!': 'fox'
+      'first time I see this cage!': 'fox',
+      'I\'m too lazy to write separately for each cage': [
+        'hare',
+      `I don't know who it is but it bites`,
+      'fox'
+      ] 
     },
   },
 }
 
+// Let's make sure that we have successfully replaced the hares with 
+// beavers both in the properties of objects and in the members of 
+// arrays.
 console.log('original: ', JSON.stringify(original, null, 4))
 
 // Let's copy this report, and at the same time still count the animals. 
@@ -101,6 +109,7 @@ if (hare.length > wolf.length) {
   }
 }
 
+// Let's make sure that we have successfully replaced the hares with 
+// beavers both in the properties of objects and in the members of 
+// arrays.
 console.log('copy: ', JSON.stringify(copy, null, 4))
-
-

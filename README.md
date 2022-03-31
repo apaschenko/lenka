@@ -2,7 +2,7 @@
 
 A set of useful utilities.
 
-At the moment it contains only one utility: `deepCopy`
+At the moment it contains only one utility: `deepCopy` :grin:
 
 ## Prerequisites
 NodeJS version >= v6.4.0
@@ -18,7 +18,7 @@ NodeJS version >= v6.4.0
 There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited.
 These shortcomings I tried to correct in `deepCopy`.
 ### Features:
-- ![done](./docs/icons8-check-mark-18.png) Correct copying of objects that contain cyclic references.
+- ![done](./docs/icons8-check-mark-18.png) Correct copying of objects and arrays that contain cyclic references.
 - ![done](./docs/icons8-check-mark-18.png) Advanced customization ability.
 
 ### Including to your code:
@@ -487,7 +487,7 @@ const original = {
       }
     },
   },
-  cages: {
+cages: {
     'warm': 'hare',
     'skewed': '?',
     'new': 'this cage is empty',
@@ -499,7 +499,12 @@ const original = {
         'older': 'sorry, I forgot to check it',
         'oldest': 'hare',
       },
-      'first time I see this cage!': 'fox'
+      'first time I see this cage!': 'fox',
+      'I\'m too lazy to write separately for each cage': [
+        'hare',
+      `I don't know who it is but it bites`,
+      'fox'
+      ] 
     },
   },
 }
@@ -568,6 +573,9 @@ if (hare.length > wolf.length) {
   }
 }
 
+// Let's make sure that we have successfully replaced the hares with 
+// beavers both in the properties of objects and in the members of 
+// arrays.
 console.log('copy: ', JSON.stringify(copy, null, 4))
 ```
 
