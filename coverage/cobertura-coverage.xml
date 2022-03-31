@@ -1,0 +1,142 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage lines-valid="108" lines-covered="104" line-rate="0.9629000000000001" branches-valid="28" branches-covered="24" branch-rate="0.8571" timestamp="1648752636882" complexity="0" version="0.1">
+  <sources>
+    <source>/media/a/a4361fe9-056f-47f8-845d-3ff3a7f0e5a8/Dropbox/code/lenka</source>
+  </sources>
+  <packages>
+    <package name="main" line-rate="0.9629000000000001" branch-rate="0.8571">
+      <classes>
+        <class name="index.js" filename="lib/src/deep_copy/index.js" line-rate="0.9629000000000001" branch-rate="0.8571">
+          <methods>
+            <method name="deepCopy" hits="8" signature="()V">
+              <lines>
+                <line number="4" hits="8"/>
+              </lines>
+            </method>
+            <method name="customCopy" hits="122" signature="()V">
+              <lines>
+                <line number="27" hits="122"/>
+              </lines>
+            </method>
+            <method name="deepCopyInternal" hits="122" signature="()V">
+              <lines>
+                <line number="57" hits="122"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="2" hits="1" branch="false"/>
+            <line number="3" hits="1" branch="false"/>
+            <line number="4" hits="8" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="5" hits="8" branch="false"/>
+            <line number="6" hits="8" branch="false"/>
+            <line number="7" hits="8" branch="false"/>
+            <line number="8" hits="8" branch="false"/>
+            <line number="9" hits="8" branch="false"/>
+            <line number="10" hits="8" branch="true" condition-coverage="50% (1/2)"/>
+            <line number="11" hits="8" branch="false"/>
+            <line number="12" hits="8" branch="false"/>
+            <line number="13" hits="8" branch="false"/>
+            <line number="14" hits="8" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="15" hits="3" branch="false"/>
+            <line number="16" hits="3" branch="false"/>
+            <line number="17" hits="3" branch="false"/>
+            <line number="18" hits="8" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="19" hits="8" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="20" hits="2" branch="false"/>
+            <line number="21" hits="2" branch="false"/>
+            <line number="22" hits="2" branch="false"/>
+            <line number="23" hits="2" branch="false"/>
+            <line number="24" hits="8" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="25" hits="8" branch="false"/>
+            <line number="26" hits="1" branch="false"/>
+            <line number="27" hits="122" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="28" hits="122" branch="false"/>
+            <line number="29" hits="122" branch="false"/>
+            <line number="30" hits="122" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="31" hits="62" branch="false"/>
+            <line number="32" hits="62" branch="false"/>
+            <line number="33" hits="122" branch="false"/>
+            <line number="34" hits="122" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="35" hits="3" branch="false"/>
+            <line number="36" hits="3" branch="false"/>
+            <line number="37" hits="122" branch="true" condition-coverage="100% (3/3)"/>
+            <line number="38" hits="62" branch="false"/>
+            <line number="39" hits="62" branch="false"/>
+            <line number="40" hits="62" branch="false"/>
+            <line number="41" hits="62" branch="false"/>
+            <line number="42" hits="62" branch="false"/>
+            <line number="43" hits="62" branch="false"/>
+            <line number="44" hits="62" branch="false"/>
+            <line number="45" hits="62" branch="false"/>
+            <line number="46" hits="62" branch="false"/>
+            <line number="47" hits="62" branch="true" condition-coverage="0% (0/1)"/>
+            <line number="48" hits="0" branch="false"/>
+            <line number="49" hits="0" branch="false"/>
+            <line number="50" hits="62" branch="false"/>
+            <line number="51" hits="122" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="52" hits="3" branch="false"/>
+            <line number="53" hits="3" branch="false"/>
+            <line number="54" hits="3" branch="false"/>
+            <line number="55" hits="122" branch="false"/>
+            <line number="56" hits="122" branch="false"/>
+            <line number="57" hits="122" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="58" hits="122" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="59" hits="23" branch="false"/>
+            <line number="60" hits="23" branch="false"/>
+            <line number="61" hits="23" branch="false"/>
+            <line number="62" hits="23" branch="false"/>
+            <line number="63" hits="23" branch="false"/>
+            <line number="64" hits="23" branch="false"/>
+            <line number="65" hits="23" branch="false"/>
+            <line number="66" hits="23" branch="false"/>
+            <line number="67" hits="23" branch="false"/>
+            <line number="68" hits="23" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="69" hits="3" branch="false"/>
+            <line number="70" hits="3" branch="false"/>
+            <line number="71" hits="20" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="72" hits="20" branch="false"/>
+            <line number="73" hits="20" branch="false"/>
+            <line number="74" hits="20" branch="false"/>
+            <line number="75" hits="122" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="76" hits="39" branch="false"/>
+            <line number="77" hits="39" branch="false"/>
+            <line number="78" hits="39" branch="false"/>
+            <line number="79" hits="39" branch="false"/>
+            <line number="80" hits="39" branch="false"/>
+            <line number="81" hits="39" branch="false"/>
+            <line number="82" hits="39" branch="false"/>
+            <line number="83" hits="39" branch="false"/>
+            <line number="84" hits="39" branch="false"/>
+            <line number="85" hits="39" branch="true" condition-coverage="0% (0/1)"/>
+            <line number="86" hits="0" branch="false"/>
+            <line number="87" hits="0" branch="false"/>
+            <line number="88" hits="39" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="89" hits="75" branch="false"/>
+            <line number="90" hits="75" branch="false"/>
+            <line number="91" hits="75" branch="false"/>
+            <line number="92" hits="39" branch="false"/>
+            <line number="93" hits="39" branch="false"/>
+            <line number="94" hits="39" branch="false"/>
+            <line number="95" hits="39" branch="false"/>
+            <line number="96" hits="122" branch="false"/>
+            <line number="97" hits="122" branch="false"/>
+            <line number="98" hits="122" branch="false"/>
+            <line number="99" hits="122" branch="false"/>
+            <line number="100" hits="122" branch="false"/>
+            <line number="101" hits="122" branch="false"/>
+            <line number="102" hits="122" branch="false"/>
+            <line number="103" hits="122" branch="false"/>
+            <line number="104" hits="122" branch="false"/>
+            <line number="105" hits="122" branch="false"/>
+            <line number="106" hits="122" branch="true" condition-coverage="0% (0/1)"/>
+            <line number="107" hits="122" branch="false"/>
+            <line number="108" hits="122" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

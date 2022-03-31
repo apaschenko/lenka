@@ -35,7 +35,11 @@ interface InternalData {
 export declare function deepCopy(original: any, options?: {
     customizer: (DCCustomizerParams: any) => DCCustomizerReturn;
     accumulator?: Record<string, any>;
-    mode?: 'simple';
+    mode: 'simple';
+}): any;
+export declare function deepCopy(original: any, options?: {
+    customizer: (DCCustomizerParams: any) => DCCustomizerReturn;
+    accumulator?: Record<string, any>;
 }): any;
 export declare function deepCopy(original: any, options?: {
     customizer: (DCCustomizerParams: any) => DCCustomizerReturn;

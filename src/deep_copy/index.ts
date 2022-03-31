@@ -45,7 +45,15 @@ export function deepCopy(
   options?: { 
     customizer: (DCCustomizerParams) => DCCustomizerReturn
     accumulator?: Record<string, any>
-    mode?: 'simple'
+    mode: 'simple'
+  }
+): any
+
+export function deepCopy(
+  original: any,
+  options?: { 
+    customizer: (DCCustomizerParams) => DCCustomizerReturn
+    accumulator?: Record<string, any>
   }
 ): any
 
