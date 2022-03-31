@@ -1,6 +1,6 @@
 # lenka
 
-A set of useful utilities. ![coverage](https://img.shields.io/badge/Coverage-95%25-83A603.svg?style=plastic&logo=github&logoColor=white&color=green&prefix=$coverage$)
+A set of useful utilities. ![](https://img.shields.io/badge/Coverage-95%25-83A603.svg?style=plastic&logo=github&logoColor=white&color=green&prefix=$coverage$)
 
 At the moment it contains only one utility: `deepCopy` :grin:
 
