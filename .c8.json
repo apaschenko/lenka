@@ -1,0 +1,6 @@
+{
+  "reporter": ["text","text-summary", "json-summary", "cobertura"],
+  "extension": "js",
+  "include": "lib/src/**",
+  "exclude": "lib/src/index.js"
+}
