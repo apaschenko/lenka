@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="108" lines-covered="104" line-rate="0.9629000000000001" branches-valid="28" branches-covered="24" branch-rate="0.8571" timestamp="1648752636882" complexity="0" version="0.1">
+<coverage lines-valid="108" lines-covered="104" line-rate="0.9629000000000001" branches-valid="28" branches-covered="24" branch-rate="0.8571" timestamp="1648823006154" complexity="0" version="0.1">
   <sources>
     <source>/media/a/a4361fe9-056f-47f8-845d-3ff3a7f0e5a8/Dropbox/code/lenka</source>
   </sources>

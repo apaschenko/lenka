@@ -1,5 +1,5 @@
 
-# lenka <span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.1" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=96%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka <span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.1" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=[[[coverage]]]%25&color=green&style=plastic&logo=github" align="right" /></span>
 
 A set of useful utilities. 
 
@@ -118,29 +118,7 @@ Verbose mode allows you to perform the necessary post-processing of a copy or or
 ### Simple (default) mode
 ### T.1. Simple usage
 ```typescript
-import { deepCopy } from '../../src'
-
-// Let's define a some complex object...
-const original: any = {
-  a: {
-    aa: 1,
-    ab: [{ aba: '1', abb: '2' }, { abc: 3, abd: { abda: 18 } }]
-  },
-  b: 33
-}
-
-// ...and copy it.
-const copy = deepCopy(original)
-
-// Let's make sure the result looks the same as the original,..
-console.log('copy: ', JSON.stringify(copy, null, 4), '\n')
-
-// ...that the utility actually made a copy,..
-console.log('copy === original: ', copy === original) // false
-
-// ...and that it's not a shallow copy.
-console.log('original.a.ab[1] === copy.a.ab[1]: ', original.a.ab[1] === copy.a.ab[1]) // false
-
+{{{ts_examples/deep_copy/example01_simple_usage.ts}}}
 ```
 
 ### T.2. Copy an object with circular dependencies

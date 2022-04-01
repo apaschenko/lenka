@@ -7,11 +7,13 @@
     "declaration": true,
     "outDir": "lib",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*", 
     "test/**/*",
-    "ts_examples/**/*"
-  ]
+    "ts_examples/**/*",
+    "utils/**/*"
+, "utils"  ]
 }
