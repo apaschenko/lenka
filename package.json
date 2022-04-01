@@ -27,7 +27,8 @@
     "circular deps",
     "circular references",
     "circular",
-    "typescript"
+    "typescript",
+    "es6"
   ],
   "author": "Alexander Paschenko",
   "license": "Apache-2.0",

@@ -1,12 +1,9 @@
 
-# lenka <span><img src="https://img.shields.io/badge/Coverage-95%25-83A603.svg?style=plastic&logo=github&logoColor=white&color=green&prefix=$coverage$" align="right"/><img src="./docs/blank.png" align="right" /><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="node-current" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /></span>
+# lenka <span><img src="https://img.shields.io/badge/Coverage-95%25-83A603.svg?style=plastic&logo=github&logoColor=white&color=green&prefix=$coverage$" align="right"/><img src="./docs/blank.png" align="right" /><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="typescript 3.1" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="javascript es6" src="https://img.shields.io/static/v1?label=javascriptscript&message=ES6&color=green&style=plastic" align="right" /></span>
 
 A set of useful utilities. 
 
 At the moment it contains only one utility: `deepCopy` :grin:
-
-## Prerequisites
-NodeJS version >= v6.4.0
 
 ## Installation
 `npm install lenka`
