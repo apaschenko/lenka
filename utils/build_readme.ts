@@ -19,7 +19,10 @@ export default (async function() {
     readme = readme.replace(fullMatch, content)
   }
 
-  readme = readme.replace('[[[coverage]]]', `${json.total.lines.pct.toFixed()}`)
+  const coverage = typeof json.total.lines.pct === 'number' 
+    ? (json.total.lines.pct as number).toFixed(1)
+    : json.total.lines.pct
+  readme = readme.replace('[[[coverage]]]', `${coverage}`)
 
   await writeFile(path.join(rootDirObj.path, destinationName), readme)
 })()

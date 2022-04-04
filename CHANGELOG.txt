@@ -1,3 +1,5 @@
-04/01/2022 v0.2.17 Add examples; add tiny build system; cleanup the project
+04/04/2022 v0.3.0 typeOf has been added.
 
-03/29/2022 v0.2.12 Initial commit
+04/01/2022 v0.2.17 Add examples; add tiny build system; cleanup the project.
+
+03/29/2022 v0.2.12 Initial commit.

@@ -1,7 +1,12 @@
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+import { 
+  deepCopy,
+  DCCustomizerParams,
+  DCCustomizerReturn
+} from '../../src'
 
-// Let's say a sports coach gave us his gym inventory results as a Javascript object.
-// We should copy this object (the coach won't let us keep the original).
+// Let's say a sports coach gave us his gym inventory results as 
+// a Javascript object.
+// We should copy this object (the coach won't let us keep the original)
 // Let's count at the same time how many items are in the gym.
 const original: any = {
   balls: 3,
@@ -27,13 +32,15 @@ const original: any = {
   }
 }
 
-// To do this, we use three features of deep copying: the customizer function, the
-// accumulator and the verbose mode (so that after copying we get access to the accumulator 
-// in which we will accumulate the total number of items.
+// To do this, we use three features of deep copying: the customizer
+// function, the accumulator and the verbose mode (so that after copying
+// we get access to the accumulator in which we will accumulate the
+// total number of items.
 
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
+  // It takes one parameter: object. A full description of all fields
+  // of this object is provided in the README.
+
   // To solve the task, we need two field: "accumulator" and "value".
   const { value, accumulator } = params
 
@@ -44,7 +51,6 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
 
   return {
     processed: false,
-    result: 'If we return "processed: false", the value of result will be ignored.',
   }
 } 
 

@@ -1,9 +1,14 @@
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+import {
+  deepCopy,
+  DCCustomizerParams,
+  DCCustomizerReturn 
+} from '../../src'
 
 // Imagine that you are the director of a zoo.
 // Wolves, hares and foxes live and breed in your zoo. Each animal is 
 // settled in a separate single aviary or cage.
-// You asked your assistant to count the number of animals of each species.
+// You asked your assistant to count the number of animals of each 
+// species.
 // He  conscientiously walked around the zoo, but arithmetic is too
 // difficult for him, so he brought you this report:
 const original = {
@@ -53,21 +58,23 @@ console.log('original: ', JSON.stringify(original, null, 4))
 // Let's copy this report, and at the same time still count the animals. 
 // And if we have more hares than wolves, then we will exchange all our 
 // hares for beavers in the neighboring zoo.
-// In order not to do the job twice, we will remember the places where each 
-// of the biological species is located during copying.
-// We can easily do this because the customizer receives a reference to the
-// parent node of the current node and a key in the parent node on each call.
-// But be careful: this is a link to the parent node of the original, not a copy!
+// In order not to do the job twice, we will remember the places where
+// each of the biological species is located during copying.
+// We can easily do this because the customizer receives a reference to
+// the parent node of the current node and a key in the parent node on
+// each call.
+// But be careful: this is a link to the parent node of the original,
+// not a copy!
 
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
+  // It takes one parameter: object. A full description of all fields
+  // of this object is provided in the README.
   const { 
-    value,       // value of the current node
-    parent,      // reference to parent node (OF ORIGINAL!)
-    key,         // key of parent node for current node
-    accumulator, // the value of this object is preserved between calls, so we will
-                 // remember the places of occupation here. 
+    value,       // Value of the current node.
+    parent,      // Reference to parent node (OF ORIGINAL!).
+    key,         // Key of parent node for current node.
+    accumulator, // The value of this object is preserved between calls,
+                 // so we will remember the places of occupation here. 
   } = params
 
 
@@ -93,15 +100,17 @@ for (const [name, places] of Object.entries(accumulator)) {
   console.log(`${name}: ${places.length}`)
 }
 
-// if there were more hares than wolves, then we will exchange all hares for beavers.
+// if there were more hares than wolves, then we will exchange all
+// hares for beavers.
 const { hare, wolf } = accumulator
 if (hare.length > wolf.length) {
-  // Oh, stop! We have kept the places of the hares in the ORIGINAL, but we want to
-  // exchange in a COPY!
-  // Don't worry. Fortunately, this is easy to do. In verbose mode, the function 
-  // returns "originalToCopy" field. This is a Map whose keys are links to each of
-  // the nodes of the original, and whose values are links to the corresponding 
-  // nodes of the copy.
+  // Oh, stop! We have kept the places of the hares in the ORIGINAL,
+  // but we want to exchange in a COPY!
+  // Don't worry. Fortunately, this is easy to do. In verbose mode,
+  // the function returns "originalToCopy" field. This is a Map whose
+  // keys are links to each of the nodes of the original, and whose
+  // values are links to the corresponding nodes of the copy.
+
   // So, let's do it!
   for (const { parent, key } of hare) {
     const placeInCopy = originalToCopy.get(parent)

@@ -1,7 +1,7 @@
 {
   "name": "lenka",
-  "version": "0.2.17",
-  "description": "Typescript and javascript utilities. deepCopy: deep clone the objects with support circular references and customizing.",
+  "version": "0.3.0",
+  "description": "Typescript and javascript utilities. deepCopy: deep clone the objects with support circular references and customizing; typeOf: typeof+instanceOf on steroids with support platform-specific classes",
   "main": "./lib/src/index.js",
   "types": "./lib/src/index.d.ts",
   "files": [
@@ -9,11 +9,12 @@
     "/src"
   ],
   "scripts": {
-    "build": "npx tsc --project tsconfig.json && npm run coverage && npm run refresh:readme && npm run cleanup",
-    "test": "npx mocha lib/test/**",
-    "coverage": "npx c8 -c=.c8.json npm test",
-    "refresh:readme": "node lib/utils/includeFilesToREADME.js",
-    "cleanup": "rm lib/utils/*.d.ts lib/ts_examples/**/*.d.ts lib/tsconfig.tsbuildinfo"
+    "build:full": "npm run build:c  && npm run test:full && npm run refresh:readme && npm run cleanup",
+    "build:c": "rm -rf lib/**/* && npx tsc --project tsconfig.json",
+    "test:mocha": "npx mocha lib/test/**",
+    "test:full": "npx c8 -c=.c8.json npm run test:mocha",
+    "refresh:readme": "node lib/utils/build_readme.js",
+    "cleanup": "rm lib/utils/*.d.ts lib/ts_examples/**/*.d.ts"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,13 @@
     "circular references",
     "circular",
     "typescript",
-    "es6"
+    "es6",
+    "typeof",
+    "type of",
+    "instance of",
+    "sort of",
+    "kind-of",
+    "kind of"
   ],
   "author": "Alexander Paschenko",
   "license": "Apache-2.0",
@@ -53,6 +60,6 @@
   "engines": {
     "node": ">=6.4.0"
   },
-  "dependencies": {   
+  "dependencies": {
   }
 }

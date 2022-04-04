@@ -3,10 +3,15 @@
 
 A set of useful utilities. 
 
-At the moment it contains only one utility: `deepCopy` :grin:
+At the moment it contains only two utilities: 
+- [deepCopy](#deepcopy)
+- [typeOf](#typeof)
 
 ## Prerequisites:
 `javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.1
+
+For the using as node.js package: `node.js` version >= 6.4.0
+
 ## Installation
 `npm install lenka`
 
@@ -123,426 +128,171 @@ Verbose mode allows you to perform the necessary post-processing of a copy or or
 
 ### T.2. Copy an object with circular dependencies
 ```typescript
-import { deepCopy } from 'lenka'
-
-// Let's define a some complex object.
-const original: any = {
-  a: {
-    aa: 1,
-    ab: [
-      { 
-        aba: '1', 
-        abb: '2' 
-      }, 
-      { 
-        abc: 3, 
-        abd: { abda: 18 } 
-      }
-    ]
-  },
-  b: 33
-}
-
-// Let's mess it up by adding two cyclic references...
-original.c = original
-original.a.ab[1].abd.abdb = original.a
-
-// ...and copy it.
-const copy = deepCopy(original)
-
-// Let's make sure the result still contains the circular dependencies
-// (we can't use JSON.stringify here because it's not supports objects 
-// with loops!)
-console.log(copy)
-
-// Cyclic dependencies in the copy are reproduced correctly, they do not
-// point to the original. 
-console.log('copy.c === original.c: ', copy.c === original.c) // false
-console.log(
-  'copy.a.ab[1].abd.abdb === original.a.ab[1].abd.abdb: ',
-  copy.a.ab[1].abd.abdb === original.a.ab[1].abd.abdb,
-) // false
+{{{ts_examples/deep_copy/example02_copy_object_with_circular_dependencies.ts}}}
 ```
 
 ### T.3. Customization to limit copy levels
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
-
-// Let's take the some object:
-const original: any = {
-  a: {
-    aa: {
-      aaa: 1,
-      aab: {
-        aaba: 72,
-      }
-    },
-    ab: [
-      { 
-        aba: '1',
-        abb: '2' 
-      },
-      { 
-        abc: 3,
-        abd: { abda: 18 } 
-      },
-    ],
-    ac: {
-      aca: 1,
-      acb: { acba: 'leaf' }
-    }
-  },
-  b: 33,
-}
-
-// Let's say we want to get something between a deep and a shallow copy:
-// let the top N levels of the original be copied, while the deeper 
-// levels of nesting remain references to the nodes of the original 
-// object.
-
-const MAX_LEVEL = 3
-
-// To do this, we need to define a customizer function (note that the 
-// package provides service types to describe the parameters and return
-// the customizer).
-// This function will be called for each node of the original object.
-function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields 
-  // of this object is provided in the README.
-  // To solve the task, we need only two fields: the current nesting 
-  // level and value of the current original node.
-  const { level, value } = params
-
-  // For nesting levels less than the threshold, let the deepCopy 
-  // process the data (for this we will return "{ processed: false }"),
-  // and when the specified depth is reached, we will interrupt 
-  // processing, returning processed: true and link to the original.
-  return (level < MAX_LEVEL)
-  ? { 
-      processed: false,
-      result: 
-        'If we return "processed: false", then the "result" is ' +
-          `optional and it's value will be ignored.`,
-    }
-  : {
-      processed: true,
-      result: value,
-    }
-} 
-
-// Get copy.
-const copy = deepCopy(original, { customizer })
-
-console.log('copy === original: ', copy === original) // false
-
-// Top level items (level=0) copied
-console.log('copy.a === original.a: ', copy.a === original.a) // false
-
-// Second level (level=1) copied too.
-console.log(
-  'copy.a.ab === original.a.ab: ', copy.a.ab === original.a.ab
-) // false
-
-console.log(
-  'copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac
-) // false
-
-// Third level didn't copied.
-console.log(
-  'copy.a.ac.acb === original.a.ac.acb: ', 
-  copy.a.ac.acb === original.a.ac.acb
-) // true
+{{{ts_examples/deep_copy/example03_customization_to_limit_copy_levels.ts}}}
 ```
 
 ### T.4. Customization to remove circular dependencies
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
-
-// Let's define a some complex object.
-const original: any = {
-  a: {
-    aa: 1,
-    ab: [{ aba: '1', abb: '2' }, { abc: 3, abd: { abda: 18 } }]
-  },
-  b: 33
-}
-
-// Let's mess it up by adding two cyclic dependencies.
-original.c = original
-original.a.ab[1].abd.abdb = original.a
-
-// We want to replace all cyclic dependencies in the copy 
-// with the string "Death to cycles!"
-
-// To do this, we need to define a customizer function (note that the 
-// package provides service types to describe the parameters and 
-// return the customizer).
-// This function will be called for each node of the original object.
-function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields 
-  // of this object you can see in the README.
-
-  // To solve the task, we need only one field: boolean flag 
-  // "isItACycle".
-  const { isItACycle } = params
-
-  // If the node on which the customizer is called is not a cyclic 
-  // dependency, let the deepCopy process the data (for this we 
-  // will return "{ processed: false }"), and for circular deps. we will
-  // interrupt processing, returning processed: true and the result.
-  return (isItACycle)
-  ? { 
-      processed: true,
-      result: 'Kill the cycles!',
-    }
-  : {
-      processed: false,
-    }
-} 
-
-// Get copy.
-const copy = deepCopy(original, { customizer })
-
-// Wow! The copy does not contain cycles!
-console.log(JSON.stringify(copy, null, 4))
+{{{ts_examples/deep_copy/example04_customization_to_remove_circular_deps.ts}}}
 ```
 
 ### T.5. Customization to change value of some field
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
-
-// Let's define a some object.
-const original: any = {
-  name: 'John',
-  surname: 'Doe',
-  age: 35,
-  address: '-',
-  timestamps: {
-    createdAt: '1995-12-17T03:24:00.285Z',
-    updatedAt: '2003-09-01T16:52:30.011Z',
-  }
-}
-
-// Suppose that when copying an object, we want to update the 
-// "updatedAt" field with current data.
-
-// To do this, we need to define a customizer function (note 
-// that the package provides service types to describe the 
-// parameters and return the customizer).
-// This function will be called for each node of the original object.
-function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields 
-  // of this object is provided in the README.
-
-  // To solve the task, we need only one field: "key" that contains a 
-  // name of the field.
-  const { key } = params
-
-  // If the node on which the customizer is not "updatedAt",
-  // let the deepCopy process the data (for this we 
-  // will return "{ processed: false }"), and for "updatedAt" we will 
-  // interrupt processing, returning processed: true and the result.
-  return (key === 'updatedAt')
-  ? { 
-      processed: true,
-      result: new Date().toISOString(),
-    }
-  : {
-      processed: false,
-    }
-} 
-
-// Get copy.
-const copy = deepCopy(original, { customizer })
-
-// The value of "updatedAt" has been changed.
-console.log(JSON.stringify(copy, null, 4))
+{{{ts_examples/deep_copy/example05_customization_to_change_the_value_of_some_field.ts}}}
 ```
 
 ### Verbose mode
 
 ### T.6. Using the accumulator to calculate the sum of the numeric nodes of the original object.
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
-
-// Let's say a sports coach gave us his gym inventory results as 
-// Javascript object.
-// We should copy this object (the coach won't let us keep the original).
-// Let's count at the same time how many items are in the gym.
-const original: any = {
-  balls: 3,
-  hulaHoops: 7,
-  skateboards: {
-    red: 2,
-    yellow: 5,
-    green: 3,
-  },
-  kettlebells: {
-    '8kg': 6,
-    '16kg': 4,
-  },
-  barbells: {
-    forChildren: 2,
-    forAdults: {
-      new: 1,
-      other: {
-        rusty: 6,
-        broken: 1,
-      }
-    }
-  }
-}
-
-// To do this, we use three features of deep copying: the customizer 
-// function, the accumulator and the verbose mode (so that after copying
-// we get access to the accumulator in which we will accumulate the 
-// total number of items).
-
-function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields
-  // of this object is provided in the README.
-  // To solve the task, we need two field: "accumulator" and "value".
-  const { value, accumulator } = params
-
-  // We will calculate the sum of the values of all numerical nodes
-  if ('number' === typeof value) {
-    accumulator.count = accumulator.count + value
-  }
-
-  return {
-    processed: false,
-  }
-} 
-
-// Get copy.
-const { copy, accumulator } = deepCopy(original, { 
-  customizer,
-  accumulator: { count: 0 },
-  mode: 'verbose',
-})
-
-console.log('copy: ', JSON.stringify(copy, null, 4))
-console.log(`Total number of item: ${ accumulator.count }`) // 40
+{{{ts_examples/deep_copy/example06_verbose_mode_total.ts}}}
 ```
 
 ### T.7 Using an originalToCopy Map for post-processing. 
 ```typescript
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from 'lenka'
+{{{ts_examples/deep_copy/example07_verbose_mode_postprocessing.ts}}}
+```
 
-// Imagine that you are the director of a zoo.
-// Wolves, hares and foxes live and breed in your zoo. Each animal is 
-// settled in a separate single aviary or cage.
-// You asked your assistant to count the number of animals of each 
-// species.
-// He  conscientiously walked around the zoo, but arithmetic is too
-// difficult for him, so he brought you this report:
-const original = {
-  aviaries: {
-    northern: {
-      'the one where the boy fell last year': 'wolf',
-      'where the crocodile lived': 'fox',
-    },
-    western: {
-      'where I would like to live': 'hare',
-      'named after Monty Python': 'fox',
-      'the aviaries we built on credit': {
-        'first': 'hare',
-        'second': `I don't know who it is but it's creepy!`,
-        'I always forget about this aviary': 'hare',
-        'damn, there are too many!': 'wolf',
-      }
-    },
-  },
-cages: {
-    'warm': 'hare',
-    'skewed': '?',
-    'new': 'this cage is empty',
-    'cages that Alice gave us': {
-      'blue': `it's definitely not an elephant`,
-      'who has a holey ': `it hid and I couldn't see who it was`,
-      'woodens': {
-        'old': 'hare',
-        'older': 'sorry, I forgot to check it',
-        'oldest': 'hare',
-      },
-      'first time I see this cage!': 'fox',
-      'I\'m too lazy to write separately for each cage': [
-        'hare',
-      `I don't know who it is but it bites`,
-      'fox'
-      ] 
-    },
-  },
+## typeOf
+
+### Motivation
+The built-in javascript operator does not work satisfactorily because it has remained unchanged from the earliest versions of the language.
+There are many alternative solutions, but they all have serious drawbacks: Almost all of them do not work well with user-defined classes, as well as platform-specific classes (for example, Node.js classes).
+Let's take for example one of the most popular solutions - [kind-of](https://www.npmjs.com/package/kind-of):
+```typescript
+import kindOf from 'kind-of'
+import EventEmitter from 'events' // NodeJS-specific class
+
+// The instance of build-in class:
+const myWeakMap = new WeakMap
+
+// User-defined class...
+class ExtNumber extends Number {
+  say1(): { return 1 }
 }
 
-console.log('original: ', JSON.stringify(original, null, 4))
+// ... and instance of this class:
+const myNumber = new ExtNumber()
 
-// Let's copy this report, and at the same time still count the animals. 
-// And if we have more hares than wolves, then we will exchange all our
-// hares for beavers in the neighboring zoo.
-// In order not to do the job twice, we will remember the places where 
-// each of the biological species is located during copying.
-// We can easily do this because the customizer receives a reference to 
-// the parent node of the current node and a key in the parent node on 
-// each call.
-// But be careful: this is a link to the parent node of the original, 
-// not a copy!
+const myEmitter = new EventEmitter()
 
-function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields 
-  // of this object is provided in the README.
-  const { 
-    value,       // value of the current node
-    parent,      // reference to parent node (OF ORIGINAL!)
-    key,         // key of parent node for current node
-    accumulator, // the value of this object is preserved between calls,
-                 // so we will remember the places of occupation here. 
-  } = params
+// Yes, it's a right result.
+kindOf(myWeakMap) // "weakmap"
 
+// And first failure: kind-of doesn't show the classes itself:
+// even for standard javascript classes.
+// It goes without saying that when we pass a class, we expect to see 
+// its name. That its constructor is a function is obvious without 
+// kind-of calling
+kindOf(WeakMap) // "function" (instead "WeakMap")
 
-  // we will remember places only for hares, foxes and wolves
-  if (['wolf', 'fox', 'hare'].includes(value)) {
-    accumulator[value].push({ parent, key })
-  }
+// Well, since it does not know how to work with classes, then perhaps 
+// it will at least show the type of the instance correctly? 
+// Oops, no again.
+kindOf(myNumber) // "number" (instead "ExtNumber")
 
-  return {
-    processed: false,
-  }
-} 
+// Failed again: an async function and a (synchronous) function are two
+// different things. 
+kindOf(async function myAsyncFunction() {}) // "function"
 
-// Get copy.
-const { copy, accumulator, originalToCopy } = deepCopy(original, { 
-  customizer,
-  accumulator: { wolf: [], hare: [], fox: [] },
-  mode: 'verbose',
-})
+// And things are really bad for platform-specific classes and their 
+// instances:
+kindOf(myEmitter) // "object"
+```
 
-// Let's check how many hares, foxes and wolves we have.
-for (const [name, places] of Object.entries(accumulator)) {
-  console.log(`${name}: ${places.length}`)
+So, my expectations from a correct utility of this type:
+- when we pass a class constructor function to it, it should return not "function", but the name of the class with a capital letter.
+- When we pass an instance of ANY class (standard or platform-specific) to it, it should return the name of the class starting with a small letter.
+- It goes without saying that primitive types should also be supported.
+
+### Including to your code:
+
+**typescript:**
+`import { typeOf } from lenka`
+
+**javascript:**
+`const { typeOf } = require('lenka')`
+
+### Usage:
+```typescript
+const type = typeOf(anyData)
+// or
+const copy = typeOf(anyData, options)
+```
+The second parameter can be passed to the function is an options. 
+At the moment there are only two of them and they indicate how they 
+should be processed NaN and Infinities ([see below](#typeof-options)).
+
+### Examples of the typeOf() output:
+```typescript
+import { typeOf } from lenka
+import EventEmitter from 'events'
+
+class MyClass {
+  a() { return 1 }
 }
 
-// if there were more hares than wolves, then we will exchange all 
-// hares for beavers.
-const { hare, wolf } = accumulator
-if (hare.length > wolf.length) {
-  // Oh, stop! We have kept the places of the hares in the ORIGINAL, but
-  // we want to exchange in a COPY!
-  // Don't worry. Fortunately, this is easy to do. In verbose mode, the 
-  // function returns "originalToCopy" field. This is a Map whose keys 
-  // are links to each of the nodes of the original, and whose values 
-  // are references to the corresponding nodes of the copy.
-  // So, let's do it!
-  for (const { parent, key } of hare) {
-    const placeInCopy = originalToCopy.get(parent)
-    placeInCopy[key] = 'beaver'
-  }
+class MyClassExt extends Number {
+ toMyNumber() { return 7 }
 }
 
-// Let's make sure that we have successfully replaced the hares with 
-// beavers both in the properties of objects and in the members of 
-// arrays.
-console.log('copy: ', JSON.stringify(copy, null, 4))
+const constMyClass = MyClass
+
+typeOf(WeakMap)                                 // "WeakMap"
+typeOf(new WeakMap())                           // "weakMap"
+typeOf(new Set())                               // "set"
+typeOf({ a: 1, b: 2})                           // "object"
+typeOf(new Object(null))                        // "object"
+typeOf(function myFunction(a) { return a })     // "function"
+typeOf(MyClass)                                 // "MyClass"
+typeOf(new MyClass())                           // "myClass"
+typeOf(MyClassExt)                              // "MyClassExt"
+typeOf(new MyClassExt())                        // "myClassExt"
+typeOf(constMyClass)                            // "MyClass"
+typeOf(EventEmitter)                            // "EventEmitter"
+typeOf(new EventEmitter())                      // "eventEmitter"
+typeOf(async function myAsyncFunction() {})     // "asyncFunction"
+typeOf(function* myGenerator() { yield 1 })     // "generatorFunction"
+typeOf([1, 2, 3])                               // "array"
+typeOf(/.*.a/g)                                 // "regExp"
+typeOf(Number)                                  // "Number"
+typeOf(Number(1))                               // "number"
+typeOf(7)                                       // "number"
+typeOf('www')                                   // "string"
+typeOf(null)                                    // "null"
+typeOf(undefined)                               // "undefined"
+typeOf(void 0)                                  // "undefined"
+typeOf(true)                                    // "boolean"
+typeOf(Symbol('unic'))                          // "symbol"
+typeOf(Promise)                                 // "Promise"
+typeOf(new Promise((resolve) => { resolve(1)})) // "promise"
+// etc.
+```
+
+### typeOf options
+```typescript
+{
+  nan?: boolean     // default is false
+  infinity?: boolean // default is false
+}
+```
+
+Although `NaN`, `Number.POSITIVE_INFINITY` and `Number.NEGATIVE_INFINITY` in Javascript refer to numbers, using them in calculations rarely gives the expected result.
+For your convenience, if you specify the "`nan: true`" option, typeOf will return result for `NaN` as a separate type "nan", not a "number".
+Similarly for infinities:
+```typescript
+typeOf(NaN)                // "number"
+typeof(nan, { nan: true }) // "nan"
+
+typeOf(Number.POSITIVE_INFINITY)                     // "number"
+typeof(Number.POSITIVE_INFINITY, { infinity: true }) // "+infinity"
+typeof(Number.NEGATIVE_INFINITY)                     // "number"
+typeof(Number.NEGATIVE_INFINITY, { infinity: true }) // "-infinity"
 ```
 
 (c) 2022

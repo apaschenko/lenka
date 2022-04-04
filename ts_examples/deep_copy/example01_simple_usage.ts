@@ -19,4 +19,7 @@ console.log('copy: ', JSON.stringify(copy, null, 4), '\n')
 console.log('copy === original: ', copy === original) // false
 
 // ...and that it's not a shallow copy.
-console.log('original.a.ab[1] === copy.a.ab[1]: ', original.a.ab[1] === copy.a.ab[1]) // false
+console.log(
+  'original.a.ab[1] === copy.a.ab[1]: ',
+  original.a.ab[1] === copy.a.ab[1]
+) // false

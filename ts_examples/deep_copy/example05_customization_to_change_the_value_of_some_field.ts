@@ -1,4 +1,8 @@
-import { deepCopy, DCCustomizerParams, DCCustomizerReturn } from '../../src'
+import { 
+  deepCopy,
+  DCCustomizerParams,
+  DCCustomizerReturn
+} from '../../src'
 
 // Let's define a some object.
 const original: any = {
@@ -12,16 +16,19 @@ const original: any = {
   }
 }
 
-// Suppose that when copying an object, we want to update the "updatedAt" field
-// with current data.
+// Suppose that when copying an object, we want to update the
+// "updatedAt" field with current data.
 
-// To do this, we need to define a customizer function (note that the package provides service
-// types to describe the parameters and return the customizer).
+// To do this, we need to define a customizer function (note that the 
+// package provides service types to describe the parameters and return
+// the customizer).
 // This function will be called for each node of the original object.
 function customizer(params: DCCustomizerParams): DCCustomizerReturn {
-  // It takes one parameter: object. A full description of all fields of this object is 
-  // provided in the README.
-  // To solve the task, we need only one field: "key" that contains a name of the field.
+  // It takes one parameter: object. A full description of all fields 
+  // of this object is provided in the README.
+
+  // To solve the task, we need only one field: "key" that contains
+  // a name of the field.
   const { key } = params
 
   // If the node on which the customizer is not "updatedAt",
@@ -35,7 +42,6 @@ function customizer(params: DCCustomizerParams): DCCustomizerReturn {
     }
   : {
       processed: false,
-      result: 'If we return "processed: false", then the value will be ignored.',
     }
 } 
 
