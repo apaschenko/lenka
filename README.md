@@ -5,7 +5,7 @@ A set of useful utilities.
 
 At the moment it contains only two utilities: 
 - [**deepCopy**: customizable cloning of any objects or arrays with circular references](#deepcopy)
-- [**typeOf**: intuitively obvious js typeof+instanceOf](#typeof)
+- [**typeOf**: intuitively obvious js typeof+instanceOf with support of user-defined and platform-specific classes](#typeof)
 
 ## Prerequisites:
 `javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.1
@@ -17,7 +17,7 @@ For the using as node.js package: `node.js` version >= 6.4.0
 
 ***
 
-## Migration from 0.2.x version
+## Migration from 0.2.x versions
 The new version does not contain any breaking changes, so no action is required after the upgrade. 
 
 ## deepCopy
@@ -603,7 +603,7 @@ console.log('copy: ', JSON.stringify(copy, null, 4))
 ## typeOf
 
 ### Motivation
-The built-in javascript operator does not work satisfactorily because it has remained unchanged from the earliest versions of the language.
+The built-in `typeof` javascript operator does not work satisfactorily because it has remained unchanged from the earliest versions of the language.
 There are many alternative solutions, but they all have serious drawbacks: Almost all of them do not work well with user-defined classes, as well as platform-specific classes (for example, Node.js classes).
 Let's take for example one of the most popular solutions - [kind-of](https://www.npmjs.com/package/kind-of):
 ```typescript
