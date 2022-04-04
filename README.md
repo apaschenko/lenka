@@ -4,8 +4,8 @@
 A set of useful utilities. 
 
 At the moment it contains only two utilities: 
-- [deepCopy](#deepcopy)
-- [typeOf](#typeof)
+- [**deepCopy**: customizable cloning of any objects or arrays with circular references](#deepcopy)
+- [**typeOf**: intuitively obvious js typeof+instanceOf](#typeof)
 
 ## Prerequisites:
 `javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.1
@@ -16,6 +16,9 @@ For the using as node.js package: `node.js` version >= 6.4.0
 `npm install lenka`
 
 ***
+
+## Migration from 0.2.x version
+The new version does not contain any breaking changes, so no action is required after the upgrade. 
 
 ## deepCopy
 
@@ -716,7 +719,7 @@ typeOf(new Promise((resolve) => { resolve(1)})) // "promise"
 ### typeOf options
 ```typescript
 {
-  nan?: boolean     // default is false
+  nan?: boolean      // default is false
   infinity?: boolean // default is false
 }
 ```
