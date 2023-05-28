@@ -1,14 +1,13 @@
 
-# lenka <span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.1" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=[[[coverage]]]%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka [[[version]]]<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=[[[coverage]]]%25&color=green&style=plastic&logo=github" align="right" /></span>
 
-A set of useful utilities. 
-
-At the moment it contains only two utilities: 
-- [**deepCopy**: customizable cloning of any objects or arrays with circular references](#deepcopy)
+A set of useful utilities:
+- [**isEquals**: ] 
+- [**clone**: customizable cloning of any objects or arrays with circular references](#clone)
 - [**typeOf**: intuitively obvious js typeof+instanceOf with support of user-defined and platform-specific classes](#typeof)
 
 ## Prerequisites:
-`javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.1
+`javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.4
 
 For the using as node.js package: `node.js` version >= 6.4.0
 
@@ -17,14 +16,14 @@ For the using as node.js package: `node.js` version >= 6.4.0
 
 ***
 
-## Migration from 0.2.x versions
-The new version does not contain any breaking changes, so no action is required after the upgrade. 
+## Migration from 0.2.x, 0.3.x versions
+This version has many changes compared to earlier versions. Please follow this documentation.
 
-## deepCopy
+## clone
 
 ### Motivation:
-There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited.
-These shortcomings I tried to correct in `deepCopy`.
+There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
+These shortcomings I tried to correct in `clone`.
 
 ### Features:
 - ![done](./docs/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
@@ -33,79 +32,97 @@ These shortcomings I tried to correct in `deepCopy`.
 ### Including to your code:
 
 **typescript:**
-`import { deepCopy } from lenka`
+`import { clone } from lenka`
 
 **javascript:**
-`const { deepCopy } = require('lenka')`
+`const { clone } = require('lenka')`
 
 ### Usage:
 ```typescript
-const copy = deepCopy(original)
-// or
-const copy = deepCopy(original, options)
+const copy = clone(original [, options])
 ```
 
-When `deepCopy` invoked without options, it works just like regular deep copy utilities, with one exception:
-if the original object contains circular referenceses, then all these references will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
+When `clone` invoked without options, it works just like regular deep copy utilities, with one exception:
+if the original object contains circular and/or duplicate referenceses, then all these references will be correctly reproduced in the copy (of course, they will point to members of the copy, not the original).
 
-To control the behavior of `deepCopy`, you can pass an options object (for a typescript, the Lenka package exports a service type **DCOptions** that describes the fields of this object).
+To control the behavior of `clone`, you can pass an options object (for typescript, the Lenka package exports **CloneOptions** interface that describes the fields of this object). All fields of this object are optional.
 ```typescript
 {
-  customizer: (params: DCCustomizerParams) => DCCustomizerReturn
-  accumulator?: any // default is {} (empty object)
-  mode?: 'simple' | 'verbose' // default is 'simple'
+  customizer?: (params: CustomizerParams) => unknown
+  accumulator?: Record<PropertyKey, any> // default is {} (empty object)
+  output?: 'simple' | 'verbose'          // default is 'simple'
+  descriptors?: boolean                  // default is false
 }
 ```
 
 `customizer` is a reference to your customizer function.
 ```typescript
-function customizer(params) {
+function customizer(params: CustomizerParams) {
   // ...
 }
 
-const copy = deepCopy(original, { customizer })
+const copy = clone(original, { customizer })
 ```
-This customizer will be called for the each node of an original object (for each key of object, each array item and each atomic values).
+This customizer will be called for the each node of an original object (for each key of object, each array's and set's item, etc.).
 
-The customizer takes one parameter: this is an object (for a typescript, the Lenka package exports a service type **DCCustomizerParams** that describes the fields of this object).
+The customizer takes one parameter: this is an object (for typescript, the Lenka package exports a service type **CustomizerParams** that describes the fields of this object).
 ```typescript
 {
-  accumulator: object    // Place where you can save some data between customizer calls, if necessary (see options.accumulator)
-  value: any             // Value of the current node in the original 
-  parent: object | any[] // Reference to parent node of the original
-  key: string | number   // Key of parent node for current node (index of array item or key of object) 
-  root: any              // Reference to root of the original object
-  level: number          // Nesting level of the current node (root level is 0)
-  isItACycle: boolean    // Whether the current node is a circular dependency
+  accumulator: Record<PropertyKey, any> // Place where you can save some
+                          // data between customizer calls, if necessary
+                          // (see options.accumulator above).
+  value: any              // Value of the current node in the original.
+  parent: CustomizerParams // Reference to parent node of the original.
+                          // For the root node this is null.
+  root: CustomizerParams  // Link to the CustomizerParams object of the
+                          // root node
+  index: number           // for clone() function - always 0. Ignore it.
+  level: number           // It's a level of current node: 0 for the
+                          // root node, 1 for its children, etc.
+  label: number           // Internal label of the current node. You
+                          // can save it in accumulator and use later 
+                          // for the postrocessing in the 'verbose' mode
+                          // (please see "verbose mode postprocessing"
+                          // example).
+  producedBy: any         // Key or property name in parent node for 
+                          // current node (for example, index of array 
+                          // item, key of object or value of Set's item)
+  producedAs: ProducedAs  // How to get current node from parent.
+                          // Please see the explanation below.
+  path: array             // Full path from the root to current node.
+                          // Each item of this array is an object with
+                          // two fields: producedBy and producedAs.
+  isItADouble: boolean    // Whether the current node is a duplicate of 
+                          // a link already present in the original.
+  isItAPrimitive: boolean // Whether the value of the current node is 
+                          // of a primitive type (number, string etc.)
+  options: CloneOptions   // Options you passed to the clone() function.
 }
 ```
 
-The customizer should return an object with two fields (for a typescript, the Lenka package exports a service type **DCCustomizerReturn** that describes the fields of this object):
-```typescript
-{
-  processed: boolean
-  result: any
-}
-```
+**Note:** All fields of the object have read-only access. You cannot change values of these fields: <img src="./docs/readonly.png" height="145px;" width="596px;" alt="Read only access"/>
 
-If `processed = false`, the customizer gives `deepCopy` the ability to handle the current node by default. The returned `result` value is ignored in this case.
-If `processed = true`, the returned `result` value is used as value of corresponding node in the copy.
+The customizer must return one of two things:
+- If the customizer returns any value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.
+- If the customizer returns a special `BY_DEFAULT` value (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to deepCopy (see [use cases](#a-few-use-cases) below).
 
-`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will default to an empty object.
+`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will sets by default to an empty object.
 
-`mode` can have one of two values: `simple` or `verbose`.
+`mode` can have one of two values: `'simple'` or `'verbose'`.
 In a simple mode, `deepCopy` returns a copy of the original object.
 In verbose mode, the function returns an object with three properties:
 ```typescript
 {
   copy: any                                       // a copy of the original object
   accumulator: DCOptions['accumulator']           // resulting accumulator value
-  originalToCopy: InternalData['originalToCopy']  // A plan whose keys are references to the nodes of the
+  sourceToTarget: InternalData['sourceToTarget']  // A plan whose keys are references to the nodes of the
               // original object and values of these keys are references to the corresponding nodes of the copy.
 }
 ```
 
 Verbose mode allows you to perform the necessary post-processing of a copy or original after copying is completed.
+
+`descriptors`: By default, Lenka copies objects without regard to [properties descriptors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor) to speed up work. This almost always gives the expected result. But if you want the descriptors of all properties of the copy to exactly match the original (for example, if you are copying an object that has some fields that have getters and/or setters), set this flag to true.
 
 -----
 
@@ -115,50 +132,50 @@ Verbose mode allows you to perform the necessary post-processing of a copy or or
 - **Typescript examples**
   - ["simple" (default) mode](#simple-default-mode)
     - [Simple usage](#t1-simple-usage)
-    - [Copy an object with circular dependencies](#t2-copy-an-object-with-circular-dependencies)
+    - [Customization to prevent redundant cloning](#t2-customization-to-prevent-redundant-cloning)
     - [Customization to limit copy levels](#t3-customization-to-limit-copy-levels)
     - [Customization to remove circular dependencies](#t4-customization-to-remove-circular-dependencies)
     - [Customization to change value of some field](#t5-customization-to-change-value-of-some-field)
   - ["verbose" mode](#verbose-mode)
     - [Using the accumulator to calculate the sum of numeric nodes](#t6-using-the-accumulator-to-calculate-the-sum-of-the-numeric-nodes-of-the-original-object)
-    - [Using originalToCopy Map for post-processing](#t7-using-an-originaltocopy-map-for-post-processing)
+    - [Using sourceToTarget Map for post-processing](#t7-using-an-sourceToTarget-map-for-post-processing)
 
 ### Simple (default) mode
 ### T.1. Simple usage
 ```typescript
-{{{ts_examples/deep_copy/example01_simple_usage.ts}}}
+{{{ts_examples/clone/example01_simple_usage.ts}}}
 ```
 
-### T.2. Copy an object with circular dependencies
+### T.2. Customization to prevent redundant cloning
 ```typescript
-{{{ts_examples/deep_copy/example02_copy_object_with_circular_dependencies.ts}}}
+{{{ts_examples/clone/example02_customization-to-prevent-redundant-cloning.ts}}}
 ```
 
 ### T.3. Customization to limit copy levels
 ```typescript
-{{{ts_examples/deep_copy/example03_customization_to_limit_copy_levels.ts}}}
+{{{ts_examples/clone/example03_customization_to_limit_copy_levels.ts}}}
 ```
 
-### T.4. Customization to remove circular dependencies
+### T.4. Customization to remove circular and duplicate dependencies
 ```typescript
-{{{ts_examples/deep_copy/example04_customization_to_remove_circular_deps.ts}}}
+{{{ts_examples/clone/example04_customization_to_remove_circular_deps.ts}}}
 ```
 
 ### T.5. Customization to change value of some field
 ```typescript
-{{{ts_examples/deep_copy/example05_customization_to_change_the_value_of_some_field.ts}}}
+{{{ts_examples/clone/example05_customization_to_change_the_value_of_some_field.ts}}}
 ```
 
 ### Verbose mode
 
-### T.6. Using the accumulator to calculate the sum of the numeric nodes of the original object.
+### T.6. Using the `accumulator` to calculate the sum of the numeric nodes of the original object.
 ```typescript
-{{{ts_examples/deep_copy/example06_verbose_mode_total.ts}}}
+{{{ts_examples/clone/example06_verbose_mode_total.ts}}}
 ```
 
-### T.7 Using an originalToCopy Map for post-processing. 
+### T.7 Using an `sourceToTarget` Map for post-processing. 
 ```typescript
-{{{ts_examples/deep_copy/example07_verbose_mode_postprocessing.ts}}}
+{{{ts_examples/clone/example07_verbose_mode_postprocessing.ts}}}
 ```
 
 ## typeOf
@@ -197,7 +214,7 @@ kindOf(WeakMap) // "function" (instead "WeakMap")
 // Well, since it does not know how to work with classes, then perhaps 
 // it will at least show the type of the instance correctly? 
 // Oops, no again.
-kindOf(myNumber) // "number" (instead "ExtNumber")
+kindOf(myNumber) // "number" (instead "extNumber")
 
 // Failed again: an async function and a (synchronous) function are two
 // different things. 
@@ -285,17 +302,18 @@ typeOf(new Promise((resolve) => { resolve(1)})) // "promise"
 }
 ```
 
-Although `NaN`, `Number.POSITIVE_INFINITY` and `Number.NEGATIVE_INFINITY` in Javascript refer to numbers, using them in calculations rarely gives the expected result.
+Although `NaN`, `Infinity`, `Number.POSITIVE_INFINITY` and `Number.NEGATIVE_INFINITY` in Javascript refer to numbers, using them in calculations rarely gives the expected result.
 For your convenience, if you specify the "`nan: true`" option, typeOf will return result for `NaN` as a separate type "nan", not a "number".
 Similarly for infinities:
 ```typescript
-typeOf(NaN)                // "number"
-typeof(nan, { nan: true }) // "nan"
-
+typeOf(NaN)                      // "number"
+typeOf(nan, { nan: true })       // "nan"
+typeOf(Infinity)                 // "number"
+typeOf (Infinity, { nan: true }) // "infinity"
 typeOf(Number.POSITIVE_INFINITY)                     // "number"
-typeof(Number.POSITIVE_INFINITY, { infinity: true }) // "+infinity"
-typeof(Number.NEGATIVE_INFINITY)                     // "number"
-typeof(Number.NEGATIVE_INFINITY, { infinity: true }) // "-infinity"
+typeOf(Number.POSITIVE_INFINITY, { infinity: true }) // "infinity"
+typeOf(Number.NEGATIVE_INFINITY)                     // "number"
+typeOf(Number.NEGATIVE_INFINITY, { infinity: true }) // "infinity"
 ```
 
 (c) 2022

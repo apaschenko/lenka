@@ -1,0 +1,72 @@
+import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+
+// Let's take the some object:
+const original: any = {
+  a: {
+    aa: {
+      aaa: 1,
+      aab: {
+        aaba: 72,
+      },
+    },
+    ab: [
+      {
+        aba: '1',
+        abb: '2',
+      },
+      {
+        abc: 3,
+        abd: { abda: 18 },
+      },
+    ],
+    ac: {
+      aca: 1,
+      acb: { acba: 'leaf' },
+    },
+  },
+  b: 33,
+};
+
+// Let's say we want to get something between a deep and a shallow copy:
+// let the top N levels of the original be copied, while the deeper
+// levels of nesting remain references to the nodes of the original
+// object.
+
+const MAX_LEVEL = 3;
+
+// To do this, we need to define a customizer function (note that the
+// package provides service
+// types to describe the parameters and return the customizer).
+// This function will be called for each node of the original object.
+function customizer(params: CustomizerParams): any {
+  // It takes one parameter: object. A full description of all fields
+  // of this object is provided in the README.
+  // To solve the task, we need only two fields: the current nesting
+  // level and value of the current original node.
+  const { value, level } = params;
+
+  // For nesting levels less than the threshold, let the deepCopy
+  // process the data (for this we will return `BY_DEFAULT`),
+  // and when the specified depth is reached, we will
+  // interrupt processing and return a reference to the
+  // original.
+  return level < MAX_LEVEL ? BY_DEFAULT : value;
+}
+
+// Get copy.
+const copy = clone(original, { customizer });
+
+console.log('copy === original: ', copy === original); // false
+
+// Top level items (level=0) copied
+console.log('copy.a === original.a: ', copy.a === original.a); // false
+
+// Second level (level=1) copied too.
+console.log('copy.a.ab === original.a.ab: ', copy.a.ab === original.a.ab); // false
+console.log('copy.a.ac === original.a.ac: ', copy.a.ac === original.a.ac); // false
+
+// Third level didn't copied.
+console.log(
+  'copy.a.ac.acb === original.a.ac.acb: ',
+  copy.a.ac.acb === original.a.ac.acb
+); // true

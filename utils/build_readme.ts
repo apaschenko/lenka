@@ -1,28 +1,39 @@
-import { readFile, writeFile } from 'fs/promises'
-import path from 'path'
-import rootDirObj from 'app-root-path'
-import * as json from '../coverage/coverage-summary.json'
+import { readFile, writeFile } from 'fs/promises';
+import { readFileSync } from 'fs';
+import path from 'path';
+import rootDirObj from 'app-root-path';
 
-const sourceName = 'README-raw.md'
-const destinationName = 'README.md'
-const template = /({{{)(.*?)(}}})/
+import * as jsonCoverage from '../coverage/coverage-summary.json';
 
-export default (async function() {
-  let readme = await readFile(path.join(rootDirObj.path, sourceName), 'utf8')
+const sourceName = 'README-raw.md';
+const destinationName = 'README.md';
+const template = /({{{)(.*?)(}}})/;
+const jsonPackage = JSON.parse(
+  readFileSync(path.join(rootDirObj.path, 'package.json'), 'utf8')
+);
 
-  let found
-  while(found = readme.match(template)) {
-    const [fullMatch, , fileName] = found
+export default (async function () {
+  let readme = await readFile(path.join(rootDirObj.path, sourceName), 'utf8');
 
-    const content = await readFile(path.join(rootDirObj.path, fileName), 'utf8')
+  let found;
+  while ((found = readme.match(template))) {
+    const [fullMatch, , fileName] = found;
 
-    readme = readme.replace(fullMatch, content)
+    const content = await readFile(
+      path.join(rootDirObj.path, fileName),
+      'utf8'
+    );
+
+    readme = readme.replace(fullMatch, content);
   }
 
-  const coverage = typeof json.total.lines.pct === 'number' 
-    ? (json.total.lines.pct as number).toFixed(1)
-    : json.total.lines.pct
-  readme = readme.replace('[[[coverage]]]', `${coverage}`)
+  const coverage =
+    typeof jsonCoverage.total.lines.pct === 'number'
+      ? jsonCoverage.total.lines.pct.toFixed(1)
+      : jsonCoverage.total.lines.pct;
+  readme = readme
+    .replace('[[[coverage]]]', `${coverage}`)
+    .replace('[[[version]]]', jsonPackage.version);
 
-  await writeFile(path.join(rootDirObj.path, destinationName), readme)
-})()
+  await writeFile(path.join(rootDirObj.path, destinationName), readme);
+})();
