@@ -7,6 +7,7 @@ import * as jsonCoverage from '../coverage/coverage-summary.json';
 
 const sourceName = 'README-raw.md';
 const destinationName = 'README.md';
+const picBase = 'https://raw.githubusercontent.com/apaschenko/lenka/docs/docs';
 const template = /({{{)(.*?)(}}})/;
 const jsonPackage = JSON.parse(
   readFileSync(path.join(rootDirObj.path, 'package.json'), 'utf8')
@@ -33,7 +34,8 @@ export default (async function () {
       : jsonCoverage.total.lines.pct;
   readme = readme
     .replace('[[[coverage]]]', `${coverage}`)
-    .replace('[[[version]]]', jsonPackage.version);
+    .replace('[[[version]]]', jsonPackage.version)
+    .replace(/\[{3}picURL]{3}/g, picBase);
 
   await writeFile(path.join(rootDirObj.path, destinationName), readme);
 })();

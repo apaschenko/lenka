@@ -100,7 +100,7 @@ The customizer takes one parameter: this is an object (for typescript, the Lenka
 }
 ```
 
-**Note:** All fields of the object have read-only access. You cannot change values of these fields: <img src="./docs/readonly.png" height="145px;" width="596px;" alt="Read only access"/>
+**Note:** All fields of the object have read-only access. You cannot change values of these fields: <img src="[[[picURL]]]/readonly.png" height="145px;" width="596px;" alt="Read only access"/>
 
 The customizer must return one of two things:
 - If the customizer returns any value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.

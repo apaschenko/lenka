@@ -100,7 +100,8 @@ The customizer takes one parameter: this is an object (for typescript, the Lenka
 }
 ```
 
-**Note:** All fields of the object have read-only access. You cannot change their value.
+**Note:** All fields of the object have read-only access. You cannot change values of these fields: <img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/readonly.png" height="145;" width="596" alt="Read only access"/>
+
 The customizer must return one of two things:
 - If the customizer returns any value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.
 - If the customizer returns a special `BY_DEFAULT` value (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to deepCopy (see [use cases](#a-few-use-cases) below).
