@@ -97,7 +97,10 @@ export declare class Results {
     get options(): RawCloneOptions;
     get result(): any;
     setByLabel: (label: number, value: any) => void;
+    deleteByLabel: (label: number) => void;
+    private _deleteByLabel;
     private _setByLabel;
+    private: any;
     private _summary;
 }
 export declare class Summary {
@@ -107,6 +110,7 @@ export declare class Summary {
     getTargetBySource(source: unknown): unknown;
     setAndGetResult(result: unknown): Results;
     setByLabel(label: number, rawData: unknown): void;
+    deleteByLabel(label: number): void;
     get accumulator(): Record<PropertyKey, any>;
     get result(): unknown;
     get rawOptions(): RawCloneOptions;
@@ -114,6 +118,7 @@ export declare class Summary {
     get roots(): Source[];
     private buildFinalOptions;
     private initRoots;
+    private checkLabel;
     private _accumulator;
     private _sourcesToLabels;
     private _allSources;

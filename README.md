@@ -48,12 +48,20 @@ if the original object contains circular and/or duplicate referenceses, then all
 To control the behavior of `clone`, you can pass an options object (for typescript, the Lenka package exports **CloneOptions** interface that describes the fields of this object). All fields of this object are optional.
 ```typescript
 {
-  customizer?: (params: CustomizerParams) => unknown
   accumulator?: Record<PropertyKey, any> // default is {} (empty object)
   output?: 'simple' | 'verbose'          // default is 'simple'
   descriptors?: boolean                  // default is false
+  customizer?: (params: CustomizerParams) => unknown
 }
 ```
+`accumulator` this is where your `customizer` function will store data between calls. If you don't set a value for this field, it will sets by default to an empty object.
+
+`output` can have one of two values: `'simple'` or `'verbose'`.
+In a simple mode, `clone` returns a copy of the original object.
+In verbose mode, the function returns an instance of [Results](#results) class.
+Verbose mode allows you to perform the necessary post-processing of a copy or original after copying is completed.
+
+`descriptors`: By default, Lenka copies objects without regard to [properties descriptors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor) to speed up work. This almost always gives the expected result. But if you want the descriptors of all properties of the copy to exactly match the original (for example, if you are copying an object that has some fields that have getters and/or setters), set this flag to true.
 
 `customizer` is a reference to your customizer function.
 ```typescript
@@ -67,7 +75,7 @@ This customizer will be called for the each node of an original object (for each
 
 The customizer takes one parameter: this is an object (for typescript, the Lenka package exports a service type **CustomizerParams** that describes the fields of this object).
 ```typescript
-const parameters = {
+interface CustomizerParams {
   accumulator: Record<PropertyKey, any> // Place where you can save some
                           // data between customizer calls, if necessary
                           // (see options.accumulator above).
@@ -82,8 +90,8 @@ const parameters = {
   label: number           // Internal label of the current node. You
                           // can save it in accumulator and use later 
                           // for the postrocessing in the 'verbose' mode
-                          // (please see "verbose mode postprocessing"
-                          // example).
+                          // (please see "Using setByLabel method for 
+                          // post-processing" example below).
   producedBy: any         // Key or property name in parent node for 
                           // current node (for example, index of array 
                           // item, key of object or value of Set's item)
@@ -100,48 +108,50 @@ const parameters = {
 }
 ```
 
-**Note:** All fields of the object have read-only access. You cannot change values of these fields: <img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/readonly.png" height="145;" width="596" alt="Read only access"/>
+**Note A:** All fields of the object have read-only access. You cannot change values of these fields: <img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/readonly.png" height="145" width="596" alt="Read only access"/>
 
-The customizer must return one of two things:
-- If the customizer returns any value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.
-- If the customizer returns a special `BY_DEFAULT` value (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to deepCopy (see [use cases](#a-few-use-cases) below).
+**Note B:** `accumulator` field of `CustomizerParams` has `Record<PropertyKey, any>` type (general plain object). But the structure of the accumulator is usually known in advance. Therefore, for your convenience, the package provides two useful `CustomizerParams` type extensions: `CustParamsAccSoft<ACC_TYPE>` and `CustParamsAccStrict<ACC_TYPE>`.
+<img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/autocomplete.png" alt="CustomizerParams with typization"/>
 
-`accumulator` this is where your setup function will store data between calls. If you don't set a value for this field, it will sets by default to an empty object.
-
-`mode` can have one of two values: `'simple'` or `'verbose'`.
-In a simple mode, `deepCopy` returns a copy of the original object.
-In verbose mode, the function returns an object with three properties:
+The customizer must return one of three things:
+- If the customizer returns a special `BY_DEFAULT` symbol (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to `clone` (see [use cases](#a-few-use-cases) below).
+- If the customizer returns a special `MISSING` symbol (you should import it from the lenka package: `import {MISSING} from 'lenka'`), this node will be excluded from the copy.
+- If the customizer returns any other value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.
+### Results
+This class has 3 properties and 2 methods:
 ```typescript
-{
-  copy: any                                       // a copy of the original object
-  accumulator: DCOptions['accumulator']           // resulting accumulator value
-  sourceToTarget: InternalData['sourceToTarget']  // A plan whose keys are references to the nodes of the
-              // original object and values of these keys are references to the corresponding nodes of the copy.
+interface Results {
+  result: any
+  accumulator: Record<PropertyKey, any>
+  options: CloneOptions // Options you passed to the clone() function.
+  setByLabel: (label: number, value: any) => void
+  deleteByLabel: (label: number) => void
 }
 ```
-
-Verbose mode allows you to perform the necessary post-processing of a copy or original after copying is completed.
-
-`descriptors`: By default, Lenka copies objects without regard to [properties descriptors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor) to speed up work. This almost always gives the expected result. But if you want the descriptors of all properties of the copy to exactly match the original (for example, if you are copying an object that has some fields that have getters and/or setters), set this flag to true.
-
+- `result` - a copy (the same as clone function returns in simple mode)
+- `accumulator` - in which the `сustomizer()` can store some data
+- `options` - options you passed to the clone() function.
+- `setByLabel` - this function takes two arguments:
+  - `label` - the label of node
+  - `value` - new value of node
 -----
 
 ## A few use cases
 (You can find all these examples in `/src/examples` folder)
 
 - **Typescript examples**
-  - ["simple" (default) mode](#simple-default-mode)
+  - ["simple" (default) output mode](#simple-default-output-mode)
     - [Simple usage](#t1-simple-usage)
     - [Customization to prevent redundant cloning](#t2-customization-to-prevent-redundant-cloning)
     - [Customization to limit copy levels](#t3-customization-to-limit-copy-levels)
     - [Customization to remove circular dependencies](#t4-customization-to-remove-circular-dependencies)
     - [Customization to change value of some field](#t5-customization-to-change-value-of-some-field)
-  - ["verbose" mode](#verbose-mode)
+  - ["verbose" output mode](#verbose-output-mode)
     - [Using the accumulator to calculate the sum of numeric nodes](#t6-using-the-accumulator-to-calculate-the-sum-of-the-numeric-nodes-of-the-original-object)
-    - [Using sourceToTarget Map for post-processing](#t7-using-an-sourceToTarget-map-for-post-processing)
+    - [Using setByLabel method for post-processing](#t7-using-setbylabel-method-for-post-processing)
 
-### Simple (default) mode
-### T.1. Simple usage
+### Simple (default) output mode
+#### T.1. Simple usage
 ```typescript
 import { clone } from '../../src';
 
@@ -185,7 +195,7 @@ console.log(
 
 ```
 
-### T.2. Customization to prevent redundant cloning
+#### T.2. Customization to prevent redundant cloning
 ```typescript
 import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
 
@@ -226,7 +236,7 @@ console.log(
 
 ```
 
-### T.3. Customization to limit copy levels
+#### T.3. Customization to limit copy levels
 ```typescript
 import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
 
@@ -303,7 +313,7 @@ console.log(
 
 ```
 
-### T.4. Customization to remove circular and duplicate dependencies
+#### T.4. Customization to remove circular and duplicate dependencies
 ```typescript
 import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
 
@@ -352,7 +362,7 @@ console.log(JSON.stringify(copy, null, 4));
 
 ```
 
-### T.5. Customization to change value of some field
+#### T.5. Customization to change value of some field
 ```typescript
 import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
 
@@ -402,9 +412,9 @@ console.log(JSON.stringify(copy, null, 4));
 
 ```
 
-### Verbose mode
+### Verbose output mode
 
-### T.6. Using the `accumulator` to calculate the sum of the numeric nodes of the original object.
+#### T.6. Using the `accumulator` to calculate the sum of the numeric nodes of the original object.
 ```typescript
 import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
 
@@ -469,7 +479,7 @@ console.log(`Total number of item: ${accumulator.count}`); // 40
 
 ```
 
-### T.7 Using an `sourceToTarget` Map for post-processing. 
+#### T.7 Using `setByLabel` method for post-processing. 
 ```typescript
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable prettier/prettier */
