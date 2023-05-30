@@ -67,7 +67,7 @@ This customizer will be called for the each node of an original object (for each
 
 The customizer takes one parameter: this is an object (for typescript, the Lenka package exports a service type **CustomizerParams** that describes the fields of this object).
 ```typescript
-{
+const parameters = {
   accumulator: Record<PropertyKey, any> // Place where you can save some
                           // data between customizer calls, if necessary
                           // (see options.accumulator above).

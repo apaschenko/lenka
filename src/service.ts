@@ -386,9 +386,17 @@ export class Results {
 
   setByLabel: (label: number, value: any) => void = this._setByLabel.bind(this);
 
-  private _setByLabel(label: number, rawData: unknown) {
+  deleteByLabel: (label: number) => void = this._deleteByLabel.bind(this);
+
+  private _deleteByLabel(label: number): void {
+    return this._summary.deleteByLabel(label);
+  }
+
+  private _setByLabel(label: number, rawData: unknown): void {
     return this._summary.setByLabel(label, rawData);
   }
+
+  private
 
   private _summary: Summary;
 }
@@ -443,13 +451,7 @@ export class Summary {
   }
 
   setByLabel(label: number, rawData: unknown): void {
-    if (typeof label !== 'number') {
-      throw new TypeError('Parameter of setByLabel function must be a number.');
-    }
-
-    if (label > this._allSources.length || label < 0) {
-      throw new TypeError('Invalid parameter of setByLabel function.');
-    }
+    this.checkLabel(label);
 
     const source = this._allSources[label];
     const parentTarget = source.parentSource.target;
@@ -473,6 +475,32 @@ export class Summary {
     }
 
     source.target = rawData;
+  }
+
+  deleteByLabel(label: number): void {
+    this.checkLabel(label);
+
+    const source = this._allSources[label];
+    const parentTarget = source.parentSource.target;
+
+    switch (source.producedAs) {
+      case 'key':
+        (parentTarget as Map<unknown, unknown>).delete(source.producedBy);
+        break;
+
+      case 'property':
+        delete (parentTarget as object)[source.producedBy];
+        break;
+
+      case 'value':
+        (parentTarget as Set<unknown>).delete(source.target);
+        break;
+
+      case 'root':
+        throw new TypeError(`You can't delete a root node!`);
+    }
+
+    source.target = MISSING;
   }
 
   get accumulator() {
@@ -516,6 +544,16 @@ export class Summary {
 
       this._roots.push(source);
       this.addToAllSources(source);
+    }
+  }
+
+  private checkLabel(label: number): void {
+    if (typeof label !== 'number') {
+      throw new TypeError('Parameter of setByLabel/deleteLabel functions must be a number.');
+    }
+
+    if (label > this._allSources.length || label < 0) {
+      throw new TypeError('Invalid parameter of setByLabel/deleteLabel functions.');
     }
   }
 

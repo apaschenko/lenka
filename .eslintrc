@@ -1,0 +1,130 @@
+{
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "extends": [
+    "airbnb-typescript/base",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:import/errors",
+    "plugin:import/typescript",
+    "plugin:import/warnings",
+    "plugin:node/recommended",
+    "plugin:promise/recommended",
+    "plugin:security/recommended",
+    "plugin:sonarjs/recommended",
+    "plugin:unicorn/recommended",
+    "plugin:eslint-comments/recommended",
+    "plugin:prettier/recommended",
+    "prettier"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2020,
+    "project": "./tsconfig.json",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "promise",
+    "security",
+    "sonarjs",
+    "prettier"
+  ],
+  "rules": {
+    "no-unused-vars": "off",
+    "dot-notation": "off",
+    "class-methods-use-this": "off",
+    "no-restricted-syntax": "off",
+    "no-plusplus": "off",
+    "sort-imports": "off",
+    "no-console": "off",
+    "promise/no-callback-in-promise": ["error", { "exceptions": ["next"] }],
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "import/order": [
+      "error",
+      {
+        "newlines-between": "always",
+        "alphabetize": { "order": "ignore" },
+        "groups": [
+          ["builtin", "external"],
+          ["internal", "parent", "sibling", "index"]
+        ]
+      }
+    ],
+    "import/prefer-default-export": "off",
+    "import/no-unresolved": "off",
+    "node/no-missing-import": [
+      "error",
+      {
+        "allowModules": [],
+        "tryExtensions": [".ts", ".js", ".json"]
+      }
+    ],
+    "node/no-unpublished-import": "off",
+    "node/no-unsupported-features/es-syntax": "off",
+    "unicorn/filename-case": "off",
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/no-fn-reference-in-iterator": "off",
+    "unicorn/no-null": "off",
+    "unicorn/prefer-export-from": "off",
+    "unicorn/no-console-spaces": "off",
+    "unicorn/numeric-separators-style": "off",
+    "eslint-comments/no-unused-disable": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/restrict-template-expressions": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "@typescript-eslint/no-unsafe-return": "warn",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-param-reassign": "off",
+    "import/no-cycle": "warn",
+    "unicorn/prefer-json-parse-buffer": "off",
+    "unicorn/prefer-node-protocol": "off",
+    "security/detect-object-injection": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/consistent-destructuring": "warn",
+    "prettier/prettier": ["error", {"singleQuote": true, "parser": "flow"}]
+  },
+  "overrides": [
+    {
+      "files": ["./migrations/**/*.*", "./dialogs/**/*.*", "./src/models/*.ts"],
+      "rules": {
+        "max-classes-per-file": "off"
+      }
+    },
+    {
+      "files": ["./src/routes/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-misused-promises": "off"
+      }
+    }
+  ],
+  "settings": {
+    "import/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
+    "import/resolver": {
+      "node": {
+        "extensions": [".ts"]
+      }
+    }
+  }
+}
