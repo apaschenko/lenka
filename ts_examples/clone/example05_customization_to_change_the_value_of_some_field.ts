@@ -25,7 +25,7 @@ function customizer(params: CustomizerParams): any {
 
   // To solve the task, we need only one field: "producedBy" that
   // contains a name of the field.
-  const { producedBy } = params;
+  const { key } = params;
 
   // If the node on which the customizer is not "updatedAt",
   // let the deepCopy process the data (for this we
@@ -33,7 +33,7 @@ function customizer(params: CustomizerParams): any {
   // interrupt processing, returning the result.
 
   // eslint-disable-next-line prettier/prettier
-  return producedBy === 'updatedAt'
+  return key === 'updatedAt'
     ? new Date().toISOString()
     : BY_DEFAULT;
 }

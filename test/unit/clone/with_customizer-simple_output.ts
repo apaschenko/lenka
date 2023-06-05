@@ -89,7 +89,7 @@ describe('===== clone [with customizer: simple output] =====', () => {
     const customizer = (params: CustomizerParams): any => {
       let value;
 
-      switch (params.producedBy) {
+      switch (params.key) {
         case 'e':
           value = MISSING;
           break;

@@ -22,14 +22,7 @@
 
 // const acc = { a, summ: 0 };
 
-
-
-
-
 // clone(a)
-
-
-
 
 // function customizer(params: CustomizerParams): any {
 //   params.accumulator.someKey = 'a'; // it will work
@@ -51,10 +44,33 @@
 //   return BY_DEFAULT;
 // }
 
+// const engines = [
+//   { 
+//     type: 'steam',
+//     applyIn: new Set([{ kind: 'locomobiles' }, { kind: 'mills' }]),
+//   },
+//   { 
+//     type: 'jet',
+//     applyIn: new Set<any>([{kind: 'rocket' }]),
+//   }
+// ];
 
+// const boeing = new Map<string, string | object>([
+//   ['name', 'Boeing'],
+//   ['engines', engines[1]],
+// ]);
+
+// engines[1].applyIn.add({ kind: 'aircraft', trademark: boeing });
+
+// const accumulator = { someKey: [] };
+
+// const copy = clone(engines, { customizer, accumulator });
+
+
+// clone(copy)
 // // Get copy.
-// const original = { qq: 'ww'}
-// const { result, accumulator, setByLabel } = clone(original, {
+// //const original = { qq: 'ww'}
+// const { result, setByLabel } = clone(original, {
 //   customizer,
 //   accumulator: { wolf: [], hare: [], fox: [] },
 //   output: 'verbose',

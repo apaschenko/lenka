@@ -36,10 +36,6 @@ export interface AllCloneOptions {
     raw: RawCloneOptions;
 }
 export declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
-interface PathItem {
-    producedBy: unknown;
-    producedAs: ProducedAs;
-}
 export declare class Source {
     constructor(summary: Summary);
     createChild(producedBy: unknown, producedAs: ProducedAs): Source;
@@ -130,16 +126,14 @@ export declare class Summary {
 export declare class CustomizerParams {
     constructor(source: Source);
     get value(): Source['value'];
+    get key(): Source['producedBy'];
     get parent(): CustomizerParams;
     get root(): CustomizerParams;
     get index(): Source['index'];
     get level(): Source['level'];
     get label(): Source['label'];
-    get producedBy(): Source['producedBy'];
-    get produsedAs(): ProducedAs;
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
-    get path(): PathItem[];
     get accumulator(): FinalCloneOptions['accumulator'];
     get options(): RawCloneOptions;
     private _source;

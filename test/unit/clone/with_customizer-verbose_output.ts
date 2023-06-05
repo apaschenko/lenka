@@ -15,11 +15,11 @@ interface CustParamsToCollectLabels extends CustomizerParams {
 }
 
 function customizerToCollectLabels(params: CustParamsToCollectLabels): any {
-  if (params.producedBy === 'a' && params.level === 1) {
+  if (params.key === 'a' && params.level === 1) {
     params.accumulator.labelA = params.label;
-  } else if (params.producedBy === 'c' && params.level === 3) {
+  } else if (params.key === 'c' && params.level === 3) {
     params.accumulator.labelC = params.label;
-  } else if (params.producedBy == 0 && params.level === 2) {
+  } else if (params.key == 0 && params.level === 2) {
     params.accumulator.label0 = params.label;
   }
 
@@ -97,14 +97,14 @@ describe('===== clone [with customizer: verbose output] =====', () => {
 
       acc.counter += 1;
 
-      acc.sequence += `${
-        params.path.map((item) => item.producedBy).join(',') || 'root'
-      }(${params.level})[${params.produsedAs}]${
-        params.isItAPrimitive ? 'pr.' : 'obj.'
-      }${params.isItAdouble ? 'double' : 'new'};`;
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      acc.sequence += `${params.label}(${params.key || 'root'})[${
+        params.level
+      }]${params.isItAPrimitive ? 'prm.' : 'obj.'}${
+        params.isItAdouble ? 'double' : 'new'
+      };`;
 
       acc.rootLabel = params.root.label;
-      acc.rootProducedAs = params.root.produsedAs;
 
       return BY_DEFAULT;
     };
@@ -126,15 +126,13 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     expect(copy.accumulator).to.deep.equal({
       counter: 23,
       sequence:
-        'root(0)[root]obj.new;a(1)[property]pr.new;b(1)[property]obj.new;b,0(2)[property]pr.new;' +
-        'b,1(2)[property]pr.new;b,2(2)[property]obj.new;b,2,bbc(3)[property]obj.new;b,2,bbc,0(4)[property]pr.new;' +
-        'b,2,bbc,1(4)[property]obj.new;b,2,bbc,1,xxx(5)[property]obj.new;b,2,bbc,1,xxx,0(6)[property]pr.new;' +
-        'c(1)[property]obj.new;c,d(2)[property]pr.new;c,e(2)[property]pr.new;c,f(2)[property]obj.new;' +
-        'c,f,0(3)[property]obj.new;c,f,0,g(4)[property]obj.new;c,f,0,g,0(5)[property]pr.new;' +
-        'c,f,0,g,1(5)[property]obj.new;c,f,0,g,1,0(6)[property]pr.new;c,f,0,g,1,1(6)[property]pr.new;' +
-        'c,f,1(3)[property]pr.new;loop(1)[property]obj.double;',
+        '0(root)[0]obj.new;1(a)[1]prm.new;2(b)[1]obj.new;3(0)[2]prm.new;' +
+        '4(1)[2]prm.new;5(2)[2]obj.new;6(bbc)[3]obj.new;7(0)[4]prm.new;' +
+        '8(1)[4]obj.new;9(xxx)[5]obj.new;10(0)[6]prm.new;11(c)[1]obj.new;' +
+        '12(d)[2]prm.new;13(e)[2]prm.new;14(f)[2]obj.new;15(0)[3]obj.new;' +
+        '16(g)[4]obj.new;17(0)[5]prm.new;18(1)[5]obj.new;19(0)[6]prm.new;' +
+        '20(1)[6]prm.new;21(1)[3]prm.new;22(loop)[1]obj.double;',
       rootLabel: 0,
-      rootProducedAs: 'root',
     });
   });
 

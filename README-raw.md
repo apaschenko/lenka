@@ -80,7 +80,8 @@ interface CustomizerParams {
                           // data between customizer calls, if necessary
                           // (see options.accumulator above).
   value: any              // Value of the current node in the original.
-  parent: CustomizerParams // Reference to parent node of the original.
+  parent: CustomizerParams   // Reference to the CustomizerParams 
+                             // of parent node of the original.
                           // For the root node this is null.
   root: CustomizerParams  // Link to the CustomizerParams object of the
                           // root node
@@ -92,14 +93,9 @@ interface CustomizerParams {
                           // for the postrocessing in the 'verbose' mode
                           // (please see "Using setByLabel method for 
                           // post-processing" example below).
-  producedBy: any         // Key or property name in parent node for 
+  producedBy: key         // Key or property name in parent node for 
                           // current node (for example, index of array 
                           // item, key of object or value of Set's item)
-  producedAs: ProducedAs  // How to get current node from parent.
-                          // Please see the explanation below.
-  path: array             // Full path from the root to current node.
-                          // Each item of this array is an object with
-                          // two fields: producedBy and producedAs.
   isItADouble: boolean    // Whether the current node is a duplicate of 
                           // a link already present in the original.
   isItAPrimitive: boolean // Whether the value of the current node is 
@@ -112,6 +108,12 @@ interface CustomizerParams {
 
 **Note B:** `accumulator` field of `CustomizerParams` has `Record<PropertyKey, any>` type (general plain object). But the structure of the accumulator is usually known in advance. Therefore, for your convenience, the package provides two useful `CustomizerParams` type extensions: `CustParamsAccSoft<ACC_TYPE>` and `CustParamsAccStrict<ACC_TYPE>`.
 <img src="[[[picURL]]]/autocomplete.png" alt="CustomizerParams with typization"/>
+
+**Note C:** Please note: the `root` and `parent` fields do not point to the original nodes,
+but to the CustomizerParams objects of the corresponding original nodes.
+So for example, if you need to get a link to the root node of the original, 
+you should use `root.value`.
+<img src="[[[picURL]]]/customizer-params.png" alt="Examples of CustomizerParams values"/>
 
 The customizer must return one of three things:
 - If the customizer returns a special `BY_DEFAULT` symbol (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to `clone` (see [use cases](#a-few-use-cases) below).

@@ -13,13 +13,14 @@ const original: any = {
 };
 
 function customizer(params: CustomizerParams): any {
-  console.log(
-    JSON.stringify(params.path, null, 4),
-    ', current: ',
-    params.producedBy
-  );
+  // eslint-disable-next-line prettier/prettier
+  console.log(`node ${params.label}: ${
+    JSON.stringify(params.value, null, 4)
+  }`);
+
   return BY_DEFAULT;
 }
+
 // ...and copy it.
 const copy = clone(original, { customizer });
 

@@ -100,11 +100,6 @@ export interface AllCloneOptions {
 
 export type ProducedAs = 'key' | 'property' | 'value' | 'root';
 
-interface PathItem {
-  producedBy: unknown;
-  producedAs: ProducedAs;
-}
-
 export class Source {
   constructor(summary: Summary) {
     this._summary = summary;
@@ -582,6 +577,11 @@ export class CustomizerParams {
     return this._source.value;
   }
 
+  get key(): Source['producedBy'] {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._source.producedBy;
+  }
+
   get parent(): CustomizerParams {
     return this._source.parentSource 
       ? new CustomizerParams(this._source.parentSource)
@@ -604,39 +604,12 @@ export class CustomizerParams {
     return this._source.label;
   }
 
-  get producedBy(): Source['producedBy'] {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._source.producedBy;
-  }
-
-  get produsedAs(): ProducedAs {
-    return this._source.producedAs;
-  }
-
   get isItAdouble(): boolean {
     return this._source.isItADouble;
   }
 
   get isItAPrimitive(): boolean {
     return this._source.isItAPrimitive;
-  }
-
-  get path(): PathItem[] {
-    const path: PathItem[] = [];
-    let source = this._source;
-
-    while (source.producedAs !== 'root') {
-      const pathItem: PathItem = {
-        producedBy: source.producedBy, 
-        producedAs: source.producedAs, 
-      };
-
-      path.push(pathItem);
-
-      source = source.parentSource;
-    };
-
-    return path.reverse();
   }
 
   get accumulator(): FinalCloneOptions['accumulator'] {
