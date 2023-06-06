@@ -12,6 +12,7 @@ const template = /({{{)(.*?)(}}})/;
 const jsonPackage = JSON.parse(
   readFileSync(path.join(rootDirObj.path, 'package.json'), 'utf8')
 );
+const replaceInFiles = [[/'[./]*src'/g, "'lenka'"]];
 
 export default (async function () {
   let readme = await readFile(path.join(rootDirObj.path, sourceName), 'utf8');
@@ -20,10 +21,14 @@ export default (async function () {
   while ((found = readme.match(template))) {
     const [fullMatch, , fileName] = found;
 
-    const content = await readFile(
+    let content = await readFile(
       path.join(rootDirObj.path, fileName),
       'utf8'
     );
+
+    for (const [pattern, result] of replaceInFiles) {
+      content = content.replace(pattern, <string>result);
+    }
 
     readme = readme.replace(fullMatch, content);
   }

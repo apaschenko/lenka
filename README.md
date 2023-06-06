@@ -63,7 +63,8 @@ Verbose mode allows you to perform the necessary post-processing of a copy or or
 
 `descriptors`: By default, Lenka copies objects without regard to [properties descriptors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor) to speed up work. This almost always gives the expected result. But if you want the descriptors of all properties of the copy to exactly match the original (for example, if you are copying an object that has some fields that have getters and/or setters), set this flag to true.
 
-`customizer` is a reference to your customizer function.
+`customizer` is a reference to your customizer function:
+### Customizer
 ```typescript
 function customizer(params: CustomizerParams) {
   // ...
@@ -73,7 +74,8 @@ const copy = clone(original, { customizer })
 ```
 This customizer will be called for the each node of an original object (for each key of object, each array's and set's item, etc.).
 
-The customizer takes one parameter: this is an object (for typescript, the Lenka package exports a service type **CustomizerParams** that describes the fields of this object).
+The customizer takes one parameter: this is an object (for typescript, the Lenka package exports a service type **CustomizerParams** that describes the fields of this object):
+### CustomizerParams
 ```typescript
 interface CustomizerParams {
   accumulator: Record<PropertyKey, any> // Place where you can save some
@@ -93,7 +95,7 @@ interface CustomizerParams {
                           // for the postrocessing in the 'verbose' mode
                           // (please see "Using setByLabel method for 
                           // post-processing" example below).
-  producedBy: key         // Key or property name in parent node for 
+  key: any                // Key or property name in parent node for 
                           // current node (for example, index of array 
                           // item, key of object or value of Set's item)
   isItADouble: boolean    // Whether the current node is a duplicate of 
@@ -119,6 +121,7 @@ The customizer must return one of three things:
 - If the customizer returns a special `BY_DEFAULT` symbol (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to `clone` (see [use cases](#a-few-use-cases) below).
 - If the customizer returns a special `MISSING` symbol (you should import it from the lenka package: `import {MISSING} from 'lenka'`), this node will be excluded from the copy.
 - If the customizer returns any other value, processing of the current node is considered complete and the returned result is used as the value of that node in the copy.
+
 ### Results
 This class has 3 properties and 2 methods:
 ```typescript
@@ -136,8 +139,97 @@ interface Results {
 - `setByLabel` - this function takes two arguments:
   - `label` - the label of node
   - `value` - new value of node
------
+  
+  and changes value of corresponding node in result (copy).
+- `deleteByLabel` - this function takes a label of node and removes the corresponding node from result (copy).
 
+-----
+## Postprocessing
+
+Sometimes we need to not only get an exact copy of the original object, but also modify it in some way.
+If the changes depend on the value of the current node, we can change this node directly during cloning by returning the modified value of the node from the `customizer` function or `MISSING` symbol to exclude it from the copy.
+
+But it happens that we can make a decision about modification only on the basis of some general properties of the copied object.
+For such cases, `lenka` provides a convenient post-processing mechanism.
+This mechanic uses a [customizer](#customizer) function, accumulator, node labels (`accumulator` and `label` fields of [CustomizerParams](#customizerparams) object), as well as `setByLabel` and `deleteByLabel` methods of [Results](#results).
+
+Let's illustrate how post-processing works with a simple example.
+
+Consider the hypothetical "noseball" game in which the players hit the ball with their noses.
+According to the rules of this game, after each round, one team with the fewest points is eliminated.
+
+We have a set of noseball player cards:
+```typescript
+const playes = new Set([
+  { name: 'John', age: 21, team: 'blue', points: 14 },
+  { name: 'Emma', age: 4, team: 'green', points: 5 },
+  // and also 1000 cards...
+  { name: 'Bob', age: 85, team: 'red', points: 0 };
+]);
+```
+
+And we want to not just clone this set, but also throw out the cards of all the players of the eliminated team from it.
+A team's points are the sum of the points of its players. Of course, we don't have this information until the cloning of the set is complete. Therefore, we will go the other way: when cloning, we will save the information we need in the accumulator, and after cloning, we will apply post-processing of the copy.
+
+For each team, we will count the points and collect the labels of the cards of its players in the array:
+```typescript
+type TeamInfo = { points: number, players: number[] };
+
+const acc: Record<string, TeamInfo> = {};
+
+const customizer = (params: CustParamsAccSoft<typeof acc>) => {
+  const { 
+    accumulator, 
+    label, 
+    value: { team, points } 
+  } = params;
+
+  if (team in accumulator) {
+    accumulator[team].points += points;
+    accumulator[team].players.push(label);
+  } else {
+    accumulator[team] = {
+      points,
+      players: [label];
+    }
+  }
+
+  return BY_DEFAULT;
+}
+```
+
+Let's call `clone` in verbose mode:
+```typescript
+const { result, accumulator, deleteByLabel } = clone(players, {
+  customizer,
+  accumulator: acc,
+  output: 'verbose'
+});
+```
+
+Then find the team with the minimum number of points...
+```typescript
+let eliminatedTeam: TeamInfo = { points: -1, players: [] };
+
+for (const teamInfo of Object.values(result)) {
+  if (teamInfo.points < eliminatedTeam.points) {
+    eliminatedTeam = teamInfo;
+  }
+}
+```
+...and remove the cards of its players from the result:
+```typescript
+for (const label of eliminatedTeam.players) {
+  deleteByLabel(label);
+}
+```
+That's all!
+
+Of course, you can combine post-processing with changing/removing nodes "on the fly" by returning not BY_DEFAULT value from the `customizer`.
+
+You can see another example of post-processing [here](#t7-using-setbylabel-method-for-post-processing).
+
+-----
 ## A few use cases
 (You can find all these examples in `/src/examples` folder)
 
@@ -155,7 +247,7 @@ interface Results {
 ### Simple (default) output mode
 #### T.1. Simple usage
 ```typescript
-import { clone } from '../../src';
+import { clone } from 'lenka';
 
 // Let's define a some complex object.
 const original: any = {
@@ -199,7 +291,7 @@ console.log(
 
 #### T.2. Customization to prevent redundant cloning
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some object...
 const original: any = {
@@ -241,7 +333,7 @@ console.log(
 
 #### T.3. Customization to limit copy levels
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's take the some object:
 const original: any = {
@@ -318,7 +410,7 @@ console.log(
 
 #### T.4. Customization to remove circular and duplicate dependencies
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some complex object.
 const original: any = {
@@ -367,7 +459,7 @@ console.log(JSON.stringify(copy, null, 4));
 
 #### T.5. Customization to change value of some field
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some object.
 const original: any = {
@@ -419,7 +511,7 @@ console.log(JSON.stringify(copy, null, 4));
 
 #### T.6. Using the `accumulator` to calculate the sum of the numeric nodes of the original object.
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's say a sports coach gave us his gym inventory results as
 // a Javascript object.
@@ -486,7 +578,7 @@ console.log(`Total number of item: ${accumulator.count}`); // 40
 ```typescript
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable prettier/prettier */
-import { clone, CustParamsAccStrict, BY_DEFAULT } from '../../src';
+import { clone, CustParamsAccStrict, BY_DEFAULT } from 'lenka';
 
 // Imagine that you are the director of a zoo.
 // Wolves, hares and foxes live and breed in your zoo. Each animal is
@@ -541,7 +633,7 @@ console.log('original: ', JSON.stringify(original, null, 4));
 
 // Let's copy this report, and at the same time still count the animals.
 // And if we have more hares than wolves, then we will exchange all our
-// hares for beavers in the neighboring zoo.
+// hares for beavers and remove all foxes in the neighboring zoo.
 // In order not to do the job twice, we will remember the places where
 // each of the biological species is located during copying.
 // We can easily do this because the customizer receives a label
@@ -569,10 +661,11 @@ function customizer(params: CustParamsAccStrict<typeof acc>): any {
 }
 
 // Get copy.
-const { result, accumulator, setByLabel } = clone(original, {
-  customizer,
-  accumulator: { wolf: [], hare: [], fox: [] },
-  output: 'verbose',
+const { result, accumulator, setByLabel, deleteByLabel } =
+  clone(original, {
+    customizer,
+    accumulator: { wolf: [], hare: [], fox: [] },
+    output: 'verbose',
 });
 
 for (const [name, places] of Object.entries(accumulator)) {
@@ -581,11 +674,15 @@ for (const [name, places] of Object.entries(accumulator)) {
 
 // if there were more hares than wolves, then we'll change all
 // hares for beavers.
-const { hare, wolf } = accumulator;
+const { hare, wolf, fox } = accumulator;
 if (hare.length > wolf.length) {
   // So, let's do it!
   for (const label of hare) {
     setByLabel(label as number, 'beaver');
+  }
+
+  for (const label of fox) {
+    deleteByLabel(label as number);
   }
 }
 

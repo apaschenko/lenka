@@ -55,7 +55,7 @@ console.log('original: ', JSON.stringify(original, null, 4));
 
 // Let's copy this report, and at the same time still count the animals.
 // And if we have more hares than wolves, then we will exchange all our
-// hares for beavers in the neighboring zoo.
+// hares for beavers and remove all foxes in the neighboring zoo.
 // In order not to do the job twice, we will remember the places where
 // each of the biological species is located during copying.
 // We can easily do this because the customizer receives a label
@@ -83,10 +83,11 @@ function customizer(params: CustParamsAccStrict<typeof acc>): any {
 }
 
 // Get copy.
-const { result, accumulator, setByLabel } = clone(original, {
-  customizer,
-  accumulator: { wolf: [], hare: [], fox: [] },
-  output: 'verbose',
+const { result, accumulator, setByLabel, deleteByLabel } =
+  clone(original, {
+    customizer,
+    accumulator: { wolf: [], hare: [], fox: [] },
+    output: 'verbose',
 });
 
 for (const [name, places] of Object.entries(accumulator)) {
@@ -95,11 +96,15 @@ for (const [name, places] of Object.entries(accumulator)) {
 
 // if there were more hares than wolves, then we'll change all
 // hares for beavers.
-const { hare, wolf } = accumulator;
+const { hare, wolf, fox } = accumulator;
 if (hare.length > wolf.length) {
   // So, let's do it!
   for (const label of hare) {
     setByLabel(label as number, 'beaver');
+  }
+
+  for (const label of fox) {
+    deleteByLabel(label as number);
   }
 }
 
