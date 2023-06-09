@@ -1,4 +1,5 @@
-export declare function whatIsIt(wtf: any, options?: {
+export interface WhatIsItOptions {
     nan?: boolean;
     infinity?: boolean;
-}): string;
+}
+export declare function whatIsIt(wtf: any, options?: WhatIsItOptions): string;

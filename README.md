@@ -1,11 +1,10 @@
 
-# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=89.2%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=88.9%25&color=green&style=plastic&logo=github" align="right" /></span>
 
 A set of useful utilities:
-- [**isEquals**: ] 
-- [**clone**: customizable cloning of any objects or arrays with circular references](#clone)
-- [**typeOf**: intuitively obvious js typeof+instanceOf with support of user-defined and platform-specific classes](#typeof)
-
+- [**clone()**: customizable cloning of any js objects (plain object, array, buffer etc.) with circular references](#clone)
+- [**whatIsIt()**: intuitively obvious js typeof+instanceOf with support of user-defined and platform-specific classes](#whatisit)
+- [**isItTheSameAs()**: customizable recursively comparision](#isitthesameas) 
 ## Prerequisites:
 `javascript:` version >= es2015 (es6+) or `typescript:` version >= 3.4
 
@@ -17,7 +16,7 @@ For the using as node.js package: `node.js` version >= 6.4.0
 ***
 
 ## Migration from 0.2.x, 0.3.x versions
-This version has many changes compared to earlier versions. Please follow this documentation.
+This version is incompatible with 0.2 and 0.3. It has a lot of changes compared to earlier versions. Please follow this documentation.
 
 ## clone
 
@@ -169,7 +168,7 @@ const playes = new Set([
 ```
 
 And we want to not just clone this set, but also throw out the cards of all the players of the eliminated team from it.
-A team's points are the sum of the points of its players. Of course, we don't have this information until the cloning of the set is complete. Therefore, we will go the other way: when cloning, we will save the information we need in the accumulator, and after cloning, we will apply post-processing of the copy.
+A team's points are the sum of the points of its players. Of course, we don't have this information until the cloning of the set is complete. Therefore, we will go the other way: during cloning, we will save the information we need in the accumulator, and after cloning, we will apply post-processing of the copy.
 
 For each team, we will count the points and collect the labels of the cards of its players in the array:
 ```typescript
@@ -209,13 +208,9 @@ const { result, accumulator, deleteByLabel } = clone(players, {
 
 Then find the team with the minimum number of points...
 ```typescript
-let eliminatedTeam: TeamInfo = { points: -1, players: [] };
-
-for (const teamInfo of Object.values(result)) {
-  if (teamInfo.points < eliminatedTeam.points) {
-    eliminatedTeam = teamInfo;
-  }
-}
+const eliminatedTeam = Object.values(accumulator).sort((a, b) => {
+  return a.points - b.points;
+})[0];
 ```
 ...and remove the cards of its players from the result:
 ```typescript
@@ -227,7 +222,7 @@ That's all!
 
 Of course, you can combine post-processing with changing/removing nodes "on the fly" by returning not BY_DEFAULT value from the `customizer`.
 
-You can see another example of post-processing [here](#t7-using-setbylabel-method-for-post-processing).
+You can see another example of post-processing [here](#t7-using-setbylabel-and-deletebylabel-methods-for-post-processing).
 
 -----
 ## A few use cases
@@ -242,7 +237,7 @@ You can see another example of post-processing [here](#t7-using-setbylabel-metho
     - [Customization to change value of some field](#t5-customization-to-change-value-of-some-field)
   - ["verbose" output mode](#verbose-output-mode)
     - [Using the accumulator to calculate the sum of numeric nodes](#t6-using-the-accumulator-to-calculate-the-sum-of-the-numeric-nodes-of-the-original-object)
-    - [Using setByLabel method for post-processing](#t7-using-setbylabel-method-for-post-processing)
+    - [Using setByLabel and deleteByLabel methods for post-processing](#t7-using-setbylabel-and-deletebylabel-methods-for-post-processing)
 
 ### Simple (default) output mode
 #### T.1. Simple usage
@@ -574,7 +569,7 @@ console.log(`Total number of item: ${accumulator.count}`); // 40
 
 ```
 
-#### T.7 Using `setByLabel` method for post-processing. 
+#### T.7 Using `setByLabel` and `deleteByLabel` methods for post-processing. 
 ```typescript
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable prettier/prettier */
@@ -693,10 +688,10 @@ console.log('Result: ', JSON.stringify(result, null, 4));
 
 ```
 
-## typeOf
+## whatIsIt()
 
 ### Motivation
-The built-in `typeof` javascript operator does not work satisfactorily because it has remained unchanged from the earliest versions of the language.
+The built-in `typeof` javascript operator does not work satisfactorily because it still unchanged from the earliest versions of the JS language.
 There are many alternative solutions, but they all have serious drawbacks: Almost all of them do not work well with user-defined classes, as well as platform-specific classes (for example, Node.js classes).
 Let's take for example one of the most popular solutions - [kind-of](https://www.npmjs.com/package/kind-of):
 ```typescript
@@ -748,24 +743,24 @@ So, my expectations from a correct utility of this type:
 ### Including to your code:
 
 **typescript:**
-`import { typeOf } from lenka`
+`import { whatIsIt } from lenka`
 
 **javascript:**
-`const { typeOf } = require('lenka')`
+`const { whatIsIt } = require('lenka')`
 
 ### Usage:
 ```typescript
-const type = typeOf(anyData)
+const type = whatIsIt(anyData)
 // or
-const copy = typeOf(anyData, options)
+const copy = whatIsIt(anyData, options)
 ```
 The second parameter can be passed to the function is an options. 
 At the moment there are only two of them and they indicate how they 
-should be processed NaN and Infinities ([see below](#typeof-options)).
+should be processed NaN and Infinities ([see below](#whatisit-options)).
 
-### Examples of the typeOf() output:
+### Examples of the whatIsIt() output:
 ```typescript
-import { typeOf } from lenka
+import { whatIsIt } from lenka
 import EventEmitter from 'events'
 
 class MyClass {
@@ -778,38 +773,38 @@ class MyClassExt extends Number {
 
 const constMyClass = MyClass
 
-typeOf(WeakMap)                                 // "WeakMap"
-typeOf(new WeakMap())                           // "weakMap"
-typeOf(new Set())                               // "set"
-typeOf({ a: 1, b: 2})                           // "object"
-typeOf(new Object(null))                        // "object"
-typeOf(function myFunction(a) { return a })     // "function"
-typeOf(MyClass)                                 // "MyClass"
-typeOf(new MyClass())                           // "myClass"
-typeOf(MyClassExt)                              // "MyClassExt"
-typeOf(new MyClassExt())                        // "myClassExt"
-typeOf(constMyClass)                            // "MyClass"
-typeOf(EventEmitter)                            // "EventEmitter"
-typeOf(new EventEmitter())                      // "eventEmitter"
-typeOf(async function myAsyncFunction() {})     // "asyncFunction"
-typeOf(function* myGenerator() { yield 1 })     // "generatorFunction"
-typeOf([1, 2, 3])                               // "array"
-typeOf(/.*.a/g)                                 // "regExp"
-typeOf(Number)                                  // "Number"
-typeOf(Number(1))                               // "number"
-typeOf(7)                                       // "number"
-typeOf('www')                                   // "string"
-typeOf(null)                                    // "null"
-typeOf(undefined)                               // "undefined"
-typeOf(void 0)                                  // "undefined"
-typeOf(true)                                    // "boolean"
-typeOf(Symbol('unic'))                          // "symbol"
-typeOf(Promise)                                 // "Promise"
-typeOf(new Promise((resolve) => { resolve(1)})) // "promise"
+whatIsIt(WeakMap)                             // "WeakMap"
+whatIsIt(new WeakMap())                       // "weakMap"
+whatIsIt(new Set())                           // "set"
+whatIsIt({ a: 1, b: 2})                       // "object"
+whatIsIt(new Object(null))                    // "object"
+whatIsIt(function myFunction(a) { return a }) // "function"
+whatIsIt(MyClass)                             // "MyClass"
+whatIsIt(new MyClass())                       // "myClass"
+whatIsIt(MyClassExt)                          // "MyClassExt"
+whatIsIt(new MyClassExt())                    // "myClassExt"
+whatIsIt(constMyClass)                        // "MyClass"
+whatIsIt(EventEmitter)                        // "EventEmitter"
+whatIsIt(new EventEmitter())                  // "eventEmitter"
+whatIsIt(async function myAsyncFunction() {}) // "asyncFunction"
+whatIsIt(function* myGenerator() { yield 1 }) // "generatorFunction"
+whatIsIt([1, 2, 3])                           // "array"
+whatIsIt(/.*.a/g)                             // "regExp"
+whatIsIt(Number)                              // "Number"
+whatIsIt(Number(1))                           // "number"
+whatIsIt(7)                                   // "number"
+whatIsIt('www')                               // "string"
+whatIsIt(null)                                // "null"
+whatIsIt(undefined)                           // "undefined"
+whatIsIt(void 0)                              // "undefined"
+whatIsIt(true)                                // "boolean"
+whatIsIt(Symbol('unic'))                      // "symbol"
+whatIsIt(Promise)                             // "Promise"
+whatIsIt(new Promise((resolve) => { resolve(1)})) // "promise"
 // etc.
 ```
 
-### typeOf options
+### whatIsIt options
 ```typescript
 {
   nan?: boolean      // default is false
@@ -818,17 +813,55 @@ typeOf(new Promise((resolve) => { resolve(1)})) // "promise"
 ```
 
 Although `NaN`, `Infinity`, `Number.POSITIVE_INFINITY` and `Number.NEGATIVE_INFINITY` in Javascript refer to numbers, using them in calculations rarely gives the expected result.
-For your convenience, if you specify the "`nan: true`" option, typeOf will return result for `NaN` as a separate type "nan", not a "number".
+For your convenience, if you specify the "`nan: true`" option, `whatIsIt` will return result for `NaN` as a separate type "nan", not a "number".
 Similarly for infinities:
 ```typescript
-typeOf(NaN)                      // "number"
-typeOf(nan, { nan: true })       // "nan"
-typeOf(Infinity)                 // "number"
-typeOf (Infinity, { nan: true }) // "infinity"
-typeOf(Number.POSITIVE_INFINITY)                     // "number"
-typeOf(Number.POSITIVE_INFINITY, { infinity: true }) // "infinity"
-typeOf(Number.NEGATIVE_INFINITY)                     // "number"
-typeOf(Number.NEGATIVE_INFINITY, { infinity: true }) // "infinity"
+whatIsIt(NaN)                      // "number"
+whatIsIt(nan, { nan: true })       // "nan"
+whatIsIt(Infinity)                 // "number"
+whatIsIt (Infinity, { nan: true }) // "infinity"
+whatIsIt(Number.POSITIVE_INFINITY)                     // "number"
+whatIsIt(Number.POSITIVE_INFINITY, { infinity: true }) // "infinity"
+whatIsIt(Number.NEGATIVE_INFINITY)                     // "number"
+whatIsIt(Number.NEGATIVE_INFINITY, { infinity: true }) // "infinity"
 ```
 
-(c) 2022
+## isItTheSameAs
+
+### Motivation
+
+How to compare different objects (or instances of classes, buffers, etc.) with each other?
+In different situations, we are interested in different comparisons.
+
+Sometimes we just need to compare values. That is, if we have a base class instance and a derived class instance that have the same values, we consider them the same.
+
+Sometimes we want to compare classes as well: that is, instances of the base and derived class are considered different, even if they are filled with the same values.
+
+Sometimes we also want to compare property descriptors.
+
+The function has been designed for all these situations. It has four modes of operation that determine the "strictness" of the comparison.
+
+### Including to your code:
+
+**typescript:**
+`import { isItTheSameAs } from lenka`
+
+**javascript:**
+`const { isItTheSameAs } = require('lenka')`
+
+### Usage:
+```typescript
+const type = isItTheSameAs(anyData)
+// or
+const copy = isItTheSameAs(anyData, options)
+```
+The second parameter can be passed to the function is an options:
+```typescript
+interface IsSameOptions {
+  mode: 'soft' | 'moderate' | 'strict' | 'draconian' // default is 'moderate'
+}
+``` 
+At the moment there are includes `mode` only.
+
+
+(c) 2022-2023
