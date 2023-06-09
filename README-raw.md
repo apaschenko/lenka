@@ -25,8 +25,8 @@ There are many out-of-the-box deep copy solutions (for example, `_.deepClone/dee
 These shortcomings I tried to correct in `clone`.
 
 ### Features:
-- ![done](./docs/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
-- ![done](./docs/check-mark-14.png) Advanced customization ability.
+- ![done]([[[picURL]]]/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
+- ![done]([[[picURL]]]/check-mark-14.png) Advanced customization ability.
 
 ### Including to your code:
 

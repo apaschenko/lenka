@@ -7,7 +7,7 @@ import * as jsonCoverage from '../coverage/coverage-summary.json';
 
 const sourceName = 'README-raw.md';
 const destinationName = 'README.md';
-const picBase = 'https://raw.githubusercontent.com/apaschenko/lenka/docs/docs';
+const picBase = 'https://raw.githubusercontent.com/apaschenko/lenka/dev/docs';
 const template = /({{{)(.*?)(}}})/;
 const jsonPackage = JSON.parse(
   readFileSync(path.join(rootDirObj.path, 'package.json'), 'utf8')
