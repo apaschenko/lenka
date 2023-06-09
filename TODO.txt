@@ -1,0 +1,7 @@
+1. Implement deepMerge with two array merge strategies 
+   (concatenation or "shading").
+
+2. Implement processing of constructors and property 
+   descriptors for deepCopy().
+
+3. Implement isDeepEqual()
