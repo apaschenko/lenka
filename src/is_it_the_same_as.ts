@@ -133,7 +133,7 @@ function sameInternal(original: any, toCompare: any, modeIndex: number, processe
   }
 
   if (typeof original === 'object' && typeof toCompare === 'object') {
-    isSameObject(original, toCompare, modeIndex, processedNodes);
+    return isSameObject(original, toCompare, modeIndex, processedNodes);
   }
 
   if (typeof original === 'function' && typeof toCompare === 'function') {

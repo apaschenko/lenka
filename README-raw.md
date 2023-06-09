@@ -226,7 +226,7 @@ You can see another example of post-processing [here](#t7-using-setbylabel-and-d
 
 -----
 ## A few use cases
-(You can find all these examples in `/src/examples` folder)
+(You can find all these examples [here](https://github.com/apaschenko/lenka/tree/dev/ts_examples/clone))
 
 - **Typescript examples**
   - ["simple" (default) output mode](#simple-default-output-mode)

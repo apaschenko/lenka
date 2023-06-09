@@ -1,5 +1,5 @@
 
-# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=88.9%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=89.1%25&color=green&style=plastic&logo=github" align="right" /></span>
 
 A set of useful utilities:
 - [**clone()**: customizable cloning of any js objects (plain object, array, buffer etc.) with circular references](#clone)
@@ -16,7 +16,7 @@ For the using as node.js package: `node.js` version >= 6.4.0
 ***
 
 ## Migration from 0.2.x, 0.3.x versions
-This version is incompatible with 0.2 and 0.3. It has a lot of changes compared to earlier versions. Please follow this documentation.
+This version is incompatible with 0.2 and 0.3. It has a lot of changes changes compared to earlier versions. Please follow this documentation.
 
 ## clone
 
@@ -25,8 +25,8 @@ There are many out-of-the-box deep copy solutions (for example, `_.deepClone/dee
 These shortcomings I tried to correct in `clone`.
 
 ### Features:
-- ![done](./docs/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
-- ![done](./docs/check-mark-14.png) Advanced customization ability.
+- ![done](https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
+- ![done](https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/check-mark-14.png) Advanced customization ability.
 
 ### Including to your code:
 
@@ -105,16 +105,16 @@ interface CustomizerParams {
 }
 ```
 
-**Note A:** All fields of the object have read-only access. You cannot change values of these fields: <img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/readonly.png" height="145" width="596" alt="Read only access"/>
+**Note A:** All fields of the object have read-only access. You cannot change values of these fields: <img src="https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/readonly.png" height="145" width="596" alt="Read only access"/>
 
 **Note B:** `accumulator` field of `CustomizerParams` has `Record<PropertyKey, any>` type (general plain object). But the structure of the accumulator is usually known in advance. Therefore, for your convenience, the package provides two useful `CustomizerParams` type extensions: `CustParamsAccSoft<ACC_TYPE>` and `CustParamsAccStrict<ACC_TYPE>`.
-<img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/autocomplete.png" alt="CustomizerParams with typization"/>
+<img src="https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/autocomplete.png" alt="CustomizerParams with typization"/>
 
 **Note C:** Please note: the `root` and `parent` fields do not point to the original nodes,
 but to the CustomizerParams objects of the corresponding original nodes.
 So for example, if you need to get a link to the root node of the original, 
 you should use `root.value`.
-<img src="https://raw.githubusercontent.com/apaschenko/lenka/docs/docs/customizer-params.png" alt="Examples of CustomizerParams values"/>
+<img src="https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/customizer-params.png" alt="Examples of CustomizerParams values"/>
 
 The customizer must return one of three things:
 - If the customizer returns a special `BY_DEFAULT` symbol (you should import it from the lenka package: `import {BY_DEFAULT} from 'lenka'`), it means that the customizer delegates the processing of this node to `clone` (see [use cases](#a-few-use-cases) below).
@@ -226,7 +226,7 @@ You can see another example of post-processing [here](#t7-using-setbylabel-and-d
 
 -----
 ## A few use cases
-(You can find all these examples in `/src/examples` folder)
+(You can find all these examples [here](https://github.com/apaschenko/lenka/tree/dev/ts_examples/clone))
 
 - **Typescript examples**
   - ["simple" (default) output mode](#simple-default-output-mode)
@@ -862,6 +862,31 @@ interface IsSameOptions {
 }
 ``` 
 At the moment there are includes `mode` only.
+
+### Mode values
+- `soft` -  Compare only values using js [equality operator (==)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality). In all other modes, the [strict equality (===) operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality) is used.
+  ```typescript
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: 1, c: 2}}, {mode: 'soft'});     // true
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: '1', c: '2'}}, {mode: 'soft'}); // true
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: 1, c: 3}}, {mode: 'soft'});     // false
+  ```
+
+- `moderate` - Compare only values.
+    ```typescript
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: 1, c: 2}}, {mode: 'moderate'});     // true
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: '1', c: '2'}}, {mode: 'moderate'}); // false
+  isItTheSameAs({a: {b: 1, c: 2}}, {a: {b: 1, c: 3}}, {mode: 'moderate'});     // false
+  ```
+
+- `strict` - Compare values as well as classes.
+  ```typescript
+  class MyArray extends Array {};
+  isItTheSameAs(new Array(1, 2), new Array(1, 2), {mode: 'strict'});     // true
+  isItTheSameAs(new Array(1, 2), new Array('1', '2'), {mode: 'strict'}); // false
+  isItTheSameAs(new Array(1, 2), new MyArray(1, 2), {mode: 'strict'});   // false
+  ```
+
+- `draconian` - Same as in strict mode, but also compare [property descriptors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty) as well as [extensible](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible), [freeze](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen) and [sealed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed) object statuses.
 
 
 (c) 2022-2023
