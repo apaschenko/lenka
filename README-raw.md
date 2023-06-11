@@ -21,7 +21,7 @@ This version is incompatible with 0.2 and 0.3. It has a lot of changes changes c
 ## clone
 
 ### Motivation:
-<img align="left" src="[[[picURL]]]/errors.png" alt="The most common errors">There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
+<img align="left" src="[[[picURL]]]/errors.png" alt="The most common errors" width="50%">There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
 These shortcomings I tried to correct in `clone`.
 
 ### Features:
