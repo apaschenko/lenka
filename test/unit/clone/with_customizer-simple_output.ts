@@ -246,4 +246,32 @@ describe('===== clone [with customizer: simple output] =====', () => {
     expect(copy.a?.ac).to.deep.equal(original.a?.ac);
     expect(copy.a?.ac?.acb).to.equal(original.a?.ac?.acb);
   });
+
+  it('skip nodes with MISSING', () => {
+    const original = {
+      a: new Map<string, any>([
+        ['aa', 7],
+        ['ab', 'AB'],
+        ['ac', { aca: 15 }],
+      ]),
+      b: new Set([8, '9', 'last']),
+      c: 10,
+    };
+
+    const expectedResult = {
+      a: new Map<string, any>([
+        ['aa', 7],
+        ['ac', { aca: 15 }],
+      ]),
+      b: new Set([8, 'last']),
+    };
+
+    const result = clone(original, {
+      customizer: (params: CustomizerParams) => {
+        return ['ab', '9', 'c'].includes(params.key) ? MISSING : BY_DEFAULT;
+      },
+    });
+
+    expect(expectedResult).to.deep.equal(result);
+  });
 });

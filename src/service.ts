@@ -150,29 +150,29 @@ export class Source {
     this._summary.addToSourcesToLabels(this);
   }
 
-  changeResult(result: any): void {
-    if (this._parentSource) {
-      this._target = result;
+  // changeResult(result: any): void {
+  //   if (this._parentSource) {
+  //     this._target = result;
 
-      switch (this._producedAs) {
-        case 'property':
-          (this._parentSource as object)[this._producedBy] = result;
-          break;
+  //     switch (this._producedAs) {
+  //       case 'property':
+  //         (this._parentSource as object)[this._producedBy] = result;
+  //         break;
 
-          case 'key':
-          (this._parentSource as unknown as Map<unknown, unknown>).set(this._producedBy, result);
-          break;
+  //         case 'key':
+  //         (this._parentSource as unknown as Map<unknown, unknown>).set(this._producedBy, result);
+  //         break;
 
-        case 'value':
-          (this._parentSource as unknown as Set<unknown>).delete(this._target);
-          (this._parentSource as unknown as Set<unknown>).add(result);
-          break;
+  //       case 'value':
+  //         (this._parentSource as unknown as Set<unknown>).delete(this._target);
+  //         (this._parentSource as unknown as Set<unknown>).add(result);
+  //         break;
 
-        default:
-          throw new TypeError(`Internal error S02`);
-      }
-    }
-  }
+  //       default:
+  //         throw new TypeError(`Internal error S02`);
+  //     }
+  //   }
+  // }
 
   setFlags(): void {
     this._isItMissed = this._target === MISSING;
@@ -297,9 +297,9 @@ export class Source {
     return this._isItAPrimitive;
   }
 
-  get isItCustomized(): boolean {
-    return this._isItCustomized;
-  }
+  // get isItCustomized(): boolean {
+  //   return this._isItCustomized;
+  // }
 
   get isItMissed(): boolean {
     return this._isItMissed;
@@ -309,25 +309,25 @@ export class Source {
     return this._isItProcessed;
   }
 
-  set isItProcessed(isProcessed: boolean) {
-    this._isItProcessed = isProcessed;
-  }
+  // set isItProcessed(isProcessed: boolean) {
+  //   this._isItProcessed = isProcessed;
+  // }
 
   get summary(): Summary {
     return this._summary;
   }
 
-  set summary(summary: Summary) {
-    this._summary = summary;
-  }
+  // set summary(summary: Summary) {
+  //   this._summary = summary;
+  // }
 
-  get rawOptions(): RawCloneOptions {
-    return this._summary.rawOptions;
-  }
+  // get rawOptions(): RawCloneOptions {
+  //   return this._summary.rawOptions;
+  // }
 
-  get finalOptions(): FinalCloneOptions {
-    return this._summary.finalOptions;
-  }
+  // get finalOptions(): FinalCloneOptions {
+  //   return this._summary.finalOptions;
+  // }
 
   private _value: any;
 
@@ -449,6 +449,14 @@ export class Summary {
     this.checkLabel(label);
 
     const source = this._allSources[label];
+
+    if (source.producedAs === 'root') {
+      throw new TypeError(
+        "You can't change a root node value (the whole cloning result) with" +
+        " setByLabel method! Instead, use new value directly in your code."
+      );
+    }
+
     const parentTarget = source.parentSource.target;
 
     switch (source.producedAs) {
@@ -464,9 +472,6 @@ export class Summary {
         (parentTarget as Set<unknown>).delete(source.target);
         (parentTarget as Set<unknown>).add(rawData);
         break;
-
-      case 'root':
-        throw new TypeError(`You can't change a root node value with setByLabel method!`);
     }
 
     source.target = rawData;
@@ -476,6 +481,11 @@ export class Summary {
     this.checkLabel(label);
 
     const source = this._allSources[label];
+
+    if (source.producedAs === 'root') {
+      throw new TypeError("You can't delete a root node (the whole cloning result)!");
+    }
+
     const parentTarget = source.parentSource.target;
 
     switch (source.producedAs) {
@@ -490,9 +500,6 @@ export class Summary {
       case 'value':
         (parentTarget as Set<unknown>).delete(source.target);
         break;
-
-      case 'root':
-        throw new TypeError(`You can't delete a root node!`);
     }
 
     source.target = MISSING;
@@ -548,7 +555,7 @@ export class Summary {
     }
 
     if (label > this._allSources.length || label < 0) {
-      throw new TypeError('Invalid parameter of setByLabel/deleteLabel functions.');
+      throw new TypeError('Invalid parameter of setByLabel/deleteLabel functions (out of range).');
     }
   }
 

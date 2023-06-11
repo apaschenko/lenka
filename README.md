@@ -1,5 +1,5 @@
 
-# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=89.1%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka 1.0.2<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=98.6%25&color=green&style=plastic&logo=github" align="right" /></span>
 
 A set of useful utilities:
 - [**clone()**: customizable cloning of any js objects (plain object, array, buffer etc.) with circular references](#clone)
@@ -21,7 +21,7 @@ This version is incompatible with 0.2 and 0.3. It has a lot of changes changes c
 ## clone
 
 ### Motivation:
-There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
+<img align="left" src="https://raw.githubusercontent.com/apaschenko/lenka/dev/docs/errors.png" alt="The most common errors">There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
 These shortcomings I tried to correct in `clone`.
 
 ### Features:
@@ -154,7 +154,7 @@ This mechanic uses a [customizer](#customizer) function, accumulator, node label
 
 Let's illustrate how post-processing works with a simple example.
 
-Consider the hypothetical "noseball" game in which the players hit the ball with their noses.
+Consider the hypothetical "noseball" game in which the players kick the ball with their noses.
 According to the rules of this game, after each round, one team with the fewest points is eliminated.
 
 We have a set of noseball player cards:

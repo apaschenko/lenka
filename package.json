@@ -1,6 +1,6 @@
 {
   "name": "lenka",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Typescript and javascript utilities. clone: deep copy the almost all js structures (plain objects, sets, maps, buffers, class instances etc.) with support circular/duplicate references and customizing; whatIsIt: typeof+instanceOf on steroids with support platform-specific classes",
   "main": "./lib/src/index.js",
   "types": "./lib/src/index.d.ts",

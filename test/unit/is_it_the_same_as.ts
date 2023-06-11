@@ -94,6 +94,6 @@ describe('====== isItTheSameAs ======', function() {
     } catch (error) {
       expect(error).to.be.an('error')
     }
-  })
+  });
 })
 

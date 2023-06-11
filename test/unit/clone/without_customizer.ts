@@ -259,4 +259,11 @@ describe('===== clone [without customizer] =====', () => {
     expect(copy.flags).to.be.deep.equal(original.flags);
     expect(copy.source).to.be.equal(original.source);
   });
+
+  it('error: primitive type of accumulator', () => {
+    const original = /a.*b/gi;
+    expect(clone.bind(null, original, { accumulator: 'acc' })).to.throw(
+      'The accumulator must not be a primitive type.'
+    );
+  });
 });
