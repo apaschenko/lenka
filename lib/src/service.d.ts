@@ -40,7 +40,6 @@ export declare class Source {
     constructor(summary: Summary);
     createChild(producedBy: unknown, producedAs: ProducedAs): Source;
     addToSourcesToLabels(): void;
-    changeResult(result: any): void;
     setFlags(): void;
     setValueAndType(value: unknown): void;
     get value(): any;
@@ -62,14 +61,9 @@ export declare class Source {
     get isItADouble(): boolean;
     set isItADouble(isDouble: boolean);
     get isItAPrimitive(): boolean;
-    get isItCustomized(): boolean;
     get isItMissed(): boolean;
     get isItProcessed(): boolean;
-    set isItProcessed(isProcessed: boolean);
     get summary(): Summary;
-    set summary(summary: Summary);
-    get rawOptions(): RawCloneOptions;
-    get finalOptions(): FinalCloneOptions;
     private _value;
     private _type;
     private _parentSource;
