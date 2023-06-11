@@ -3,6 +3,8 @@ Planned improvements:
    (and the corresponding flag in its options).
 2. Add "merge" function.
 
+06/11/2023 v1.0.4 Tiny improvenments.
+
 06/11/2023 v1.0.3 Exceptions generation improvenment; docs impov.; add tests.
 
 06/09/2023 v1.0.2 Fully reworked.

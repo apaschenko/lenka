@@ -21,11 +21,11 @@ This version is incompatible with 0.2 and 0.3. It has a lot of changes changes c
 ## clone
 
 ### Motivation:
-<img align="left" src="[[[picURL]]]/errors.png" alt="The most common errors" width="50%">There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
+<img align="left" src="[[[picURL]]]/errors.png" alt="The most common errors" width="30%">There are many out-of-the-box deep copy solutions (for example, `_.deepClone/deepCloneWith` from [Lodash](https://lodash.com/docs) package). But when trying to copy objects with circular references, they crashes with stack overflow, and their customization options are extremely limited. If the object contains duplicate references, a copy of each of these references is created instead of correctly reproducing the structure of the original object.
 These shortcomings I tried to correct in `clone`.
 
 ### Features:
-- ![done]([[[picURL]]]/check-mark-14.png) Correct copying of objects and arrays that contain cyclic references (by default, all circular references of the original will be reproduced in the copy).
+- ![done]([[[picURL]]]/check-mark-14.png) Correct copying of js structures (objects, maps, arraybuffers etc.) Including those that contain circular and duplicate references (by default, all circular/duplicate references of the original will be reproduced in the copy).
 - ![done]([[[picURL]]]/check-mark-14.png) Advanced customization ability.
 
 ### Including to your code:
