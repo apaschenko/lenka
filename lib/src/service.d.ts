@@ -36,8 +36,18 @@ export interface AllCloneOptions {
     raw: RawCloneOptions;
 }
 export declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
+interface SourceChildPart {
+    producedBy: Source['_producedBy'];
+    producedAs: Source['_producedAs'];
+    value: Source['_value'];
+}
 export declare class Source {
-    constructor(summary: Summary);
+    constructor(value: Source['_value']);
+    static createRootSource(params: {
+        value: Source['_value'];
+        summary: Source['summary'];
+        index: Source['_index'];
+    }): Source;
     createChild(producedBy: unknown, producedAs: ProducedAs): Source;
     addToSourcesToLabels(): void;
     setFlags(): void;
@@ -48,6 +58,7 @@ export declare class Source {
     set parentSource(parent: Source);
     get root(): Source;
     set root(root: Source);
+    get childrenPartial(): SourceChildPart[];
     get target(): any;
     set target(targetValue: unknown);
     get index(): number;
@@ -64,9 +75,11 @@ export declare class Source {
     get isItMissed(): boolean;
     get isItProcessed(): boolean;
     get summary(): Summary;
+    private buildChildrenPartial;
     private _value;
     private _type;
     private _parentSource;
+    private _childrenPartial;
     private _root;
     private _target;
     private _index;

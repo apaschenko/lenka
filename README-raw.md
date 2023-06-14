@@ -406,7 +406,7 @@ For your convenience, if you specify the "`nan: true`" option, `whatIsIt` will r
 Similarly for infinities:
 ```typescript
 whatIsIt(NaN)                      // "number"
-whatIsIt(nan, { nan: true })       // "nan"
+whatIsIt(NaN, { nan: true })       // "nan"
 whatIsIt(Infinity)                 // "number"
 whatIsIt (Infinity, { nan: true }) // "infinity"
 whatIsIt(Number.POSITIVE_INFINITY)                     // "number"

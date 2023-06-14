@@ -6,6 +6,8 @@ infer TypeFromReadonlyArray
 ? TypeFromReadonlyArray
 : never
 
+type Extends<T, U extends T> = U;
+
 export const BY_DEFAULT = Symbol('BY_DEFAULT');
 export const MISSING = Symbol('MISSING');
 
@@ -100,48 +102,88 @@ export interface AllCloneOptions {
 
 export type ProducedAs = 'key' | 'property' | 'value' | 'root';
 
+interface SourceChildPart {
+  producedBy: Source['_producedBy'];
+  producedAs: Source['_producedAs'];
+  value: Source['_value'];
+}
+
+type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
+
+const restrictedProperties: Record<PieceTypeWithRP, Set<string>> = {
+  array: new Set(['length']),
+  arraybuffer: new Set(['byteLength', 'maxByteLength', 'resizable']),
+  dataview: new Set(['buffer', 'byteLength', 'byteOffset']),
+  regexp: new Set([
+    'dotAll', 'flags', 'global', 'hasIndices', 'ignoreCase', 'multiline', 'source', 'sticky', 'unicode'
+  ]),
+};
+
 export class Source {
-  constructor(summary: Summary) {
-    this._summary = summary;
-    this._producedAs = 'root';
+  constructor(value: Source['_value']) {
+    this.setValueAndType(value);
+    this.buildChildrenPartial();
+
+    this._isItCustomized = false;
+    this._isItMissed = false;
+    this._isItProcessed = false;
+  }
+
+  static createRootSource(params: {
+    value: Source['_value'];
+    summary: Source['summary'];
+    index: Source['_index'];
+  }): Source {
+    const { value, summary, index } = params;
+
+    const source = new Source(value);
+
+    source._parentSource = null;
+    source._root = source;
+    source._index = index;
+    source._level = 0;
+    source._producedAs = 'root';
+    source._summary = summary;
+    source._isItADouble = !!summary.getTargetBySource(value);
+    summary.addToAllSources(source);
+
+    return source;
   }
 
   createChild(producedBy: unknown, producedAs: ProducedAs): Source {
-    let childRawData: unknown;
+    let value: unknown;
 
     if (this._isItAPrimitive) {
-        childRawData = MISSING;
+        value = MISSING;
     } else {
       switch (producedAs) {
         case 'key':
-          childRawData = (this._value as Map<unknown, unknown>).get(producedBy);
+          value = (this._value as Map<unknown, unknown>).get(producedBy);
           break;
         case 'property':
-          childRawData = (this._value as object)[producedBy as string];
+          value = (this._value as object)[producedBy as string];
           break;
         case 'value':
-          childRawData = producedBy;
+          value = producedBy;
           break;
         default:
           throw new TypeError(`Internal error S01`);
       }
     }
+  
+    const summary = this._summary;
 
-    const prevTarget = this._summary.getTargetBySource(childRawData);
-    const isItADouble = !!prevTarget;
+    const child = new Source(value);
 
-    const child = new Source(this._summary);
-
-    child.setValueAndType.call(child, childRawData);
     child._parentSource = this;
     child._root = this._root;
     child._index = this._index;
     child._level = this._level + 1;
     child._producedBy = producedBy;
     child._producedAs = producedAs;
-    child._isItADouble = isItADouble;
-
-    this._summary.addToAllSources(child);
+    child._summary = summary;
+    child._isItADouble = !!summary.getTargetBySource(value);
+    summary.addToAllSources(child);
 
     return child;
   }
@@ -243,6 +285,10 @@ export class Source {
     this._root = root;
   }
 
+  get childrenPartial() {
+    return this._childrenPartial;
+  }
+
   get target(): any {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this._target;
@@ -265,7 +311,7 @@ export class Source {
   }
 
   set level(level: number) {
-    this._level = 0;
+    this._level = level;
   }
 
   get label(): number {
@@ -329,11 +375,44 @@ export class Source {
   //   return this._summary.finalOptions;
   // }
 
+  private buildChildrenPartial(): void {
+    this._childrenPartial = [];
+
+    if (this._isItAPrimitive) {
+      return;
+    }
+
+    for (const producedBy of Reflect.ownKeys(this.value as object)) {
+      if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
+        this._childrenPartial.push({
+          producedBy,
+          value: this.value[producedBy],
+          producedAs: 'property',
+        })
+      }
+    }
+
+    const isSet = this._type === 'set';
+    const isMap = this._type === 'map';
+
+    if (isSet || isMap) {
+      for (const [producedBy, value] of (this.value as Set<any>).entries()) {
+        this.childrenPartial.push({
+          producedBy,
+          value,
+          producedAs: isSet ? 'value' : 'key',
+        })
+      }
+    }
+  }
+
   private _value: any;
 
   private _type: PieceType;
 
   private _parentSource: Source;
+
+  private _childrenPartial: SourceChildPart[];
 
   private _root: Source;
 
@@ -535,17 +614,14 @@ export class Summary {
   }
 
   private initRoots(rawData: any[]): void {
-    for (const [index, raw] of rawData.entries()) {
-      const source = new Source(this);
-      source.setValueAndType(raw);
-      source.parentSource = null;
-      source.root = source;
-      source.index = index;
-      source.level = 0;
-      source.isItADouble = false;
+    for (const [index, value] of rawData.entries()) {
+      const source = Source.createRootSource({
+        value,
+        index,
+        summary: this,
+      });
 
       this._roots.push(source);
-      this.addToAllSources(source);
     }
   }
 
