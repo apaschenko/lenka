@@ -1,17 +1,8 @@
 // eslint-disable-next-line prettier/prettier
-export type TypeFromReadonlyArray<T extends ReadonlyArray<unknown>> = T extends ReadonlyArray<
-// eslint-disable-next-line @typescript-eslint/no-shadow
-infer TypeFromReadonlyArray
->
-? TypeFromReadonlyArray
-: never
-
 type Extends<T, U extends T> = U;
 
 export const BY_DEFAULT = Symbol('BY_DEFAULT');
 export const MISSING = Symbol('MISSING');
-
-export type MissingType = typeof MISSING;
 
 const PrimitiveTypesSet = [
   'boolean',
@@ -24,7 +15,7 @@ const PrimitiveTypesSet = [
   MISSING,
 ] as const;
 
-export type PrimitiveType = TypeFromReadonlyArray<typeof PrimitiveTypesSet>;
+type PrimitiveType = typeof PrimitiveTypesSet[number];
 
 const ReducedObjTypesSet = [
   'date',
@@ -36,53 +27,75 @@ const ReducedObjTypesSet = [
 
 const VocabularyTypesSet = ['array', 'map', 'object'] as const;
 
-// type Vocabularies = TypeFromReadonlyArray<typeof VocabularyTypesSet>;
+type InternalVocabularies = typeof VocabularyTypesSet[number];
 
-const CollectionTypesSet = ['array', 'set', 'object'] as const; // Yes, arrays are vocabularies and collections
+const CollectionTypesSet = [...VocabularyTypesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
 
-// type Collections = TypeFromReadonlyArray<typeof CollectionTypesSet>;
+type InternalCollections = typeof CollectionTypesSet[number];
 
-const InternalExtendedObjTypesSet = [...VocabularyTypesSet, ...CollectionTypesSet] as const;
+const VocabularyType = 'vocabulary' as const;
 
-const VocabularyType = 'vocabularies';
+const CollectionType = 'collection' as const;
 
-const CollectionType = 'collection';
+type ParamsVocabularies = InternalVocabularies | typeof VocabularyType;
 
-const ParamsExtendedObjTypesSet = [...InternalExtendedObjTypesSet, VocabularyType, CollectionType] as const;
+type ParamsCollections = InternalCollections | typeof CollectionType;
 
-export const ParamsActionsSet = ['replace', 'merge', 'diff'] as const;
+//const ParamsExtendedObjTypesSet = [...CollectionTypesSet, VocabularyType, CollectionType] as const;
 
-export const InternalActionsSet = [
-  ...ParamsActionsSet,
-  'vocabulariesMerge',
+const ParamsCollectionActionsSet = ['replace', 'union', 'diff'] as const;
+
+const ParamsVocabularyActionSet = [...ParamsCollectionActionsSet, 'stack'] as const;
+
+const InternalCollectionActionsSet = [
+  ...ParamsCollectionActionsSet,
   'collectionsMerge',
-  'vocabulariesDiff',
   'collectionsDiff'
 ] as const;
 
-export type ReducedObjType = TypeFromReadonlyArray<typeof ReducedObjTypesSet>;
+const InternalVocabularyActionsSet = [
+  ...InternalCollectionActionsSet,
+  'vocabulariesMerge',
+  'vocabulariesDiff'
+] as const;
 
-export type ParamsExtendedObjType = TypeFromReadonlyArray<typeof ParamsExtendedObjTypesSet>;
+type ReducedObjType = typeof ReducedObjTypesSet[number];
 
-export type InternalExtendedObjType = TypeFromReadonlyArray<typeof InternalExtendedObjTypesSet>;
+export type InternalExtendedObjType = typeof CollectionTypesSet[number];
 
 const MetaTypeSet = ['vocabulary', 'collection', 'primitive'] as const;
 
-export type MetaType = TypeFromReadonlyArray<typeof MetaTypeSet>;
+export type MetaType = typeof MetaTypeSet[number];
 
-export type ParamsAction = TypeFromReadonlyArray<typeof ParamsActionsSet>;
+export type ParamsCollectionAction = typeof ParamsCollectionActionsSet[number];
 
-export type InternalAction = TypeFromReadonlyArray<typeof InternalActionsSet>;
+export type ParamsVocabularyAction = typeof ParamsVocabularyActionSet[number];
 
-export type ParamsActions = {
-  [type in ParamsExtendedObjType]?: ParamsAction;
+type InternalCollectionAction = typeof InternalCollectionActionsSet[number];
+
+type InternalVocabularyAction = typeof InternalVocabularyActionsSet[number];
+
+type ParamsCollectionsActions = {
+  [type in ParamsCollections]: ParamsCollectionAction; 
 }
 
-export type InternalActions = {
-  [type in InternalExtendedObjType]?: InternalAction;
+type ParamsVocabulariesActions = {
+  [type in ParamsVocabularies]: ParamsVocabularyAction;
 }
 
-export type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
+type ParamsActions = ParamsCollectionsActions | ParamsVocabulariesActions;
+
+type InternalCollectionsActions = {
+  [type in InternalCollections]: InternalCollectionAction;
+}
+
+type InternalVocabulariesActions = {
+  [type in InternalVocabularies]: InternalVocabularyAction;
+}
+
+type InternalActions = InternalCollectionsActions | InternalVocabulariesActions;
+
+type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
 
 export interface FinalCloneOptions {
   customizer?: (params: CustomizerParams) => unknown;
@@ -95,18 +108,20 @@ export type RawCloneOptions = Partial<FinalCloneOptions>;
 
 export type CloneOptions = RawCloneOptions;
 
-export interface AllCloneOptions {
-  final: FinalCloneOptions,
-  raw: RawCloneOptions,
+interface GeneralCombineOptions {
+  accumulator: FinalCloneOptions['accumulator'];
+}
+interface FinalCombineOptions extends GeneralCombineOptions {
+  actions: InternalActions;
 }
 
-export type ProducedAs = 'key' | 'property' | 'value' | 'root';
-
-interface SourceChildPart {
-  producedBy: Source['_producedBy'];
-  producedAs: Source['_producedAs'];
-  value: Source['_value'];
+interface RawCombineOptions extends GeneralCombineOptions {
+  actions: ParamsActions;
 }
+
+type ProducedAs = 'key' | 'property' | 'value' | 'root';
+
+type SourceChildPart = Pick<Source, 'producedBy' | 'producedAs' | 'value' | 'index'>;
 
 type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
 
@@ -192,34 +207,10 @@ export class Source {
     this._summary.addToSourcesToLabels(this);
   }
 
-  // changeResult(result: any): void {
-  //   if (this._parentSource) {
-  //     this._target = result;
-
-  //     switch (this._producedAs) {
-  //       case 'property':
-  //         (this._parentSource as object)[this._producedBy] = result;
-  //         break;
-
-  //         case 'key':
-  //         (this._parentSource as unknown as Map<unknown, unknown>).set(this._producedBy, result);
-  //         break;
-
-  //       case 'value':
-  //         (this._parentSource as unknown as Set<unknown>).delete(this._target);
-  //         (this._parentSource as unknown as Set<unknown>).add(result);
-  //         break;
-
-  //       default:
-  //         throw new TypeError(`Internal error S02`);
-  //     }
-  //   }
-  // }
-
   setFlags(): void {
     this._isItMissed = this._target === MISSING;
 
-    this._isItCustomized = this.summary.finalOptions.customizer
+    this._isItCustomized = this.summary.finalCloneOptions.customizer
       && this.target !== BY_DEFAULT;
 
     this._isItProcessed = this._isItCustomized
@@ -232,7 +223,122 @@ export class Source {
     }
   }
 
-  setValueAndType(value: unknown) {
+  get value() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._value;
+  }
+
+  get type() {
+    return this._type;
+  }
+
+  get parentSource() {
+    return this._parentSource;
+  }
+
+  set parentSource(parent: Source) {
+    this._parentSource = parent;
+  }
+
+  get root() {
+    return this._root;
+  }
+
+  set root(root: Source) {
+    this._root = root;
+  }
+
+  get childrenPartial() {
+    return this._childrenPartial;
+  }
+
+  get target(): any {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._target;
+  }
+
+  set target(targetValue: unknown) {
+    this._target = targetValue;
+  }
+
+  get index() {
+    return this._index;
+  }
+
+  set index(index: number) {
+    this._index = index;
+  }
+
+  get level() {
+    return this._level;
+  }
+
+  set level(level: number) {
+    this._level = level;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  set label(label: number) {
+    this._label = label;
+  }
+
+  get producedBy() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._producedBy;
+  }
+
+  get producedAs() {
+    return this._producedAs;
+  }
+
+  get isItADouble() {
+    return this._isItADouble;
+  }
+
+  set isItADouble(isDouble: boolean) {
+    this._isItADouble = isDouble;
+  }
+
+  get isItAPrimitive() {
+    return this._isItAPrimitive;
+  }
+
+  // get isItCustomized(): boolean {
+  //   return this._isItCustomized;
+  // }
+
+  get isItMissed() {
+    return this._isItMissed;
+  }
+
+  get isItProcessed() {
+    return this._isItProcessed;
+  }
+
+  // set isItProcessed(isProcessed: boolean) {
+  //   this._isItProcessed = isProcessed;
+  // }
+
+  get summary() {
+    return this._summary;
+  }
+
+  // set summary(summary: Summary) {
+  //   this._summary = summary;
+  // }
+
+  // get rawOptions(): RawCloneOptions {
+  //   return this._summary.rawOptions;
+  // }
+
+  // get finalOptions(): FinalCloneOptions {
+  //   return this._summary.finalOptions;
+  // }
+
+  private setValueAndType(value: unknown) {
     this._value = value;
 
     if (value === MISSING) {
@@ -260,121 +366,6 @@ export class Source {
     this._isItAPrimitive = PrimitiveTypesSet.includes(this._type as PrimitiveType);
   }
 
-  get value(): any {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._value;
-  }
-
-  get type(): PieceType {
-    return this._type;
-  }
-
-  get parentSource(): Source {
-    return this._parentSource;
-  }
-
-  set parentSource(parent: Source) {
-    this._parentSource = parent;
-  }
-
-  get root(): Source {
-    return this._root;
-  }
-
-  set root(root: Source) {
-    this._root = root;
-  }
-
-  get childrenPartial() {
-    return this._childrenPartial;
-  }
-
-  get target(): any {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._target;
-  }
-
-  set target(targetValue: unknown) {
-    this._target = targetValue;
-  }
-
-  get index(): number {
-    return this._index;
-  }
-
-  set index(index: number) {
-    this._index = index;
-  }
-
-  get level(): number {
-    return this._level;
-  }
-
-  set level(level: number) {
-    this._level = level;
-  }
-
-  get label(): number {
-    return this._label;
-  }
-
-  set label(label: number) {
-    this._label = label;
-  }
-
-  get producedBy(): any {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._producedBy;
-  }
-
-  get producedAs(): ProducedAs {
-    return this._producedAs;
-  }
-
-  get isItADouble(): boolean {
-    return this._isItADouble;
-  }
-
-  set isItADouble(isDouble: boolean) {
-    this._isItADouble = isDouble;
-  }
-
-  get isItAPrimitive(): boolean {
-    return this._isItAPrimitive;
-  }
-
-  // get isItCustomized(): boolean {
-  //   return this._isItCustomized;
-  // }
-
-  get isItMissed(): boolean {
-    return this._isItMissed;
-  }
-
-  get isItProcessed(): boolean {
-    return this._isItProcessed;
-  }
-
-  // set isItProcessed(isProcessed: boolean) {
-  //   this._isItProcessed = isProcessed;
-  // }
-
-  get summary(): Summary {
-    return this._summary;
-  }
-
-  // set summary(summary: Summary) {
-  //   this._summary = summary;
-  // }
-
-  // get rawOptions(): RawCloneOptions {
-  //   return this._summary.rawOptions;
-  // }
-
-  // get finalOptions(): FinalCloneOptions {
-  //   return this._summary.finalOptions;
-  // }
-
   private buildChildrenPartial(): void {
     this._childrenPartial = [];
 
@@ -386,8 +377,9 @@ export class Source {
       if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
         this._childrenPartial.push({
           producedBy,
-          value: this.value[producedBy],
+          value: this._value[producedBy],
           producedAs: 'property',
+          index: this._index,
         })
       }
     }
@@ -401,6 +393,7 @@ export class Source {
           producedBy,
           value,
           producedAs: isSet ? 'value' : 'key',
+          index: this._index,
         })
       }
     }
@@ -446,15 +439,15 @@ export class Results {
     this._summary = summary;
   }
 
-  get accumulator(): FinalCloneOptions['accumulator'] {
+  get accumulator() {
     return this._summary.accumulator;
   }
 
-  get options(): RawCloneOptions {
-    return this._summary.rawOptions;
+  get options() {
+    return this._summary.rawCloneOptions;
   }
 
-  get result(): any {
+  get result() {
     return this._summary.result;
   }
 
@@ -476,7 +469,7 @@ export class Results {
 }
 
 export class Summary {
-  constructor(rawData: unknown[], rawOptions?: RawCloneOptions) {
+  constructor(rawData: unknown[], operation: 'clone' | 'combine', rawOptions?: RawCloneOptions | RawCombineOptions) {
     this._sourcesToLabels = new Map();
     this._allSources = [];
     this._roots = [];
@@ -491,9 +484,12 @@ export class Summary {
       }
     }
 
-    this._rawOptions = rawOptions;
-
-    this.buildFinalOptions();
+    if (operation === 'clone') {
+      this._rawCloneOptions = rawOptions;
+      this.buildCloneFinalOptions();
+    } else {
+      this.buildCombineFinalOptions();
+    }
 
     this.initRoots(rawData);
   }
@@ -588,29 +584,33 @@ export class Summary {
     return this._accumulator;
   }
 
-  get result(): unknown {
+  get result() {
     return this._result;
   }
 
-  get rawOptions(): RawCloneOptions {
-    return this._rawOptions;
+  get rawCloneOptions() {
+    return this._rawCloneOptions;
   }
 
-  get finalOptions(): FinalCloneOptions {
-    return this._finalOptions;
+  get finalCloneOptions() {
+    return this._finalCloneOptions;
   }
 
   get roots() {
     return this._roots;
   }
 
-  private buildFinalOptions(): void {
-    this._finalOptions = {
-      customizer: this.rawOptions?.customizer,
-      accumulator: this.rawOptions?.accumulator || {},
-      output: this.rawOptions?.output || 'simple',
-      descriptors: this.rawOptions?.descriptors || false,
+  private buildCloneFinalOptions(): void {
+    this._finalCloneOptions = {
+      customizer: this._rawCloneOptions?.customizer,
+      accumulator: this._rawCloneOptions?.accumulator || {},
+      output: this._rawCloneOptions?.output || 'simple',
+      descriptors: this._rawCloneOptions?.descriptors || false,
     }
+  }
+
+  private buildCombineFinalOptions(): void {
+
   }
 
   private initRoots(rawData: any[]): void {
@@ -645,9 +645,13 @@ export class Summary {
 
   private _result: unknown;
 
-  private _rawOptions: RawCloneOptions;
+  private _rawCloneOptions: RawCloneOptions;
 
-  private _finalOptions: FinalCloneOptions;
+  private _finalCloneOptions: FinalCloneOptions;
+
+  private _rawCombineOptions: RawCombineOptions;
+
+  private _finalCombineOptions: FinalCombineOptions;
 }
 
 export class CustomizerParams {
@@ -655,52 +659,52 @@ export class CustomizerParams {
     this._source = source;
   }
 
-  get value(): Source['value'] {
+  get value() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this._source.value;
   }
 
-  get key(): Source['producedBy'] {
+  get key() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this._source.producedBy;
   }
 
-  get parent(): CustomizerParams {
+  get parent() {
     return this._source.parentSource 
       ? new CustomizerParams(this._source.parentSource)
       : null;
   }
 
-  get root(): CustomizerParams {
+  get root() {
     return new CustomizerParams(this._source.root);
   }
 
-  get index(): Source['index'] {
+  get index() {
     return this._source.index;
   }
 
-  get level(): Source['level'] {
+  get level() {
     return this._source.level;
   }
 
-  get label(): Source['label'] {
+  get label() {
     return this._source.label;
   }
 
-  get isItAdouble(): boolean {
+  get isItAdouble() {
     return this._source.isItADouble;
   }
 
-  get isItAPrimitive(): boolean {
+  get isItAPrimitive() {
     return this._source.isItAPrimitive;
   }
 
-  get accumulator(): FinalCloneOptions['accumulator'] {
+  get accumulator() {
     return this._source.summary.accumulator;
   }
 
-  get options(): RawCloneOptions {
-    return this._source.summary.rawOptions;
+  get options() {
+    return this._source.summary.rawCloneOptions;
   }
 
   private _source: Source;

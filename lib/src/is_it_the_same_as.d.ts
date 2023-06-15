@@ -1,6 +1,5 @@
 declare const modes: readonly ["soft", "moderate", "strict", "draconian"];
-declare type ModeType<T extends ReadonlyArray<unknown>> = T extends ReadonlyArray<infer ModeType> ? ModeType : never;
-declare type Mode = ModeType<typeof modes>;
+declare type Mode = typeof modes[number];
 export interface IsSameOptions {
     mode: Mode;
 }

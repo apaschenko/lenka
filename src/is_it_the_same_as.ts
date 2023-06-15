@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 // eslint-disable-next-line prettier/prettier
-const modes = ['soft', 'moderate', 'strict', 'draconian'] as const
+const modes = ['soft', 'moderate', 'strict', 'draconian'] as const;
 
-type ModeType < T extends ReadonlyArray < unknown > > = T extends ReadonlyArray<
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  infer ModeType
->
-  ? ModeType
-  : never
-
-type Mode = ModeType<typeof modes>
+type Mode = typeof modes[number];
 
 export interface IsSameOptions {
   mode: Mode

@@ -1,28 +1,32 @@
-export declare type TypeFromReadonlyArray<T extends ReadonlyArray<unknown>> = T extends ReadonlyArray<infer TypeFromReadonlyArray> ? TypeFromReadonlyArray : never;
 export declare const BY_DEFAULT: unique symbol;
 export declare const MISSING: unique symbol;
-export declare type MissingType = typeof MISSING;
 declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null", typeof MISSING];
-export declare type PrimitiveType = TypeFromReadonlyArray<typeof PrimitiveTypesSet>;
+declare type PrimitiveType = typeof PrimitiveTypesSet[number];
 declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
-declare const InternalExtendedObjTypesSet: readonly ["array", "map", "object", "array", "set", "object"];
-declare const ParamsExtendedObjTypesSet: readonly ["array", "map", "object", "array", "set", "object", "vocabularies", "collection"];
-export declare const ParamsActionsSet: readonly ["replace", "merge", "diff"];
-export declare const InternalActionsSet: readonly ["replace", "merge", "diff", "vocabulariesMerge", "collectionsMerge", "vocabulariesDiff", "collectionsDiff"];
-export declare type ReducedObjType = TypeFromReadonlyArray<typeof ReducedObjTypesSet>;
-export declare type ParamsExtendedObjType = TypeFromReadonlyArray<typeof ParamsExtendedObjTypesSet>;
-export declare type InternalExtendedObjType = TypeFromReadonlyArray<typeof InternalExtendedObjTypesSet>;
+declare const VocabularyTypesSet: readonly ["array", "map", "object"];
+declare type InternalVocabularies = typeof VocabularyTypesSet[number];
+declare const CollectionTypesSet: readonly ["array", "map", "object", "set"];
+declare type InternalCollections = typeof CollectionTypesSet[number];
+declare const VocabularyType: "vocabulary";
+declare const CollectionType: "collection";
+declare type ParamsVocabularies = InternalVocabularies | typeof VocabularyType;
+declare type ParamsCollections = InternalCollections | typeof CollectionType;
+declare const ParamsCollectionActionsSet: readonly ["replace", "union", "diff"];
+declare const ParamsVocabularyActionSet: readonly ["replace", "union", "diff", "stack"];
+declare type ReducedObjType = typeof ReducedObjTypesSet[number];
+export declare type InternalExtendedObjType = typeof CollectionTypesSet[number];
 declare const MetaTypeSet: readonly ["vocabulary", "collection", "primitive"];
-export declare type MetaType = TypeFromReadonlyArray<typeof MetaTypeSet>;
-export declare type ParamsAction = TypeFromReadonlyArray<typeof ParamsActionsSet>;
-export declare type InternalAction = TypeFromReadonlyArray<typeof InternalActionsSet>;
-export declare type ParamsActions = {
-    [type in ParamsExtendedObjType]?: ParamsAction;
+export declare type MetaType = typeof MetaTypeSet[number];
+export declare type ParamsCollectionAction = typeof ParamsCollectionActionsSet[number];
+export declare type ParamsVocabularyAction = typeof ParamsVocabularyActionSet[number];
+declare type ParamsCollectionsActions = {
+    [type in ParamsCollections]: ParamsCollectionAction;
 };
-export declare type InternalActions = {
-    [type in InternalExtendedObjType]?: InternalAction;
+declare type ParamsVocabulariesActions = {
+    [type in ParamsVocabularies]: ParamsVocabularyAction;
 };
-export declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
+declare type ParamsActions = ParamsCollectionsActions | ParamsVocabulariesActions;
+declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
 export interface FinalCloneOptions {
     customizer?: (params: CustomizerParams) => unknown;
     accumulator: Record<PropertyKey, any>;
@@ -31,16 +35,14 @@ export interface FinalCloneOptions {
 }
 export declare type RawCloneOptions = Partial<FinalCloneOptions>;
 export declare type CloneOptions = RawCloneOptions;
-export interface AllCloneOptions {
-    final: FinalCloneOptions;
-    raw: RawCloneOptions;
+interface GeneralCombineOptions {
+    accumulator: FinalCloneOptions['accumulator'];
 }
-export declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
-interface SourceChildPart {
-    producedBy: Source['_producedBy'];
-    producedAs: Source['_producedAs'];
-    value: Source['_value'];
+interface RawCombineOptions extends GeneralCombineOptions {
+    actions: ParamsActions;
 }
+declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
+declare type SourceChildPart = Pick<Source, 'producedBy' | 'producedAs' | 'value' | 'index'>;
 export declare class Source {
     constructor(value: Source['_value']);
     static createRootSource(params: {
@@ -51,7 +53,6 @@ export declare class Source {
     createChild(producedBy: unknown, producedAs: ProducedAs): Source;
     addToSourcesToLabels(): void;
     setFlags(): void;
-    setValueAndType(value: unknown): void;
     get value(): any;
     get type(): PieceType;
     get parentSource(): Source;
@@ -75,6 +76,7 @@ export declare class Source {
     get isItMissed(): boolean;
     get isItProcessed(): boolean;
     get summary(): Summary;
+    private setValueAndType;
     private buildChildrenPartial;
     private _value;
     private _type;
@@ -96,9 +98,9 @@ export declare class Source {
 }
 export declare class Results {
     constructor(summary: Summary);
-    get accumulator(): FinalCloneOptions['accumulator'];
-    get options(): RawCloneOptions;
-    get result(): any;
+    get accumulator(): Record<PropertyKey, any>;
+    get options(): Partial<FinalCloneOptions>;
+    get result(): unknown;
     setByLabel: (label: number, value: any) => void;
     deleteByLabel: (label: number) => void;
     private _deleteByLabel;
@@ -107,7 +109,7 @@ export declare class Results {
     private _summary;
 }
 export declare class Summary {
-    constructor(rawData: unknown[], rawOptions?: RawCloneOptions);
+    constructor(rawData: unknown[], operation: 'clone' | 'combine', rawOptions?: RawCloneOptions | RawCombineOptions);
     addToAllSources(source: Source): void;
     addToSourcesToLabels(source: Source): void;
     getTargetBySource(source: unknown): unknown;
@@ -116,10 +118,11 @@ export declare class Summary {
     deleteByLabel(label: number): void;
     get accumulator(): Record<PropertyKey, any>;
     get result(): unknown;
-    get rawOptions(): RawCloneOptions;
-    get finalOptions(): FinalCloneOptions;
+    get rawCloneOptions(): Partial<FinalCloneOptions>;
+    get finalCloneOptions(): FinalCloneOptions;
     get roots(): Source[];
-    private buildFinalOptions;
+    private buildCloneFinalOptions;
+    private buildCombineFinalOptions;
     private initRoots;
     private checkLabel;
     private _accumulator;
@@ -127,22 +130,24 @@ export declare class Summary {
     private _allSources;
     private _roots;
     private _result;
-    private _rawOptions;
-    private _finalOptions;
+    private _rawCloneOptions;
+    private _finalCloneOptions;
+    private _rawCombineOptions;
+    private _finalCombineOptions;
 }
 export declare class CustomizerParams {
     constructor(source: Source);
-    get value(): Source['value'];
-    get key(): Source['producedBy'];
+    get value(): any;
+    get key(): any;
     get parent(): CustomizerParams;
     get root(): CustomizerParams;
-    get index(): Source['index'];
-    get level(): Source['level'];
-    get label(): Source['label'];
+    get index(): number;
+    get level(): number;
+    get label(): number;
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
-    get accumulator(): FinalCloneOptions['accumulator'];
-    get options(): RawCloneOptions;
+    get accumulator(): Record<PropertyKey, any>;
+    get options(): Partial<FinalCloneOptions>;
     private _source;
 }
 export {};

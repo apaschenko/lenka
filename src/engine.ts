@@ -14,7 +14,7 @@ interface DCArrayBuffer extends ArrayBuffer {
 }
 
 function customCopy(source: Source): void {
-  const finalOptions = source.summary.finalOptions;
+  const finalOptions = source.summary.finalCloneOptions;
 
   if (finalOptions.customizer) {
     source.target = finalOptions.customizer(new CustomizerParams(source));
@@ -36,8 +36,7 @@ function createAndRegister(
 function copyProperty(parent: Source, child: Source): void {
   const key = <PropertyKey>child.producedBy;
 
-  if (child.summary.finalOptions.descriptors) {
-    // eslint-disable-next-line prettier/prettier
+  if (child.summary.finalCloneOptions.descriptors) {
     const descr = Object.getOwnPropertyDescriptor(parent.value, key);
 
     if (!(descr.get || descr.set)) {
@@ -156,7 +155,7 @@ export type CloneReturnType<SOURCE, OPT> = OPT extends { output: 'verbose' }
 export function clone<
   SOURCE, OPT extends RawCloneOptions
 >(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE,OPT> {
-  const summary = new Summary([original], rawOptions);
+  const summary = new Summary([original], 'clone', rawOptions);
   const source = summary.roots[0];
 
   root(source);
