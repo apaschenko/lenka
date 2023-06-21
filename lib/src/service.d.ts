@@ -1,35 +1,48 @@
 export declare const BY_DEFAULT: unique symbol;
 export declare const MISSING: unique symbol;
-declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null", typeof MISSING];
+declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null"];
 declare type PrimitiveType = typeof PrimitiveTypesSet[number];
 declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
-declare const VocabularyTypesSet: readonly ["array", "map", "object"];
-declare type InternalVocabularies = typeof VocabularyTypesSet[number];
-declare const CollectionTypesSet: readonly ["array", "map", "object", "set"];
-declare type InternalCollections = typeof CollectionTypesSet[number];
-declare const VocabularyType: "vocabulary";
-declare const CollectionType: "collection";
-declare type ParamsVocabularies = InternalVocabularies | typeof VocabularyType;
-declare type ParamsCollections = InternalCollections | typeof CollectionType;
-declare const ParamsCollectionActionsSet: readonly ["replace", "union", "diff"];
-declare const ParamsVocabularyActionSet: readonly ["replace", "union", "diff", "stack"];
+declare const FinalVocabulariesSet: readonly ["array", "map", "object"];
+declare type FinalVocabularies = typeof FinalVocabulariesSet[number];
+declare const FinalCollectionsSet: readonly ["array", "map", "object", "set"];
+declare type InternalCollections = typeof FinalCollectionsSet[number];
+declare const Vocabulary: "vocabulary";
+declare const Collection: "collection";
+declare type RawVocabularies = FinalVocabularies | typeof Vocabulary;
+declare type RawCollections = InternalCollections | typeof Collection;
+declare const RawActCollectionSet: readonly ["replace", "union", "diff"];
+declare const RawActVocabularySet: readonly ["replace", "union", "diff", "stack"];
+declare const FinalCollActionsSet: readonly ["replace", "union", "diff", "collectionReplace", "collectionUnion", "collectionDiff"];
+declare const FinalVocActionsSet: readonly ["replace", "union", "diff", "collectionReplace", "collectionUnion", "collectionDiff", "vocabularyStack"];
 declare type ReducedObjType = typeof ReducedObjTypesSet[number];
-export declare type InternalExtendedObjType = typeof CollectionTypesSet[number];
+export declare type InternalExtendedObjType = typeof FinalCollectionsSet[number];
 declare const MetaTypeSet: readonly ["vocabulary", "collection", "primitive"];
 export declare type MetaType = typeof MetaTypeSet[number];
-export declare type ParamsCollectionAction = typeof ParamsCollectionActionsSet[number];
-export declare type ParamsVocabularyAction = typeof ParamsVocabularyActionSet[number];
+export declare type RawCollectionAction = typeof RawActCollectionSet[number];
+export declare type RawVocabularyAction = typeof RawActVocabularySet[number];
+declare type FinalCollectionAction = typeof FinalCollActionsSet[number];
+declare type FinalVocabularyAction = typeof FinalVocActionsSet[number];
 declare type ParamsCollectionsActions = {
-    [type in ParamsCollections]: ParamsCollectionAction;
+    [type in RawCollections]: RawCollectionAction;
 };
 declare type ParamsVocabulariesActions = {
-    [type in ParamsVocabularies]: ParamsVocabularyAction;
+    [type in RawVocabularies]: RawVocabularyAction;
 };
 declare type ParamsActions = ParamsCollectionsActions | ParamsVocabulariesActions;
+declare type InternalCollectionsActions = {
+    [type in InternalCollections]?: FinalCollectionAction;
+};
+declare type InternalVocabulariesActions = {
+    [type in FinalVocabularies]?: FinalVocabularyAction;
+};
+declare type InternalActions = InternalCollectionsActions | InternalVocabulariesActions;
 declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
+declare type ExtendedPieceType = PieceType | typeof MISSING;
+declare type AccumulatorType = Record<PropertyKey, any>;
 export interface FinalCloneOptions {
     customizer?: (params: CustomizerParams) => unknown;
-    accumulator: Record<PropertyKey, any>;
+    accumulator: AccumulatorType;
     output: 'simple' | 'verbose';
     descriptors: boolean;
 }
@@ -38,11 +51,10 @@ export declare type CloneOptions = RawCloneOptions;
 interface GeneralCombineOptions {
     accumulator: FinalCloneOptions['accumulator'];
 }
-interface RawCombineOptions extends GeneralCombineOptions {
+export interface RawCombineOptions extends GeneralCombineOptions {
     actions: ParamsActions;
 }
 declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
-declare type SourceChildPart = Pick<Source, 'producedBy' | 'producedAs' | 'value' | 'index'>;
 export declare class Source {
     constructor(value: Source['_value']);
     static createRootSource(params: {
@@ -50,16 +62,17 @@ export declare class Source {
         summary: Source['summary'];
         index: Source['_index'];
     }): Source;
-    createChild(producedBy: unknown, producedAs: ProducedAs): Source;
+    createChildrenPart(): void;
     addToSourcesToLabels(): void;
     setFlags(): void;
+    createChildByChildPart(value: Source['_value'], producedBy: unknown, producedAs: ProducedAs): Source;
     get value(): any;
-    get type(): PieceType;
+    get type(): ExtendedPieceType;
     get parentSource(): Source;
     set parentSource(parent: Source);
     get root(): Source;
     set root(root: Source);
-    get childrenPartial(): SourceChildPart[];
+    get children(): ChildPart[];
     get target(): any;
     set target(targetValue: unknown);
     get index(): number;
@@ -77,11 +90,10 @@ export declare class Source {
     get isItProcessed(): boolean;
     get summary(): Summary;
     private setValueAndType;
-    private buildChildrenPartial;
     private _value;
     private _type;
     private _parentSource;
-    private _childrenPartial;
+    private _children;
     private _root;
     private _target;
     private _index;
@@ -96,16 +108,29 @@ export declare class Source {
     private _isItMissed;
     private _isItProcessed;
 }
+export declare class ChildPart {
+    constructor(parent: Source, producedBy: Source['_producedBy'], producedAs: Source['_producedAs']);
+    createSource(): Source;
+    get producedBy(): any;
+    get value(): any;
+    get producedAs(): ProducedAs;
+    get parent(): Source;
+    private _value;
+    private _producedBy;
+    private _producedAs;
+    private _parent;
+}
 export declare class Results {
     constructor(summary: Summary);
-    get accumulator(): Record<PropertyKey, any>;
+    get accumulator(): AccumulatorType;
     get options(): Partial<FinalCloneOptions>;
+    get cloneOptions(): Partial<FinalCloneOptions>;
+    get combineOptions(): RawCombineOptions;
     get result(): unknown;
     setByLabel: (label: number, value: any) => void;
     deleteByLabel: (label: number) => void;
     private _deleteByLabel;
     private _setByLabel;
-    private: any;
     private _summary;
 }
 export declare class Summary {
@@ -116,13 +141,21 @@ export declare class Summary {
     setAndGetResult(result: unknown): Results;
     setByLabel(label: number, rawData: unknown): void;
     deleteByLabel(label: number): void;
-    get accumulator(): Record<PropertyKey, any>;
+    get accumulator(): AccumulatorType;
     get result(): unknown;
     get rawCloneOptions(): Partial<FinalCloneOptions>;
     get finalCloneOptions(): FinalCloneOptions;
+    get rawCombineOptions(): RawCombineOptions;
+    get finalCombineOptions(): {
+        accumulator: AccumulatorType;
+        actions: InternalActions;
+    };
     get roots(): Source[];
     private buildCloneFinalOptions;
     private buildCombineFinalOptions;
+    private buildCombineFinalActions;
+    private replaceMetaAction;
+    private checkAction;
     private initRoots;
     private checkLabel;
     private _accumulator;
@@ -146,7 +179,7 @@ export declare class CustomizerParams {
     get label(): number;
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
-    get accumulator(): Record<PropertyKey, any>;
+    get accumulator(): AccumulatorType;
     get options(): Partial<FinalCloneOptions>;
     private _source;
 }

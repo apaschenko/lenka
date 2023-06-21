@@ -86,7 +86,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     interface CustParams extends CustomizerParams {
       accumulator: {
         counter: number,
-        sequence: string,
+        description: string,
         rootLabel: number,
         rootProducedAs: string,
       };
@@ -98,11 +98,11 @@ describe('===== clone [with customizer: verbose output] =====', () => {
       acc.counter += 1;
 
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      acc.sequence += `${params.label}(${params.key || 'root'})[${
+      acc.description += `label: ${params.label} (key: ${params.key || 'root'}, lvl:${
         params.level
-      }]${params.isItAPrimitive ? 'prm.' : 'obj.'}${
+      }, ${params.isItAPrimitive ? 'primitive' : 'object'}, ${
         params.isItAdouble ? 'double' : 'new'
-      };`;
+      });`;
 
       acc.rootLabel = params.root.label;
 
@@ -119,19 +119,35 @@ describe('===== clone [with customizer: verbose output] =====', () => {
 
     const copy = clone(original, {
       customizer,
-      accumulator: { counter: 0, sequence: '' },
+      accumulator: { counter: 0, description: '' },
       output: 'verbose',
     });
 
     expect(copy.accumulator).to.deep.equal({
       counter: 23,
-      sequence:
-        '0(root)[0]obj.new;1(a)[1]prm.new;2(b)[1]obj.new;3(0)[2]prm.new;' +
-        '4(1)[2]prm.new;5(2)[2]obj.new;6(bbc)[3]obj.new;7(0)[4]prm.new;' +
-        '8(1)[4]obj.new;9(xxx)[5]obj.new;10(0)[6]prm.new;11(c)[1]obj.new;' +
-        '12(d)[2]prm.new;13(e)[2]prm.new;14(f)[2]obj.new;15(0)[3]obj.new;' +
-        '16(g)[4]obj.new;17(0)[5]prm.new;18(1)[5]obj.new;19(0)[6]prm.new;' +
-        '20(1)[6]prm.new;21(1)[3]prm.new;22(loop)[1]obj.double;',
+      description: 'label: 0 (key: root, lvl:0, object, new);' +
+      'label: 1 (key: a, lvl:1, primitive, new);' +
+      'label: 2 (key: b, lvl:1, object, new);' +
+      'label: 3 (key: 0, lvl:2, primitive, new);' +
+      'label: 4 (key: 1, lvl:2, primitive, new);' +
+      'label: 5 (key: 2, lvl:2, object, new);' +
+      'label: 6 (key: bbc, lvl:3, object, new);' +
+      'label: 7 (key: 0, lvl:4, primitive, new);' +
+      'label: 8 (key: 1, lvl:4, object, new);' +
+      'label: 9 (key: xxx, lvl:5, object, new);' +
+      'label: 10 (key: 0, lvl:6, primitive, new);' +
+      'label: 11 (key: c, lvl:1, object, new);' +
+      'label: 12 (key: d, lvl:2, primitive, new);' +
+      'label: 13 (key: e, lvl:2, primitive, new);' +
+      'label: 14 (key: f, lvl:2, object, new);' +
+      'label: 15 (key: 0, lvl:3, object, new);' +
+      'label: 16 (key: g, lvl:4, object, new);' +
+      'label: 17 (key: 0, lvl:5, primitive, new);' +
+      'label: 18 (key: 1, lvl:5, object, new);' +
+      'label: 19 (key: 0, lvl:6, primitive, new);' +
+      'label: 20 (key: 1, lvl:6, primitive, new);' +
+      'label: 21 (key: 1, lvl:3, primitive, new);' +
+      'label: 22 (key: loop, lvl:1, object, double);',
       rootLabel: 0,
     });
   });

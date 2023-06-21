@@ -5,6 +5,7 @@ import {
   CustomizerParams,
   RawCloneOptions,
   FinalCloneOptions,
+  RawCombineOptions,
 } from './service';
 
 interface DCArrayBuffer extends ArrayBuffer {
@@ -37,6 +38,7 @@ function copyProperty(parent: Source, child: Source): void {
   const key = <PropertyKey>child.producedBy;
 
   if (child.summary.finalCloneOptions.descriptors) {
+    // eslint-disable-next-line prettier/prettier
     const descr = Object.getOwnPropertyDescriptor(parent.value, key);
 
     if (!(descr.get || descr.set)) {
@@ -53,24 +55,26 @@ function copyKeysAndProperties(source: Source): void {
   const value: object = <object>source.value;
   const target: object = <object>source.target;
 
-  for (const { producedBy, producedAs } of source.childrenPartial) {
-    if (Object.hasOwnProperty.call(target, producedBy) && value[producedBy] === target[producedBy]
+  for (const childPart of source.children) {
+    if (Object.hasOwnProperty.call(target, childPart.producedBy) &&
+      value[childPart.producedBy] === target[childPart.producedBy]
     ) {
       continue;
     }
 
-    const child = source.createChild(producedBy, producedAs);
+    const child = childPart.createSource();
+
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    root(child);
+    cloneInternal(child);
 
     if (!child.isItMissed) {
-      switch (producedAs) {
+      switch (child.producedAs) {
         case 'property':
           copyProperty(source, child);
           break;
         
         case 'key':
-          (source.target as Map<any, any>).set(producedBy, child.target);
+          (source.target as Map<any, any>).set(child.producedBy, child.target);
           break;
 
         case 'value':
@@ -82,7 +86,9 @@ function copyKeysAndProperties(source: Source): void {
   }
 }
 
-function root(source: Source): void {
+function cloneInternal(source: Source): void {
+  source.createChildrenPart();
+
   customCopy(source);
 
   if (source.isItProcessed) {
@@ -158,10 +164,24 @@ export function clone<
   const summary = new Summary([original], 'clone', rawOptions);
   const source = summary.roots[0];
 
-  root(source);
+  cloneInternal(source);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return rawOptions?.output === 'verbose'
     ? summary.setAndGetResult(source.target)
     : source.target;
 }
+
+// type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
+//   ? Results : Source['target']
+
+// export function combine<OPT extends RawCombineOptions>(
+//   originals: Source['value'][],
+//   rawOptions?: OPT,
+// ): CombineReturnType<OPT> {
+//   if (!Array.isArray(originals)) {
+//     throw new TypeError('First argument of combine() must be an array of originals.');
+//   }
+
+//   const summary = new Summary(originals, 'combine', rawOptions);
+// }

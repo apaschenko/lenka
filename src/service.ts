@@ -12,7 +12,6 @@ const PrimitiveTypesSet = [
   'number',
   'bigint',
   'null',
-  MISSING,
 ] as const;
 
 type PrimitiveType = typeof PrimitiveTypesSet[number];
@@ -25,81 +24,98 @@ const ReducedObjTypesSet = [
   'arraybuffer',
 ] as const;
 
-const VocabularyTypesSet = ['array', 'map', 'object'] as const;
+const FinalVocabulariesSet = ['array', 'map', 'object'] as const;
 
-type InternalVocabularies = typeof VocabularyTypesSet[number];
+type FinalVocabularies = typeof FinalVocabulariesSet[number];
 
-const CollectionTypesSet = [...VocabularyTypesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
+const FinalCollectionsSet = [...FinalVocabulariesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
 
-type InternalCollections = typeof CollectionTypesSet[number];
+type InternalCollections = typeof FinalCollectionsSet[number];
 
-const VocabularyType = 'vocabulary' as const;
+const Vocabulary = 'vocabulary' as const;
 
-const CollectionType = 'collection' as const;
+const Collection = 'collection' as const;
 
-type ParamsVocabularies = InternalVocabularies | typeof VocabularyType;
+type MetaSetsTypes = typeof Vocabulary | typeof Collection;
 
-type ParamsCollections = InternalCollections | typeof CollectionType;
+type RawVocabularies = FinalVocabularies | typeof Vocabulary;
 
-//const ParamsExtendedObjTypesSet = [...CollectionTypesSet, VocabularyType, CollectionType] as const;
+type RawCollections = InternalCollections | typeof Collection;
 
-const ParamsCollectionActionsSet = ['replace', 'union', 'diff'] as const;
+const RawExtendedObjTypesSet = [...FinalCollectionsSet, Vocabulary, Collection] as const;
 
-const ParamsVocabularyActionSet = [...ParamsCollectionActionsSet, 'stack'] as const;
+type RawExtendedObjType = typeof RawExtendedObjTypesSet[number];
 
-const InternalCollectionActionsSet = [
-  ...ParamsCollectionActionsSet,
-  'collectionsMerge',
-  'collectionsDiff'
+const RawActCollectionSet = ['replace', 'union', 'diff'] as const;
+
+const MetaCollActionsSet = ['collectionReplace', 'collectionUnion', 'collectionDiff'] as const;
+
+const RawActVocabularySet = [...RawActCollectionSet, 'stack'] as const;
+
+const MetaVocActionsSet = ['vocabularyStack'] as const;
+
+const FinalCollActionsSet = [
+  ...RawActCollectionSet,
+  ...MetaCollActionsSet,
 ] as const;
 
-const InternalVocabularyActionsSet = [
-  ...InternalCollectionActionsSet,
-  'vocabulariesMerge',
-  'vocabulariesDiff'
+const FinalVocActionsSet = [
+  ...FinalCollActionsSet,
+  ...MetaVocActionsSet,
 ] as const;
 
 type ReducedObjType = typeof ReducedObjTypesSet[number];
 
-export type InternalExtendedObjType = typeof CollectionTypesSet[number];
+export type InternalExtendedObjType = typeof FinalCollectionsSet[number];
 
 const MetaTypeSet = ['vocabulary', 'collection', 'primitive'] as const;
 
 export type MetaType = typeof MetaTypeSet[number];
 
-export type ParamsCollectionAction = typeof ParamsCollectionActionsSet[number];
+export type RawCollectionAction = typeof RawActCollectionSet[number];
 
-export type ParamsVocabularyAction = typeof ParamsVocabularyActionSet[number];
+export type RawVocabularyAction = typeof RawActVocabularySet[number];
 
-type InternalCollectionAction = typeof InternalCollectionActionsSet[number];
+type FinalCollectionAction = typeof FinalCollActionsSet[number];
 
-type InternalVocabularyAction = typeof InternalVocabularyActionsSet[number];
+type FinalVocabularyAction = typeof FinalVocActionsSet[number];
 
 type ParamsCollectionsActions = {
-  [type in ParamsCollections]: ParamsCollectionAction; 
+  [type in RawCollections]: RawCollectionAction; 
 }
 
 type ParamsVocabulariesActions = {
-  [type in ParamsVocabularies]: ParamsVocabularyAction;
+  [type in RawVocabularies]: RawVocabularyAction;
 }
 
 type ParamsActions = ParamsCollectionsActions | ParamsVocabulariesActions;
 
 type InternalCollectionsActions = {
-  [type in InternalCollections]: InternalCollectionAction;
+  [type in InternalCollections]?: FinalCollectionAction;
 }
 
 type InternalVocabulariesActions = {
-  [type in InternalVocabularies]: InternalVocabularyAction;
+  [type in FinalVocabularies]?: FinalVocabularyAction;
 }
 
 type InternalActions = InternalCollectionsActions | InternalVocabulariesActions;
 
+const ActionsReplacer: Record<RawVocabularyAction, FinalVocabularyAction> = {
+  replace: 'collectionReplace',
+  union: 'collectionUnion',
+  diff: 'collectionDiff',
+  stack: 'vocabularyStack',
+};
+
 type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
+
+type ExtendedPieceType = PieceType | typeof MISSING;
+
+type AccumulatorType = Record<PropertyKey, any>;
 
 export interface FinalCloneOptions {
   customizer?: (params: CustomizerParams) => unknown;
-  accumulator: Record<PropertyKey, any>;
+  accumulator: AccumulatorType;
   output: 'simple' | 'verbose';
   descriptors: boolean;
 }
@@ -108,20 +124,27 @@ export type RawCloneOptions = Partial<FinalCloneOptions>;
 
 export type CloneOptions = RawCloneOptions;
 
+const FinalCmbOptsDefaults: {
+  accumulator: AccumulatorType;
+  actions: InternalActions;
+} = {
+  accumulator: {},
+  actions: {},
+} as const;
+
+const ValidRawCombineKeys = Object.keys(FinalCmbOptsDefaults);
+
 interface GeneralCombineOptions {
   accumulator: FinalCloneOptions['accumulator'];
 }
-interface FinalCombineOptions extends GeneralCombineOptions {
-  actions: InternalActions;
-}
 
-interface RawCombineOptions extends GeneralCombineOptions {
+type FinalCombineOptions = typeof FinalCmbOptsDefaults;
+
+export interface RawCombineOptions extends GeneralCombineOptions {
   actions: ParamsActions;
 }
 
 type ProducedAs = 'key' | 'property' | 'value' | 'root';
-
-type SourceChildPart = Pick<Source, 'producedBy' | 'producedAs' | 'value' | 'index'>;
 
 type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
 
@@ -134,11 +157,15 @@ const restrictedProperties: Record<PieceTypeWithRP, Set<string>> = {
   ]),
 };
 
+function quotedListFromArray(array: readonly string[]) {
+  return array.map((keyName) => { return '"' + keyName + '"' }).join(', ');
+}
+
 export class Source {
   constructor(value: Source['_value']) {
     this.setValueAndType(value);
-    this.buildChildrenPartial();
 
+    this._children = [];
     this._isItCustomized = false;
     this._isItMissed = false;
     this._isItProcessed = false;
@@ -165,43 +192,28 @@ export class Source {
     return source;
   }
 
-  createChild(producedBy: unknown, producedAs: ProducedAs): Source {
-    let value: unknown;
-
+  createChildrenPart(): void {
     if (this._isItAPrimitive) {
-        value = MISSING;
-    } else {
-      switch (producedAs) {
-        case 'key':
-          value = (this._value as Map<unknown, unknown>).get(producedBy);
-          break;
-        case 'property':
-          value = (this._value as object)[producedBy as string];
-          break;
-        case 'value':
-          value = producedBy;
-          break;
-        default:
-          throw new TypeError(`Internal error S01`);
-      }
-    }
-  
-    const summary = this._summary;
+     return;
+   }
 
-    const child = new Source(value);
+   for (const producedBy of Reflect.ownKeys(this.value as object)) {
+     if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
+       // eslint-disable-next-line @typescript-eslint/no-use-before-define
+       this._children.push(new ChildPart(this, producedBy, 'property'));
+     }
+   }
 
-    child._parentSource = this;
-    child._root = this._root;
-    child._index = this._index;
-    child._level = this._level + 1;
-    child._producedBy = producedBy;
-    child._producedAs = producedAs;
-    child._summary = summary;
-    child._isItADouble = !!summary.getTargetBySource(value);
-    summary.addToAllSources(child);
+   const isSet = this._type === 'set';
+   const isMap = this._type === 'map';
 
-    return child;
-  }
+   if (isSet || isMap) {
+     for (const producedBy of (this.value as Set<any>).keys()) {
+       // eslint-disable-next-line @typescript-eslint/no-use-before-define
+       this._children.push(new ChildPart(this, producedBy, isSet ? 'value' : 'key'));
+     }
+   }
+ }
 
   addToSourcesToLabels(): void {
     this._summary.addToSourcesToLabels(this);
@@ -221,6 +233,24 @@ export class Source {
     if (!this._isItCustomized && (this._isItAPrimitive || this._isItADouble)) {
       this._target = this._value;
     }
+  }
+
+  createChildByChildPart(value: Source['_value'], producedBy: unknown, producedAs: ProducedAs): Source {
+    const summary = this._summary;
+
+    const child = new Source(value);
+
+    child._parentSource = this;
+    child._root = this._root;
+    child._index = this._index;
+    child._level = this._level + 1;
+    child._producedBy = producedBy;
+    child._producedAs = producedAs;
+    child._summary = summary;
+    child._isItADouble = !!summary.getTargetBySource(value);
+    summary.addToAllSources(child);
+
+    return child;
   }
 
   get value() {
@@ -248,8 +278,8 @@ export class Source {
     this._root = root;
   }
 
-  get childrenPartial() {
-    return this._childrenPartial;
+  get children() {
+    return this._children;
   }
 
   get target(): any {
@@ -366,46 +396,13 @@ export class Source {
     this._isItAPrimitive = PrimitiveTypesSet.includes(this._type as PrimitiveType);
   }
 
-  private buildChildrenPartial(): void {
-    this._childrenPartial = [];
-
-    if (this._isItAPrimitive) {
-      return;
-    }
-
-    for (const producedBy of Reflect.ownKeys(this.value as object)) {
-      if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
-        this._childrenPartial.push({
-          producedBy,
-          value: this._value[producedBy],
-          producedAs: 'property',
-          index: this._index,
-        })
-      }
-    }
-
-    const isSet = this._type === 'set';
-    const isMap = this._type === 'map';
-
-    if (isSet || isMap) {
-      for (const [producedBy, value] of (this.value as Set<any>).entries()) {
-        this.childrenPartial.push({
-          producedBy,
-          value,
-          producedAs: isSet ? 'value' : 'key',
-          index: this._index,
-        })
-      }
-    }
-  }
-
   private _value: any;
 
-  private _type: PieceType;
+  private _type: ExtendedPieceType;
 
   private _parentSource: Source;
 
-  private _childrenPartial: SourceChildPart[];
+  private _children: ChildPart[];
 
   private _root: Source;
 
@@ -434,6 +431,58 @@ export class Source {
   private _isItProcessed: boolean;
 };
 
+export class ChildPart {
+  constructor(parent: Source, producedBy: Source['_producedBy'], producedAs: Source['_producedAs']) {
+    this._parent = parent;
+    this._producedBy = producedBy;
+    this._producedAs = producedAs;
+
+    switch (producedAs) {
+      case 'key':
+        this._value = (parent.value as Map<unknown, unknown>).get(producedBy);
+        break;
+      case 'property':
+        this._value = (parent.value as object)[producedBy as string];
+        break;
+      case 'value':
+        this._value = producedBy;
+        break;
+      default:
+        throw new TypeError(`Internal error S01`);
+    }
+  }
+
+  createSource() {
+    return this._parent.createChildByChildPart(this._value, this._producedBy, this._producedAs);
+  }
+
+  get producedBy(): any {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._producedBy;
+  }
+
+  get value() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._value;
+  }
+
+  get producedAs() {
+    return this._producedAs;
+  }
+
+  get parent() {
+    return this._parent;
+  }
+
+  private _value: Source['_value'];
+
+  private _producedBy: Source['_producedBy'];
+
+  private _producedAs: Source['_producedAs'];
+
+  private _parent: Source;
+}
+
 export class Results {
   constructor(summary: Summary) {
     this._summary = summary;
@@ -443,8 +492,17 @@ export class Results {
     return this._summary.accumulator;
   }
 
+  // deprecated
   get options() {
     return this._summary.rawCloneOptions;
+  }
+
+  get cloneOptions() {
+    return this._summary.rawCloneOptions;
+  }
+
+  get combineOptions() {
+    return this._summary.rawCombineOptions;
   }
 
   get result() {
@@ -462,8 +520,6 @@ export class Results {
   private _setByLabel(label: number, rawData: unknown): void {
     return this._summary.setByLabel(label, rawData);
   }
-
-  private
 
   private _summary: Summary;
 }
@@ -488,6 +544,7 @@ export class Summary {
       this._rawCloneOptions = rawOptions;
       this.buildCloneFinalOptions();
     } else {
+      this._rawCombineOptions = rawOptions as RawCombineOptions;
       this.buildCombineFinalOptions();
     }
 
@@ -596,6 +653,14 @@ export class Summary {
     return this._finalCloneOptions;
   }
 
+  get rawCombineOptions() {
+    return this._rawCombineOptions;
+  }
+
+  get finalCombineOptions() {
+    return this._finalCombineOptions;
+  }
+
   get roots() {
     return this._roots;
   }
@@ -610,7 +675,85 @@ export class Summary {
   }
 
   private buildCombineFinalOptions(): void {
+    this._finalCombineOptions = { ...FinalCmbOptsDefaults };
 
+    if (!this._rawCombineOptions) {
+      return;
+    }
+
+    if (typeof this._rawCombineOptions !== 'object') {
+      throw new TypeError('combine() optional "options" parameter must be an object. Please see the docs.');
+    }
+
+    const rawKeys = Object.keys(this._rawCombineOptions) as unknown as (keyof RawCombineOptions)[];
+
+    for (const key of rawKeys) {
+      if (!ValidRawCombineKeys.includes(key)) {
+        throw new TypeError(`Unknown combine() option. Valid options are: ${
+          quotedListFromArray(ValidRawCombineKeys)
+        }.`)
+      }
+
+      if (key === 'actions') {
+        this.buildCombineFinalActions();
+      } else {
+        this._finalCombineOptions[key] = this._rawCombineOptions[key];
+      }
+    }
+  }
+
+  private buildCombineFinalActions(): void {
+    const rawActions = this._rawCombineOptions.actions;
+
+    if (typeof rawActions !== 'object') {
+      throw new TypeError('combine() optional options.actions parameter must be an object. Please see the docs.');
+    }
+
+    const actionsKeys = Object.keys(rawActions) as RawExtendedObjType[];
+    const keyCollector: Partial<FinalCombineOptions> = {};
+
+    const refinedKeys = actionsKeys.reduce((kc, key) => {
+      const action = rawActions[key];
+
+      this.checkAction(key, action);
+      if (key === 'collection' || key === 'vocabulary') {
+        this.replaceMetaAction(key, action);
+      } else {
+        kc[key] = action;
+      }
+
+      return kc;
+    }, keyCollector);
+
+    this._finalCombineOptions.actions = { ...this._finalCombineOptions.actions, ...refinedKeys };
+  }  
+
+  private replaceMetaAction(key: MetaSetsTypes, action: RawVocabularyAction) {
+    const metaSet = key === 'collection' ? FinalCollectionsSet : FinalVocabulariesSet;
+    const finalActions = this._finalCombineOptions.actions;
+
+    for (const type of metaSet) {
+      finalActions[type] = ActionsReplacer[action];
+    }
+  }
+
+  private checkAction(type: RawExtendedObjType, action: RawVocabularyAction): void {
+    if (!FinalCollectionsSet.includes(type as InternalCollections)) {
+      throw new TypeError(`Invalid key "${type}" in combine() options.ations keys. Valid keys are: ${
+        quotedListFromArray(FinalCollectionsSet)
+      }.`)
+    }
+
+    if (!RawActVocabularySet.includes(action)) {
+      throw new TypeError(`Invalid action value "${action}" in combine() options.actions. Valid values are: ${
+        quotedListFromArray(RawActVocabularySet)
+      }.`)
+    }
+
+    if (!FinalVocabulariesSet.includes(type as FinalVocabularies) && 
+      !RawActCollectionSet.includes(action as RawCollectionAction)) {
+      throw new TypeError(`Action "${action}" is only allowed for vocabularies, but ${type} is not a vocabulary.`);
+    }
   }
 
   private initRoots(rawData: any[]): void {
