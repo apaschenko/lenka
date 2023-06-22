@@ -14,17 +14,6 @@ interface DCArrayBuffer extends ArrayBuffer {
   }
 }
 
-function cloneTryToCustomize(source: Source): void {
-  const finalOptions = source.summary.finalCloneOptions;
-
-  if (finalOptions.customizer) {
-    source.target = finalOptions.customizer(new CustomizerParams(source));
-  }
-
-  source.setFlags();
-  source.addToSourcesToLabels();
-}
-
 function createInstance(
   source: Source, 
   params: unknown[] = []
@@ -84,7 +73,14 @@ function copyKeysAndProperties(source: Source): void {
 }
 
 function cloneInternal(source: Source): void {
-  cloneTryToCustomize(source);
+  const finalOptions = source.summary.finalCloneOptions;
+
+  if (finalOptions.customizer) {
+    source.target = finalOptions.customizer(new CustomizerParams(source));
+  }
+
+  source.setFlags();
+  source.addToSourcesToLabels();
 
   if (source.isItProcessed) {
     return;
