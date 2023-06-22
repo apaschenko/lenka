@@ -14,7 +14,7 @@ interface DCArrayBuffer extends ArrayBuffer {
   }
 }
 
-function customCopy(source: Source): void {
+function cloneTryToCustomize(source: Source): void {
   const finalOptions = source.summary.finalCloneOptions;
 
   if (finalOptions.customizer) {
@@ -25,7 +25,7 @@ function customCopy(source: Source): void {
   source.addToSourcesToLabels();
 }
 
-function createAndRegister(
+function createInstance(
   source: Source, 
   params: unknown[] = []
   ): void {
@@ -55,14 +55,12 @@ function copyKeysAndProperties(source: Source): void {
   const value: object = <object>source.value;
   const target: object = <object>source.target;
 
-  for (const childPart of source.children) {
-    if (Object.hasOwnProperty.call(target, childPart.producedBy) &&
-      value[childPart.producedBy] === target[childPart.producedBy]
+  for (const child of source.children) {
+    if (Object.hasOwnProperty.call(target, child.producedBy) &&
+      value[child.producedBy] === target[child.producedBy]
     ) {
       continue;
     }
-
-    const child = childPart.createSource();
 
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     cloneInternal(child);
@@ -81,15 +79,12 @@ function copyKeysAndProperties(source: Source): void {
           (source.target as Set<any>).add(child.target);
           break;
       }
-      
     }
   }
 }
 
 function cloneInternal(source: Source): void {
-  source.createChildrenPart();
-
-  customCopy(source);
+  cloneTryToCustomize(source);
 
   if (source.isItProcessed) {
     return;
@@ -97,7 +92,7 @@ function cloneInternal(source: Source): void {
 
   switch (source.type) {
     case 'array':
-      createAndRegister(source, [(source.value as any[]).length]);
+      createInstance(source, [(source.value as any[]).length]);
       break;
 
     case 'arraybuffer':
@@ -106,7 +101,7 @@ function cloneInternal(source: Source): void {
         source.target = (source.value as DCArrayBuffer).slice(0);
       } else {
         const originalUnit8Array = new Uint8Array(source.value as DCArrayBuffer);
-        createAndRegister(source, [originalUnit8Array.length]);
+        createInstance(source, [originalUnit8Array.length]);
         const copyUnit8Array = new Uint8Array(<DCArrayBuffer>source.target);
     
         for (const [index, value] of originalUnit8Array.entries()) {
@@ -116,19 +111,19 @@ function cloneInternal(source: Source): void {
       break;
 
     case 'date':
-      createAndRegister(source, [+source.value]);
+      createInstance(source, [+source.value]);
       break;
 
     case 'dataview':
-      createAndRegister(source, [(source.value as DataView).buffer]);
+      createInstance(source, [(source.value as DataView).buffer]);
       break;
 
     case 'regexp':
-      createAndRegister(source, [(source.value as RegExp).source, (source.value as RegExp).flags]);
+      createInstance(source, [(source.value as RegExp).source, (source.value as RegExp).flags]);
       break;
 
     default:
-      createAndRegister(source);
+      createInstance(source);
       break;
   }
 
@@ -172,8 +167,8 @@ export function clone<
     : source.target;
 }
 
-// type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
-//   ? Results : Source['target']
+type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
+  ? Results : Source['target']
 
 // export function combine<OPT extends RawCombineOptions>(
 //   originals: Source['value'][],

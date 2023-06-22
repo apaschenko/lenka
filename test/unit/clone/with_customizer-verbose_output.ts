@@ -125,29 +125,30 @@ describe('===== clone [with customizer: verbose output] =====', () => {
 
     expect(copy.accumulator).to.deep.equal({
       counter: 23,
-      description: 'label: 0 (key: root, lvl:0, object, new);' +
-      'label: 1 (key: a, lvl:1, primitive, new);' +
-      'label: 2 (key: b, lvl:1, object, new);' +
-      'label: 3 (key: 0, lvl:2, primitive, new);' +
-      'label: 4 (key: 1, lvl:2, primitive, new);' +
-      'label: 5 (key: 2, lvl:2, object, new);' +
-      'label: 6 (key: bbc, lvl:3, object, new);' +
-      'label: 7 (key: 0, lvl:4, primitive, new);' +
-      'label: 8 (key: 1, lvl:4, object, new);' +
-      'label: 9 (key: xxx, lvl:5, object, new);' +
-      'label: 10 (key: 0, lvl:6, primitive, new);' +
-      'label: 11 (key: c, lvl:1, object, new);' +
-      'label: 12 (key: d, lvl:2, primitive, new);' +
-      'label: 13 (key: e, lvl:2, primitive, new);' +
-      'label: 14 (key: f, lvl:2, object, new);' +
-      'label: 15 (key: 0, lvl:3, object, new);' +
-      'label: 16 (key: g, lvl:4, object, new);' +
-      'label: 17 (key: 0, lvl:5, primitive, new);' +
-      'label: 18 (key: 1, lvl:5, object, new);' +
-      'label: 19 (key: 0, lvl:6, primitive, new);' +
-      'label: 20 (key: 1, lvl:6, primitive, new);' +
-      'label: 21 (key: 1, lvl:3, primitive, new);' +
-      'label: 22 (key: loop, lvl:1, object, double);',
+      description: 
+        'label: 0 (key: root, lvl:0, object, new);' +
+        'label: 1 (key: a, lvl:1, primitive, new);' +
+        'label: 2 (key: b, lvl:1, object, new);' +
+        'label: 5 (key: 0, lvl:2, primitive, new);' +
+        'label: 6 (key: 1, lvl:2, primitive, new);' +
+        'label: 7 (key: 2, lvl:2, object, new);' +
+        'label: 8 (key: bbc, lvl:3, object, new);' +
+        'label: 9 (key: 0, lvl:4, primitive, new);' +
+        'label: 10 (key: 1, lvl:4, object, new);' +
+        'label: 11 (key: xxx, lvl:5, object, new);' +
+        'label: 12 (key: 0, lvl:6, primitive, new);' +
+        'label: 3 (key: c, lvl:1, object, new);' +
+        'label: 13 (key: d, lvl:2, primitive, new);' +
+        'label: 14 (key: e, lvl:2, primitive, new);' +
+        'label: 15 (key: f, lvl:2, object, new);' +
+        'label: 16 (key: 0, lvl:3, object, new);' +
+        'label: 18 (key: g, lvl:4, object, new);' +
+        'label: 19 (key: 0, lvl:5, primitive, new);' +
+        'label: 20 (key: 1, lvl:5, object, new);' +
+        'label: 21 (key: 0, lvl:6, primitive, new);' +
+        'label: 22 (key: 1, lvl:6, primitive, new);' +
+        'label: 17 (key: 1, lvl:3, primitive, new);' +
+        'label: 4 (key: loop, lvl:1, object, new);',
       rootLabel: 0,
     });
   });
