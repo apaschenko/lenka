@@ -24,63 +24,37 @@ const ReducedObjTypesSet = [
   'arraybuffer',
 ] as const;
 
-const FinalVocabulariesSet = ['array', 'map', 'object'] as const;
+const VocabulariesSet = ['array', 'map', 'object'] as const;
 
-type FinalVocabularies = typeof FinalVocabulariesSet[number];
+type VocabulariesTypes = typeof VocabulariesSet[number];
 
-const FinalCollectionsSet = [...FinalVocabulariesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
+const CollectionsSet = [...VocabulariesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
 
-type FinalCollections = typeof FinalCollectionsSet[number];
+type CollectionsTypes = typeof CollectionsSet[number];
 
 const Vocabulary = 'vocabulary' as const;
 
 const Collection = 'collection' as const;
 
-type MetaSetsTypes = typeof Vocabulary | typeof Collection;
+const All = 'all' as const;
 
-type RawVocabularies = FinalVocabularies | typeof Vocabulary;
+const Asterisk = '*' as const;
 
-type RawCollections = FinalCollections | typeof Collection;
+const PredefActCoverSet = [...CollectionsSet, Vocabulary, Collection, All, Asterisk] as const;
 
-const RawExtendedObjTypesSet = [...FinalCollectionsSet, Vocabulary, Collection] as const;
+type PredefActCoverTypes = typeof PredefActCoverSet[number];
 
-type RawExtendedObjType = typeof RawExtendedObjTypesSet[number];
+const PredefinedActorsSet = ['replace', 'merge', 'union', 'diff'] as const;
 
-const ActionCollectionSet = ['replace', 'union', 'diff'] as const;
-
-const ActionVocabularySet = [...ActionCollectionSet, 'stack'] as const;
-
-type ActionCollection = typeof ActionCollectionSet[number];
-
-type ActionVocabulary = typeof ActionVocabularySet[number];
+export type PredefinedActors = typeof PredefinedActorsSet[number];
 
 type ReducedObjType = typeof ReducedObjTypesSet[number];
 
-export type InternalExtendedObjType = typeof FinalCollectionsSet[number];
+type InternalExtendedObjType = typeof CollectionsSet[number];
 
 const MetaTypeSet = ['vocabulary', 'collection', 'primitive'] as const;
 
 export type MetaType = typeof MetaTypeSet[number];
-
-type RawCollectionsActionsByType = {
-  [type in RawCollections]: ActionCollection; 
-}
-
-type RawVocabulariesActionsByType = {
-  [type in RawVocabularies]: ActionVocabulary;
-}
-
-type RawActionsByType = RawCollectionsActionsByType | RawVocabulariesActionsByType;
-
-type FinalCollectionsActionsByType = {
-  [type in FinalCollections]: ActionCollection;
-}
-
-type FinalVocabulariesActionsByType = {
-  [type in FinalVocabularies]: ActionVocabulary;
-}
-
-type FinalActionsByType = FinalCollectionsActionsByType | FinalVocabulariesActionsByType;
 
 type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
 
@@ -88,42 +62,86 @@ type ExtendedPieceType = PieceType | typeof MISSING;
 
 type AccumulatorType = Record<PropertyKey, any>;
 
-export interface FinalCloneOptions {
-  customizer?: (params: CustomizerParams) => unknown;
+const OutputTypeSet = ['simple', 'verbose'] as const;
+
+type OutputType = typeof OutputTypeSet[number];
+
+interface GeneralOptions {
   accumulator: AccumulatorType;
-  output: 'simple' | 'verbose';
+  output: OutputType;
   descriptors: boolean;
 }
 
-export type RawCloneOptions = Partial<FinalCloneOptions>;
+export interface FinalCloneOptions extends GeneralOptions {
+  customizer: ((params: CustomizerParams) => unknown) | null;
+}
 
-export type CloneOptions = RawCloneOptions;
+export interface FinalCombineOptions extends GeneralOptions {
+  actions: Action[];
+}
 
-const FinalCmbOptsDefaults: {
-  accumulator: AccumulatorType;
-  actions: FinalActionsByType;
-} = {
+export type CloneOptions = Partial<FinalCloneOptions>;
+
+export type CombineOptions = Partial<FinalCombineOptions>;
+
+type RawOptions = CloneOptions | CombineOptions;
+
+type FinalOptions = FinalCloneOptions | FinalCombineOptions;
+
+export type OperationType = 'combine' | 'clone';
+
+export type TypeChecker = (combineSource: CombineSource) => boolean;
+
+export type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
+
+export type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
+
+interface DCArrayBuffer extends ArrayBuffer {
+  prototype: {
+    slice: (start, end) => ArrayBuffer
+  }
+}
+
+const TypeCheckers: Record<PredefActCoverTypes, TypeChecker> = {
+  object: (combineSource: CombineSource) => { return combineSource._internalType === 'object'; },
+  array: (combineSource: CombineSource) => { return combineSource._internalType === 'array'; },
+  map: (combineSource: CombineSource) => { return combineSource._internalType === 'map'; },
+  set: (combineSource: CombineSource) => { return combineSource._internalType === 'set'; },
+  collection: (combineSource: CombineSource) => {
+    return CollectionsSet.includes(combineSource._internalType as CollectionsTypes);
+  },
+  vocabulary: (combineSource: CombineSource) => {
+    return VocabulariesSet.includes(combineSource._internalType as VocabulariesTypes);
+  },
+  [All]: () => { return true; },
+  [Asterisk]: () => { return true; },
+};
+
+const PredefinedActorFunctions: Record<PredefinedActors, Actor> = {
+  merge: () => { return BY_DEFAULT; },
+  replace: () => { return BY_DEFAULT; },
+  union: () => { return BY_DEFAULT; },
+  diff: () => { return BY_DEFAULT; },
+}
+
+const DefaultCloneOptions: FinalCloneOptions = {
   accumulator: {},
-  // eslint-disable-next-line unicorn/prefer-object-from-entries
-  actions: FinalCollectionsSet.reduce((acc, type) => {
-    acc[type] = 'replace';
-    return acc;
-  }, {}) as FinalActionsByType,
-} as const;
+  customizer: null,
+  output: 'simple',
+  descriptors: false,
+};
 
-const ValidRawCombineKeys = Object.keys(FinalCmbOptsDefaults);
+const DefaultCombineOptions: FinalCombineOptions = {
+  accumulator: {},
+  actions: [],
+  output: 'simple',
+  descriptors: false,
+};
 
-interface GeneralCombineOptions {
-  accumulator: FinalCloneOptions['accumulator'];
-}
+export const ProducedAsIntSet = ['key', 'property', 'value'] as const;
 
-type FinalCombineOptions = typeof FinalCmbOptsDefaults;
-
-export interface RawCombineOptions extends GeneralCombineOptions {
-  actions: RawActionsByType;
-}
-
-type ProducedAs = 'key' | 'property' | 'value' | 'root';
+type ProducedAsInt = typeof ProducedAsIntSet[number];
+export type ProducedAs = ProducedAsInt | 'root';
 
 type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
 
@@ -135,6 +153,16 @@ const restrictedProperties: Record<PieceTypeWithRP, Set<string>> = {
     'dotAll', 'flags', 'global', 'hasIndices', 'ignoreCase', 'multiline', 'source', 'sticky', 'unicode'
   ]),
 };
+
+type ChildrenProducedByArr = Source['_producedBy'][];
+
+type ChildrenList = Map<Source['_producedBy'], Child[]>;
+
+type Children<T> = Record<ProducedAsInt, T>;
+
+export type ChildrenKeys = Children<ChildrenProducedByArr>;
+
+export type CombineChildren = Children<ChildrenList>;
 
 function quotedListFromArray(array: readonly string[]) {
   return array.map((keyName) => { return '"' + keyName + '"' }).join(', ');
@@ -173,6 +201,13 @@ export class Source {
     return source;
   }
 
+  static emptyChildrenSet<T>(init: () => T): Children<T> {
+    return ProducedAsIntSet.reduce((acc, keyType) => {
+      acc[keyType] = init();
+      return acc;
+    }, {} as Children<T>);
+  }
+
   addToSourcesToLabels() {
     this._summary.addToSourcesToLabels(this);
   }
@@ -181,7 +216,7 @@ export class Source {
     this._isItMissed = this._target === MISSING;
     this._isItADouble = this._summary.hasValue(this._value);
 
-    this._isItCustomized = this.summary.finalCloneOptions.customizer
+    this._isItCustomized = this.summary.cloneOptions.customizer
       && this.target !== BY_DEFAULT;
 
     this._isItProcessed = this._isItCustomized
@@ -194,6 +229,42 @@ export class Source {
     }
   }
 
+  createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Source) {
+    const summary = this._summary;
+    let value;
+
+    switch (producedAs) {
+      case 'key':
+        value = (this.value as Map<unknown, unknown>).get(producedBy);
+        break;
+      case 'property':
+        value = (this.value as object)[producedBy as string];
+        break;
+      case 'value':
+        value = producedBy;
+        break;
+      default:
+        throw new TypeError(`Internal error S01`);
+    }
+
+    const child = new Source(value, summary);
+
+    child._parentSource = this;
+    child._parentTarget = parentTarget || this;
+    child._root = this._root;
+    child._index = this._index;
+    child._level = this._level + 1;
+    child._producedBy = producedBy;
+    child._producedAs = producedAs;
+    summary.addToAllSources(child);
+
+    return child;
+  }
+
+  createInstance() {
+    this._summary.createTargetInstance(this);
+  }
+
   get value() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this._value;
@@ -201,6 +272,32 @@ export class Source {
 
   get type() {
     return this._type;
+  }
+
+  get childKeys() {
+    const childKeys: ChildrenKeys = Source.emptyChildrenSet<ChildrenProducedByArr>(() => {
+      return [];
+    });
+
+    if (this._isItAPrimitive) {
+      return childKeys;
+    }
+
+    for (const producedBy of Reflect.ownKeys(this.value as object)) {
+      if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
+        childKeys.property.push(producedBy);
+      }
+    }
+
+    const isSet = this._type === 'set';
+
+    if (isSet || this._type === 'map') {
+      for (const producedBy of (this.value as Set<any>).keys()) {
+        childKeys[isSet ? 'value' : 'key'].push(producedBy);
+      }
+    }
+
+    return childKeys;
   }
 
   get parentSource() {
@@ -211,20 +308,20 @@ export class Source {
     this._parentSource = parent;
   }
 
+  get parentTarget() {
+    return this._parentTarget;
+  }
+
+  set parentTarget(parent: Source) {
+    this._parentTarget = parent;
+  }
+
   get root() {
     return this._root;
   }
 
   set root(root: Source) {
     this._root = root;
-  }
-
-  get children() {
-    if (!this._children) {
-      this.createChildren();
-    }
-
-    return this._children;
   }
 
   get target(): any {
@@ -341,67 +438,13 @@ export class Source {
     this._isItAPrimitive = PrimitiveTypesSet.includes(this._type as PrimitiveType);
   }
 
-  private createChildren(): void {
-    this._children = [];
-
-    if (this._isItAPrimitive) {
-      return;
-    }
-
-    for (const producedBy of Reflect.ownKeys(this.value as object)) {
-      if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
-        this._children.push(this.createChild(producedBy, 'property'));
-      }
-    }
-
-    const isSet = this._type === 'set';
-    const isMap = this._type === 'map';
-
-    if (isSet || isMap) {
-      for (const producedBy of (this.value as Set<any>).keys()) {
-        this._children.push(this.createChild(producedBy, isSet ? 'value' : 'key'));
-      }
-    }
-  }
-
-  private createChild(producedBy: unknown, producedAs: ProducedAs) {
-    const summary = this._summary;
-    let value;
-
-    switch (producedAs) {
-      case 'key':
-        value = (this.value as Map<unknown, unknown>).get(producedBy);
-        break;
-      case 'property':
-        value = (this.value as object)[producedBy as string];
-        break;
-      case 'value':
-        value = producedBy;
-        break;
-      default:
-        throw new TypeError(`Internal error S01`);
-    }
-
-    const child = new Source(value, summary);
-
-    child._parentSource = this;
-    child._root = this._root;
-    child._index = this._index;
-    child._level = this._level + 1;
-    child._producedBy = producedBy;
-    child._producedAs = producedAs;
-    summary.addToAllSources(child);
-
-    return child;
-  }
-
   private _value: any;
 
   private _type: ExtendedPieceType;
 
   private _parentSource: Source;
 
-  private _children: Source[];
+  private _parentTarget: Source;
 
   private _root: Source;
 
@@ -445,15 +488,15 @@ export class Results {
 
   // deprecated
   get options() {
-    return this._summary.rawCloneOptions;
+    return this._summary.cloneOptions;
   }
 
   get cloneOptions() {
-    return this._summary.rawCloneOptions;
+    return this._summary.cloneOptions;
   }
 
   get combineOptions() {
-    return this._summary.rawCombineOptions;
+    return this._summary.combineOptions;
   }
 
   get result() {
@@ -471,36 +514,96 @@ export class Results {
   private _summary: Summary;
 }
 
-export class Summary {
-  constructor(rawData: unknown[], operation: 'clone' | 'combine', rawOptions?: RawCloneOptions | RawCombineOptions) {
-    this._valuesToLabels = new Map();
-    this._allSources = [];
-    this._roots = [];
+export type Actor = (params: CombineParams) => typeof BY_DEFAULT;
 
-    if (rawOptions?.accumulator instanceof Object) {
-      this._accumulator = rawOptions.accumulator;
-    } else {
-      if ('undefined' === typeof rawOptions?.accumulator) {
-        this._accumulator = {};
-      } else {
-        throw new TypeError('The accumulator must not be a primitive type.');
+export class Action {
+  constructor(coverage: ActionCoverageSingle | ActionCoverageArr, actor: Actor | PredefinedActors) {
+    if (Array.isArray(coverage)) {
+      if (coverage.length !== 2) {
+        throw new TypeError(
+          'When stock coverage is specified as an array, that array must include exactly two elements: ' +
+          'coverage for the first and second parameters.');
       }
+
+      this._coverage = coverage.map((item) => {
+        return this.singleCoverageCheck(item);
+      });
+    } else {
+      const finalCoverage = this.singleCoverageCheck(coverage);
+      this._coverage = [finalCoverage, finalCoverage];
     }
 
-    if (operation === 'clone') {
-      this._rawCloneOptions = rawOptions;
-      this.buildCloneFinalOptions();
-    } else {
-      this._rawCombineOptions = rawOptions as RawCombineOptions;
-      this.buildCombineFinalOptions();
+    switch (typeof actor) {
+      case 'function':
+        this._actor = actor;
+        break;
+
+      case 'string':
+        if (!PredefinedActorsSet.includes(actor)) {
+          throw new TypeError(
+            `Unknown predefined actor "${actor}". Valid values are ${quotedListFromArray(PredefinedActorsSet)}`
+          );
+        }
+        this._actor = PredefinedActorFunctions[actor];
+        break;
+
+      default:
+        throw new TypeError(
+          `Actor can't be a ${typeof actor}. It must be either a ` +
+          `function or a string representing one of the preset values.`
+        );
     }
+  }
+
+  tryToRun(params: CombineParams) {
+    return params.bases.every((source, index) => { return this._coverage[index](source); })
+      ? { skipped: false, result: this._actor(params), }
+      : { skipped: true, result: null, };
+  }
+
+  private singleCoverageCheck(coverage: ActionCoverageSingle) {
+    switch (typeof coverage) {
+      case 'function':
+        return coverage;
+
+      case 'string':
+        if (!PredefActCoverSet.includes(coverage)) {
+          throw new TypeError(
+            `Unknown action coverage value "${coverage}". Valid options are ` +
+            `${quotedListFromArray(PredefActCoverSet)}.`
+          );
+        }
+        return TypeCheckers[coverage];
+
+      default:
+        throw new TypeError(
+          `Action coverage can't be a ${typeof coverage}. It must be either ` +
+          `a function or a string representing one of the preset values.`
+        );
+    }
+  }
+
+  private _coverage: TypeChecker[];
+
+  private _actor: Actor;
+}
+
+export class Summary {
+  constructor(rawData: unknown[], operation: OperationType, rawOptions?: RawOptions) {
+    this._valuesToLabels = new Map();
+    this._allSources = new Map();
+    this._roots = [];
+    this._label = 0;
+    this._operation = operation;
+
+    this._finalOptions = this.validateAndBuildOptions(operation, rawOptions);
 
     this.initRoots(rawData);
   }
 
   addToAllSources(source: Source) {
-    source.label = this._allSources.length;
-    this._allSources.push(source);
+    source.label = this.getAndIncreaceLabel();
+    this._allSources.set(source.label, source);
   }
 
   addToSourcesToLabels(source: Source) {
@@ -513,12 +616,6 @@ export class Summary {
     }
   }
 
-  getTargetByValue(rawData: unknown): unknown {
-    return this._valuesToLabels.has(rawData)
-      ? this._allSources[this._valuesToLabels.get(rawData)].target
-      : null;
-  }
-
   hasValue(rawData: unknown) {
     return this._valuesToLabels.has(rawData);
   }
@@ -528,10 +625,14 @@ export class Summary {
     return new Results(this);
   }
 
+  getAndIncreaceLabel() {
+    return this._label++;
+  }
+
   setByLabel(label: number, rawData: unknown) {
     this.checkLabel(label);
 
-    const source = this._allSources[label];
+    const source = this._allSources.get(label);
 
     if (source.producedAs === 'root') {
       throw new TypeError(
@@ -540,7 +641,7 @@ export class Summary {
       );
     }
 
-    const parentTarget = source.parentSource.target;
+    const parentTarget = source.parentTarget.target;
 
     switch (source.producedAs) {
       case 'key':
@@ -563,13 +664,13 @@ export class Summary {
   deleteByLabel(label: number): void {
     this.checkLabel(label);
 
-    const source = this._allSources[label];
+    const source = this._allSources.get(label);
 
     if (source.producedAs === 'root') {
       throw new TypeError("You can't delete a root node (the whole cloning result)!");
     }
 
-    const parentTarget = source.parentSource.target;
+    const parentTarget = source.parentTarget.target;
 
     switch (source.producedAs) {
       case 'key':
@@ -588,123 +689,145 @@ export class Summary {
     source.target = MISSING;
   }
 
+  createTargetInstance(source: Source) {
+    switch (source.type) {
+      case 'array':
+        this.constructSourceInstance(source, [(source.value as any[]).length]);
+        break;
+  
+      case 'arraybuffer':
+        if (typeof (source.value as DCArrayBuffer).slice === 'function') {
+          // eslint-disable-next-line unicorn/prefer-spread
+          source.target = (source.value as DCArrayBuffer).slice(0);
+        } else {
+          const originalUnit8Array = new Uint8Array(source.value as DCArrayBuffer);
+          this.constructSourceInstance(source, [originalUnit8Array.length]);
+          const copyUnit8Array = new Uint8Array(<DCArrayBuffer>source.target);
+      
+          for (const [index, value] of originalUnit8Array.entries()) {
+            copyUnit8Array[index] = value;
+          }
+        }
+        break;
+  
+      case 'date':
+        this.constructSourceInstance(source, [+source.value]);
+        break;
+  
+      case 'dataview':
+        this.constructSourceInstance(source, [(source.value as DataView).buffer]);
+        break;
+  
+      case 'regexp':
+        this.constructSourceInstance(source, [(source.value as RegExp).source, (source.value as RegExp).flags]);
+        break;
+  
+      default:
+        this.constructSourceInstance(source);
+        break;
+    }
+  }
+
   get accumulator() {
-    return this._accumulator;
+    return this._finalOptions.accumulator;
   }
 
   get result() {
     return this._result;
   }
 
-  get rawCloneOptions() {
-    return this._rawCloneOptions;
+  get cloneOptions() {
+    return this._finalOptions as FinalCloneOptions;
   }
 
-  get finalCloneOptions() {
-    return this._finalCloneOptions;
-  }
-
-  get rawCombineOptions() {
-    return this._rawCombineOptions;
-  }
-
-  get finalCombineOptions() {
-    return this._finalCombineOptions;
+  get combineOptions() {
+    return this._finalOptions as FinalCombineOptions;
   }
 
   get roots() {
     return this._roots;
   }
 
-  private buildCloneFinalOptions(): void {
-    this._finalCloneOptions = {
-      customizer: this._rawCloneOptions?.customizer,
-      accumulator: this._rawCloneOptions?.accumulator || {},
-      output: this._rawCloneOptions?.output || 'simple',
-      descriptors: this._rawCloneOptions?.descriptors || false,
-    }
+  private constructSourceInstance(
+    source: Source, 
+    params: unknown[] = []
+    ): void {
+    source.target = source.isItAPrimitive
+      ? source.value
+      : Reflect.construct(source.value.constructor, params);
   }
 
-  private buildCombineFinalOptions(): void {
-    this._finalCombineOptions = { ...FinalCmbOptsDefaults };
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+  private validateAndBuildOptions(operation: OperationType, rawOptions: RawOptions = {},) {
+    const optionsType = typeof rawOptions;
 
-    if (!this._rawCombineOptions) {
-      return;
+    if (!['undefined', 'object'].includes(optionsType)) {
+      throw new TypeError(`The ${operation}() options must be an object.`);
     }
 
-    if (typeof this._rawCombineOptions !== 'object') {
-      throw new TypeError('combine() optional "options" parameter must be an object. Please see the docs.');
-    }
+    const finalOptions = operation === 'clone' ? { ...DefaultCloneOptions } : { ...DefaultCombineOptions };
 
-    const rawKeys = Object.keys(this._rawCombineOptions) as unknown as (keyof RawCombineOptions)[];
+    for (const [optionName, optionValue] of Object.entries(rawOptions)) {
+      switch (optionName) {
+        case 'accumulator':
+          if (typeof optionValue !== 'object') {
+            throw new TypeError(`The optional ${operation}() option "accumulator" must not be a primitive type.`);
+          }
+          finalOptions.accumulator = optionValue;
+          break;
 
-    for (const key of rawKeys) {
-      if (!ValidRawCombineKeys.includes(key)) {
-        throw new TypeError(`Unknown combine() option. Valid options are: ${
-          quotedListFromArray(ValidRawCombineKeys)
-        }.`)
+        case 'descriptors':
+          if (typeof optionValue !== 'boolean') {
+            throw new TypeError(`The optional ${operation}() option "descriptors" must be a boolean.`);
+          }
+          finalOptions.descriptors = optionValue;
+          break;
+
+        case 'output':
+          if (!OutputTypeSet.includes(optionValue as OutputType)) {
+            throw new TypeError(
+              `Invalid value of the optional ${operation}() option "output". ` +
+              `Possible values are ${quotedListFromArray(OutputTypeSet)}`
+            );
+          }
+          finalOptions.output = optionValue as RawOptions['output'];
+          break;
+
+        default:
+          if (optionName === 'customizer' && operation === 'clone') {
+            if (typeof optionValue !== 'function') {
+              throw new TypeError(
+                `If optional ${operation}() option "customizer" is present, it must be a function.`
+              );
+            }
+            (finalOptions as FinalCloneOptions).customizer = optionValue as FinalCloneOptions['customizer'];
+          } else if (optionName === 'actions' && operation === 'combine') {
+            if (!Array.isArray(optionValue)) {
+              throw new TypeError(
+                `If optional ${operation}() option "actions" is present, it must be an array.`
+              );
+            }
+
+            for (const action of optionValue) {
+              if (!(action instanceof Action)) {
+                throw new TypeError(
+                  `Each action in the "actions" array must be an Action() instance.`
+                );
+              }
+            }
+
+            (finalOptions as FinalCombineOptions).actions = optionValue;
+          } else {
+            throw new TypeError(
+              `Unknown ${operation}() "${optionName}" option. Valid options are ${quotedListFromArray(
+                Object.keys(operation === 'clone' ? DefaultCloneOptions : DefaultCombineOptions)
+              )}`
+            );
+          }
       }
-
-      if (key === 'actions') {
-        this.buildCombineFinalActions();
-      } else {
-        this._finalCombineOptions[key] = this._rawCombineOptions[key];
-      }
-    }
-  }
-
-  private buildCombineFinalActions(): void {
-    const rawActions = this._rawCombineOptions.actions;
-
-    if (typeof rawActions !== 'object') {
-      throw new TypeError('combine() optional options.actions parameter must be an object. Please see the docs.');
     }
 
-    const actionsKeys = Object.keys(rawActions) as RawExtendedObjType[];
-    const keyCollector: Partial<FinalCombineOptions> = {};
-
-    const refinedKeys = actionsKeys.reduce((kc, key) => {
-      const action = rawActions[key] as ActionVocabulary;
-
-      this.checkAction(key, action);
-      if (key === 'collection' || key === 'vocabulary') {
-        this.replaceMetaAction(key, action);
-      } else {
-        kc[key] = action;
-      }
-
-      return kc;
-    }, keyCollector);
-
-    this._finalCombineOptions.actions = { ...this._finalCombineOptions.actions, ...refinedKeys };
-  }  
-
-  private replaceMetaAction(key: MetaSetsTypes, action: ActionVocabulary) {
-    const metaSet = key === 'collection' ? FinalCollectionsSet : FinalVocabulariesSet;
-    const finalActions = this._finalCombineOptions.actions;
-
-    for (const type of metaSet) {
-      finalActions[type] = action;
-    }
-  }
-
-  private checkAction(type: RawExtendedObjType, action: ActionVocabulary): void {
-    if (!FinalCollectionsSet.includes(type as FinalCollections)) {
-      throw new TypeError(`Invalid key "${type}" in combine() options.ations keys. Valid keys are: ${
-        quotedListFromArray(FinalCollectionsSet)
-      }.`)
-    }
-
-    if (!ActionVocabularySet.includes(action)) {
-      throw new TypeError(`Invalid action value "${action}" in combine() options.actions. Valid values are: ${
-        quotedListFromArray(ActionVocabularySet)
-      }.`)
-    }
-
-    if (!FinalVocabulariesSet.includes(type as FinalVocabularies) && 
-      !ActionCollectionSet.includes(action as ActionCollection)) {
-      throw new TypeError(`Action "${action}" is only allowed for vocabularies, but ${type} is not a vocabulary.`);
-    }
+    return finalOptions;
   }
 
   private initRoots(rawData: any[]): void {
@@ -721,31 +844,27 @@ export class Summary {
 
   private checkLabel(label: number): void {
     if (typeof label !== 'number') {
-      throw new TypeError('Parameter of setByLabel/deleteLabel functions must be a number.');
+      throw new TypeError('Parameter of setByLabel/deleteByLabel functions must be a number.');
     }
 
-    if (label > this._allSources.length || label < 0) {
-      throw new TypeError('Invalid parameter of setByLabel/deleteLabel functions (out of range).');
+    if (!this._allSources.has(label)) {
+      throw new TypeError('Invalid parameter of setByLabel/deleteByLabel functions (unknown label).');
     }
   }
 
-  private _accumulator: FinalCloneOptions['accumulator'];
+  private _operation: OperationType;
+
+  private _label: number;
 
   private _valuesToLabels: Map<unknown, number>;
 
-  private _allSources: Source[];
+  private _allSources: Map<Source['_label'], Source>;
 
   private _roots: Source[];
 
   private _result: unknown;
 
-  private _rawCloneOptions: RawCloneOptions;
-
-  private _finalCloneOptions: FinalCloneOptions;
-
-  private _rawCombineOptions: RawCombineOptions;
-
-  private _finalCombineOptions: FinalCombineOptions;
+  private _finalOptions: FinalOptions;
 }
 
 export class CustomizerParams {
@@ -798,8 +917,143 @@ export class CustomizerParams {
   }
 
   get options() {
-    return this._source.summary.rawCloneOptions;
+    return this._source.summary.combineOptions;
   }
 
-  private _source: Source;
+  protected _source: Source;
+}
+
+export class CombineSource extends CustomizerParams {
+  constructor(source: Source, combineParams: CombineParams) {
+    super(source);
+    this._combineParams = combineParams;
+  }
+
+  select() {
+
+  }
+
+  get _internalType() {
+    return this._source.type;
+  }
+
+  get childKeys() {
+    return this._source.childKeys;
+  }
+
+  private _combineParams: CombineParams;
+}
+
+export class Child {
+  constructor(
+    combineParams: CombineParams,
+    index: number,
+    producedBy: Source['_producedBy'],
+    producedAs: ProducedAsInt,
+  ) {
+    this._combineParams = combineParams;
+    this._index = index;
+    this._key = producedBy;
+    this._producedAs = producedAs;
+    this._label = this._combineParams.getNextLabel();
+  }
+
+  add() {
+    this._combineParams.addChild(this);
+    return this._label;
+  }
+
+  get index() {
+    return this._index;
+  }
+
+  get key() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this._key;
+  }
+
+  get producedAs() {
+    return this._producedAs;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  private _combineParams: CombineParams;
+
+  private _index: number;
+
+  private _key: Source['_producedBy'];
+
+  private _producedAs: ProducedAsInt;
+
+  private _label: Source['_label'];
+}
+
+export class CombineParams {
+  constructor(summary: Summary, sources: Source[]) {
+    this._summary = summary;
+    this._sources = sources;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias, unicorn/no-this-assignment
+    const combineParams = this;
+    this._combineSources = sources.map((source) => { return new CombineSource(source, combineParams); });
+    this.buildSchemeAndResult();
+  }
+
+  addChild(child: Child) {
+    const resultTyped = this._result[child.producedAs];
+
+    if (resultTyped.has(child.key)) {
+      resultTyped.get(child.key).push(child);
+    } else {
+      resultTyped.set(child.key, [child]);
+    }
+
+    return child.label;
+  }
+
+  getNextLabel() {
+    return this._summary.getAndIncreaceLabel();
+  }
+
+  get bases() {
+    return this._combineSources;
+  }
+
+  private buildSchemeAndResult() {
+    this._scheme = Source.emptyChildrenSet<ChildrenList>(() => {
+      return new Map();
+    });
+
+    this._result = Source.emptyChildrenSet<ChildrenList>(() => {
+      return new Map();
+    });
+
+    for (const keyType of ProducedAsIntSet) {
+      const schemeTyped = this._scheme[keyType];
+
+      for (const base of this._sources) {
+        for (const producedBy of base[keyType]) {
+          const child = new Child(this, base.index, producedBy, keyType);
+
+          if (schemeTyped.has(producedBy)) {
+            schemeTyped.get(producedBy).push(child);
+          } else {
+            schemeTyped.set(producedBy, [child]);
+          }
+        }
+      }
+    }
+  }
+
+  private _sources: Source[];
+
+  private _combineSources: CombineSource[];
+
+  private _summary: Summary;
+
+  private _scheme: CombineChildren;
+
+  private _result: CombineChildren;
 }

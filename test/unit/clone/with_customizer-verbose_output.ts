@@ -129,26 +129,26 @@ describe('===== clone [with customizer: verbose output] =====', () => {
         'label: 0 (key: root, lvl:0, object, new);' +
         'label: 1 (key: a, lvl:1, primitive, new);' +
         'label: 2 (key: b, lvl:1, object, new);' +
-        'label: 5 (key: 0, lvl:2, primitive, new);' +
-        'label: 6 (key: 1, lvl:2, primitive, new);' +
-        'label: 7 (key: 2, lvl:2, object, new);' +
-        'label: 8 (key: bbc, lvl:3, object, new);' +
-        'label: 9 (key: 0, lvl:4, primitive, new);' +
-        'label: 10 (key: 1, lvl:4, object, new);' +
-        'label: 11 (key: xxx, lvl:5, object, new);' +
-        'label: 12 (key: 0, lvl:6, primitive, new);' +
-        'label: 3 (key: c, lvl:1, object, new);' +
-        'label: 13 (key: d, lvl:2, primitive, new);' +
-        'label: 14 (key: e, lvl:2, primitive, new);' +
-        'label: 15 (key: f, lvl:2, object, new);' +
-        'label: 16 (key: 0, lvl:3, object, new);' +
-        'label: 18 (key: g, lvl:4, object, new);' +
-        'label: 19 (key: 0, lvl:5, primitive, new);' +
-        'label: 20 (key: 1, lvl:5, object, new);' +
-        'label: 21 (key: 0, lvl:6, primitive, new);' +
-        'label: 22 (key: 1, lvl:6, primitive, new);' +
-        'label: 17 (key: 1, lvl:3, primitive, new);' +
-        'label: 4 (key: loop, lvl:1, object, new);',
+        'label: 3 (key: 0, lvl:2, primitive, new);' +
+        'label: 4 (key: 1, lvl:2, primitive, new);' +
+        'label: 5 (key: 2, lvl:2, object, new);' +
+        'label: 6 (key: bbc, lvl:3, object, new);' +
+        'label: 7 (key: 0, lvl:4, primitive, new);' +
+        'label: 8 (key: 1, lvl:4, object, new);' +
+        'label: 9 (key: xxx, lvl:5, object, new);' +
+        'label: 10 (key: 0, lvl:6, primitive, new);' +
+        'label: 11 (key: c, lvl:1, object, new);' +
+        'label: 12 (key: d, lvl:2, primitive, new);' +
+        'label: 13 (key: e, lvl:2, primitive, new);' +
+        'label: 14 (key: f, lvl:2, object, new);' +
+        'label: 15 (key: 0, lvl:3, object, new);' +
+        'label: 16 (key: g, lvl:4, object, new);' +
+        'label: 17 (key: 0, lvl:5, primitive, new);' +
+        'label: 18 (key: 1, lvl:5, object, new);' +
+        'label: 19 (key: 0, lvl:6, primitive, new);' +
+        'label: 20 (key: 1, lvl:6, primitive, new);' +
+        'label: 21 (key: 1, lvl:3, primitive, new);' +
+        'label: 22 (key: loop, lvl:1, object, double);',
       rootLabel: 0,
     });
   });
@@ -253,7 +253,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.setByLabel.bind(result, ('aaa' as unknown as number), 'bbb')).to.throw(
-      'Parameter of setByLabel/deleteLabel functions must be a number.'
+      'Parameter of setByLabel/deleteByLabel functions must be a number.'
     );
   });
 
@@ -276,7 +276,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.setByLabel.bind(result, -1, 'bbb')).to.throw(
-      'Invalid parameter of setByLabel/deleteLabel functions (out of range).'
+      'Invalid parameter of setByLabel/deleteByLabel functions (unknown label).'
     );
   });
 
@@ -299,7 +299,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.deleteByLabel.bind(result, ('aaa' as unknown as number), 'bbb')).to.throw(
-      'Parameter of setByLabel/deleteLabel functions must be a number.'
+      'Parameter of setByLabel/deleteByLabel functions must be a number.'
     );
   });
 
@@ -322,7 +322,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.deleteByLabel.bind(result, -1, 'bbb')).to.throw(
-      'Invalid parameter of setByLabel/deleteLabel functions (out of range).'
+      'Invalid parameter of setByLabel/deleteByLabel functions (unknown label).'
     );
   });
 
@@ -501,10 +501,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
 
     const result = clone({ a: 1 }, options);
 
-    expect(result.options).to.be.equal(options);
-
-    for (const opts of result.accumulator.options) {
-      expect(opts).to.be.equal(options);
-    }
+    expect(result.options).to.deep.equals({...options, descriptors: false, });
+    expect(result.options.accumulator).to.be.equal(options.accumulator);
   });
 });

@@ -3,54 +3,46 @@ export declare const MISSING: unique symbol;
 declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null"];
 declare type PrimitiveType = typeof PrimitiveTypesSet[number];
 declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
-declare const FinalVocabulariesSet: readonly ["array", "map", "object"];
-declare type FinalVocabularies = typeof FinalVocabulariesSet[number];
-declare const FinalCollectionsSet: readonly ["array", "map", "object", "set"];
-declare type FinalCollections = typeof FinalCollectionsSet[number];
-declare const Vocabulary: "vocabulary";
-declare const Collection: "collection";
-declare type RawVocabularies = FinalVocabularies | typeof Vocabulary;
-declare type RawCollections = FinalCollections | typeof Collection;
-declare const ActionCollectionSet: readonly ["replace", "union", "diff"];
-declare const ActionVocabularySet: readonly ["replace", "union", "diff", "stack"];
-declare type ActionCollection = typeof ActionCollectionSet[number];
-declare type ActionVocabulary = typeof ActionVocabularySet[number];
+declare const CollectionsSet: readonly ["array", "map", "object", "set"];
+declare const PredefActCoverSet: readonly ["array", "map", "object", "set", "vocabulary", "collection", "all", "*"];
+declare type PredefActCoverTypes = typeof PredefActCoverSet[number];
+declare const PredefinedActorsSet: readonly ["replace", "merge", "union", "diff"];
+export declare type PredefinedActors = typeof PredefinedActorsSet[number];
 declare type ReducedObjType = typeof ReducedObjTypesSet[number];
-export declare type InternalExtendedObjType = typeof FinalCollectionsSet[number];
+declare type InternalExtendedObjType = typeof CollectionsSet[number];
 declare const MetaTypeSet: readonly ["vocabulary", "collection", "primitive"];
 export declare type MetaType = typeof MetaTypeSet[number];
-declare type RawCollectionsActionsByType = {
-    [type in RawCollections]: ActionCollection;
-};
-declare type RawVocabulariesActionsByType = {
-    [type in RawVocabularies]: ActionVocabulary;
-};
-declare type RawActionsByType = RawCollectionsActionsByType | RawVocabulariesActionsByType;
-declare type FinalCollectionsActionsByType = {
-    [type in FinalCollections]: ActionCollection;
-};
-declare type FinalVocabulariesActionsByType = {
-    [type in FinalVocabularies]: ActionVocabulary;
-};
-declare type FinalActionsByType = FinalCollectionsActionsByType | FinalVocabulariesActionsByType;
 declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
 declare type ExtendedPieceType = PieceType | typeof MISSING;
 declare type AccumulatorType = Record<PropertyKey, any>;
-export interface FinalCloneOptions {
-    customizer?: (params: CustomizerParams) => unknown;
+declare const OutputTypeSet: readonly ["simple", "verbose"];
+declare type OutputType = typeof OutputTypeSet[number];
+interface GeneralOptions {
     accumulator: AccumulatorType;
-    output: 'simple' | 'verbose';
+    output: OutputType;
     descriptors: boolean;
 }
-export declare type RawCloneOptions = Partial<FinalCloneOptions>;
-export declare type CloneOptions = RawCloneOptions;
-interface GeneralCombineOptions {
-    accumulator: FinalCloneOptions['accumulator'];
+export interface FinalCloneOptions extends GeneralOptions {
+    customizer: ((params: CustomizerParams) => unknown) | null;
 }
-export interface RawCombineOptions extends GeneralCombineOptions {
-    actions: RawActionsByType;
+export interface FinalCombineOptions extends GeneralOptions {
+    actions: Action[];
 }
-declare type ProducedAs = 'key' | 'property' | 'value' | 'root';
+export declare type CloneOptions = Partial<FinalCloneOptions>;
+export declare type CombineOptions = Partial<FinalCombineOptions>;
+declare type RawOptions = CloneOptions | CombineOptions;
+export declare type OperationType = 'combine' | 'clone';
+export declare type TypeChecker = (combineSource: CombineSource) => boolean;
+export declare type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
+export declare type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
+export declare const ProducedAsIntSet: readonly ["key", "property", "value"];
+declare type ProducedAsInt = typeof ProducedAsIntSet[number];
+export declare type ProducedAs = ProducedAsInt | 'root';
+declare type ChildrenProducedByArr = Source['_producedBy'][];
+declare type ChildrenList = Map<Source['_producedBy'], Child[]>;
+declare type Children<T> = Record<ProducedAsInt, T>;
+export declare type ChildrenKeys = Children<ChildrenProducedByArr>;
+export declare type CombineChildren = Children<ChildrenList>;
 export declare class Source {
     constructor(value: Source['_value'], summary: Summary);
     static createRootSource(params: {
@@ -58,15 +50,20 @@ export declare class Source {
         summary: Source['summary'];
         index: Source['_index'];
     }): Source;
+    static emptyChildrenSet<T>(init: () => T): Children<T>;
     addToSourcesToLabels(): void;
     setFlags(): void;
+    createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Source): Source;
+    createInstance(): void;
     get value(): any;
     get type(): ExtendedPieceType;
+    get childKeys(): ChildrenKeys;
     get parentSource(): Source;
     set parentSource(parent: Source);
+    get parentTarget(): Source;
+    set parentTarget(parent: Source);
     get root(): Source;
     set root(root: Source);
-    get children(): Source[];
     get target(): any;
     set target(targetValue: unknown);
     get index(): number;
@@ -84,12 +81,10 @@ export declare class Source {
     get isItProcessed(): boolean;
     get summary(): Summary;
     private setValueAndType;
-    private createChildren;
-    private createChild;
     private _value;
     private _type;
     private _parentSource;
-    private _children;
+    private _parentTarget;
     private _root;
     private _target;
     private _index;
@@ -109,49 +104,51 @@ export declare class Results {
     setByLabel: (label: number, value: any) => void;
     deleteByLabel: (label: number) => void;
     get accumulator(): AccumulatorType;
-    get options(): Partial<FinalCloneOptions>;
-    get cloneOptions(): Partial<FinalCloneOptions>;
-    get combineOptions(): RawCombineOptions;
+    get options(): FinalCloneOptions;
+    get cloneOptions(): FinalCloneOptions;
+    get combineOptions(): FinalCombineOptions;
     get result(): unknown;
     private _deleteByLabel;
     private _setByLabel;
     private _summary;
 }
+export declare type Actor = (params: CombineParams) => typeof BY_DEFAULT;
+export declare class Action {
+    constructor(coverage: ActionCoverageSingle | ActionCoverageArr, actor: Actor | PredefinedActors);
+    tryToRun(params: CombineParams): {
+        skipped: boolean;
+        result: symbol;
+    };
+    private singleCoverageCheck;
+    private _coverage;
+    private _actor;
+}
 export declare class Summary {
-    constructor(rawData: unknown[], operation: 'clone' | 'combine', rawOptions?: RawCloneOptions | RawCombineOptions);
+    constructor(rawData: unknown[], operation: OperationType, rawOptions?: RawOptions);
     addToAllSources(source: Source): void;
     addToSourcesToLabels(source: Source): void;
-    getTargetByValue(rawData: unknown): unknown;
     hasValue(rawData: unknown): boolean;
     setAndGetResult(result: unknown): Results;
+    getAndIncreaceLabel(): number;
     setByLabel(label: number, rawData: unknown): void;
     deleteByLabel(label: number): void;
+    createTargetInstance(source: Source): void;
     get accumulator(): AccumulatorType;
     get result(): unknown;
-    get rawCloneOptions(): Partial<FinalCloneOptions>;
-    get finalCloneOptions(): FinalCloneOptions;
-    get rawCombineOptions(): RawCombineOptions;
-    get finalCombineOptions(): {
-        accumulator: AccumulatorType;
-        actions: FinalActionsByType;
-    };
+    get cloneOptions(): FinalCloneOptions;
+    get combineOptions(): FinalCombineOptions;
     get roots(): Source[];
-    private buildCloneFinalOptions;
-    private buildCombineFinalOptions;
-    private buildCombineFinalActions;
-    private replaceMetaAction;
-    private checkAction;
+    private constructSourceInstance;
+    private validateAndBuildOptions;
     private initRoots;
     private checkLabel;
-    private _accumulator;
+    private _operation;
+    private _label;
     private _valuesToLabels;
     private _allSources;
     private _roots;
     private _result;
-    private _rawCloneOptions;
-    private _finalCloneOptions;
-    private _rawCombineOptions;
-    private _finalCombineOptions;
+    private _finalOptions;
 }
 export declare class CustomizerParams {
     constructor(source: Source);
@@ -165,7 +162,39 @@ export declare class CustomizerParams {
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
     get accumulator(): AccumulatorType;
-    get options(): Partial<FinalCloneOptions>;
-    private _source;
+    get options(): FinalCombineOptions;
+    protected _source: Source;
+}
+export declare class CombineSource extends CustomizerParams {
+    constructor(source: Source, combineParams: CombineParams);
+    select(): void;
+    get _internalType(): ExtendedPieceType;
+    get childKeys(): ChildrenKeys;
+    private _combineParams;
+}
+export declare class Child {
+    constructor(combineParams: CombineParams, index: number, producedBy: Source['_producedBy'], producedAs: ProducedAsInt);
+    add(): number;
+    get index(): number;
+    get key(): any;
+    get producedAs(): "key" | "property" | "value";
+    get label(): number;
+    private _combineParams;
+    private _index;
+    private _key;
+    private _producedAs;
+    private _label;
+}
+export declare class CombineParams {
+    constructor(summary: Summary, sources: Source[]);
+    addChild(child: Child): number;
+    getNextLabel(): number;
+    get bases(): CombineSource[];
+    private buildSchemeAndResult;
+    private _sources;
+    private _combineSources;
+    private _summary;
+    private _scheme;
+    private _result;
 }
 export {};

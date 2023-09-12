@@ -1,4 +1,4 @@
-import { Results, CustomizerParams, RawCloneOptions, FinalCloneOptions } from './service';
+import { Results, CustomizerParams, CloneOptions, FinalCloneOptions } from './service';
 export interface CustParamsAccSoft<ACC> extends CustomizerParams {
     accumulator: ACC & {
         [key: PropertyKey]: unknown;
@@ -22,5 +22,5 @@ interface CloneVerboseReturnType<SOURCE, OPT> extends Results {
 export declare type CloneReturnType<SOURCE, OPT> = OPT extends {
     output: 'verbose';
 } ? CloneVerboseReturnType<SOURCE, OPT> : SOURCE;
-export declare function clone<SOURCE, OPT extends RawCloneOptions>(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE, OPT>;
+export declare function clone<SOURCE, OPT extends CloneOptions>(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE, OPT>;
 export {};
