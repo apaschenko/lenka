@@ -38,32 +38,32 @@ export declare type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSin
 export declare const ProducedAsIntSet: readonly ["key", "property", "value"];
 declare type ProducedAsInt = typeof ProducedAsIntSet[number];
 export declare type ProducedAs = ProducedAsInt | 'root';
-declare type ChildrenProducedByArr = Source['_producedBy'][];
-declare type ChildrenList = Map<Source['_producedBy'], Child[]>;
+declare type ChildrenProducedByArr = Node['_producedBy'][];
+declare type ChildrenList = Map<Node['_producedBy'], Child[]>;
 declare type Children<T> = Record<ProducedAsInt, T>;
 export declare type ChildrenKeys = Children<ChildrenProducedByArr>;
 export declare type CombineChildren = Children<ChildrenList>;
-export declare class Source {
-    constructor(value: Source['_value'], summary: Summary);
-    static createRootSource(params: {
-        value: Source['_value'];
-        summary: Source['summary'];
-        index: Source['_index'];
-    }): Source;
+export declare class Node {
+    constructor(value: Node['_value'], summary: Summary);
+    static createRootNode(params: {
+        value: Node['_value'];
+        summary: Node['summary'];
+        index: Node['_index'];
+    }): Node;
     static emptyChildrenSet<T>(init: () => T): Children<T>;
-    addToSourcesToLabels(): void;
+    addToNodesToLabels(): void;
     setFlags(): void;
-    createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Source): Source;
+    createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Node): Node;
     createInstance(): void;
     get value(): any;
     get type(): ExtendedPieceType;
     get childKeys(): ChildrenKeys;
-    get parentSource(): Source;
-    set parentSource(parent: Source);
-    get parentTarget(): Source;
-    set parentTarget(parent: Source);
-    get root(): Source;
-    set root(root: Source);
+    get parentNode(): Node;
+    set parentNode(parent: Node);
+    get parentTarget(): Node;
+    set parentTarget(parent: Node);
+    get root(): Node;
+    set root(root: Node);
     get target(): any;
     set target(targetValue: unknown);
     get index(): number;
@@ -83,7 +83,7 @@ export declare class Source {
     private setValueAndType;
     private _value;
     private _type;
-    private _parentSource;
+    private _parentNode;
     private _parentTarget;
     private _root;
     private _target;
@@ -125,33 +125,33 @@ export declare class Action {
 }
 export declare class Summary {
     constructor(rawData: unknown[], operation: OperationType, rawOptions?: RawOptions);
-    addToAllSources(source: Source): void;
-    addToSourcesToLabels(source: Source): void;
+    addToAllNodes(node: Node): void;
+    addToNodesToLabels(node: Node): void;
     hasValue(rawData: unknown): boolean;
     setAndGetResult(result: unknown): Results;
     getAndIncreaceLabel(): number;
     setByLabel(label: number, rawData: unknown): void;
     deleteByLabel(label: number): void;
-    createTargetInstance(source: Source): void;
+    createTargetInstance(node: Node): void;
     get accumulator(): AccumulatorType;
     get result(): unknown;
     get cloneOptions(): FinalCloneOptions;
     get combineOptions(): FinalCombineOptions;
-    get roots(): Source[];
-    private constructSourceInstance;
+    get roots(): Node[];
+    private constructInstance;
     private validateAndBuildOptions;
     private initRoots;
     private checkLabel;
     private _operation;
     private _label;
     private _valuesToLabels;
-    private _allSources;
+    private _allNodes;
     private _roots;
     private _result;
     private _finalOptions;
 }
 export declare class CustomizerParams {
-    constructor(source: Source);
+    constructor(node: Node);
     get value(): any;
     get key(): any;
     get parent(): CustomizerParams;
@@ -163,17 +163,17 @@ export declare class CustomizerParams {
     get isItAPrimitive(): boolean;
     get accumulator(): AccumulatorType;
     get options(): FinalCombineOptions;
-    protected _source: Source;
+    protected _node: Node;
 }
 export declare class CombineSource extends CustomizerParams {
-    constructor(source: Source, combineParams: CombineParams);
+    constructor(node: Node, combineParams: CombineParams);
     select(): void;
     get _internalType(): ExtendedPieceType;
     get childKeys(): ChildrenKeys;
     private _combineParams;
 }
 export declare class Child {
-    constructor(combineParams: CombineParams, index: number, producedBy: Source['_producedBy'], producedAs: ProducedAsInt);
+    constructor(combineParams: CombineParams, index: number, producedBy: Node['_producedBy'], producedAs: ProducedAsInt);
     add(): number;
     get index(): number;
     get key(): any;
@@ -186,14 +186,16 @@ export declare class Child {
     private _label;
 }
 export declare class CombineParams {
-    constructor(summary: Summary, sources: Source[]);
+    constructor(summary: Summary, nodes: Node[]);
     addChild(child: Child): number;
     getNextLabel(): number;
+    selectBase(combineSource: CombineSource): void;
     get bases(): CombineSource[];
     private buildSchemeAndResult;
-    private _sources;
+    private _nodes;
     private _combineSources;
     private _summary;
+    private _selectedBase;
     private _scheme;
     private _result;
 }

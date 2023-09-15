@@ -1,5 +1,5 @@
 import {
-  Source,
+  Node,
   Summary,
   Results,
   CustomizerParams,
@@ -10,7 +10,7 @@ import {
   ChildrenKeys,
 } from './service';
 
-function cloneProperty(parent: Source, child: Source): void {
+function cloneProperty(parent: Node, child: Node): void {
   const key = <PropertyKey>child.producedBy;
 
   if (child.summary.cloneOptions.descriptors) {
@@ -27,62 +27,62 @@ function cloneProperty(parent: Source, child: Source): void {
   }
 }
 
-const cloneKaPProcessors: Record<ProducedAs, (source: Source, child: Source) => void> = {
-  property: (source: Source, child: Source) => { cloneProperty(source, child); },
-  key: (source: Source, child: Source) => { (source.target as Map<any, any>).set(child.producedBy, child.target); },
-  value: (source: Source, child: Source) => { (source.target as Set<any>).add(child.target); },
-  root: (_source: Source, _child: Source) => { throw new TypeError(`Internal error E01.`) },
+const cloneKaPProcessors: Record<ProducedAs, (node: Node, child: Node) => void> = {
+  property: (node: Node, child: Node) => { cloneProperty(node, child); },
+  key: (node: Node, child: Node) => { (node.target as Map<any, any>).set(child.producedBy, child.target); },
+  value: (node: Node, child: Node) => { (node.target as Set<any>).add(child.target); },
+  root: (_node: Node, _child: Node) => { throw new TypeError(`Internal error E01.`) },
 } as const;
 
 function copyKaPInternal(params: {
-  parentSource: Source,
-  producedBy: Source['_producedBy'],
-  producedAs: Source['_producedAs'],
+  parentNode: Node,
+  producedBy: Node['_producedBy'],
+  producedAs: Node['_producedAs'],
   value: object,
   target: object,
-  parentTarget?: Source,
+  parentTarget?: Node,
 }) {
-  const { parentSource, parentTarget, producedBy, producedAs, value, target } = params;
+  const { parentNode, parentTarget, producedBy, producedAs, value, target } = params;
 
   if (Object.hasOwnProperty.call(target, producedBy) && value[producedBy] === target[producedBy]) {
     return;
   }
 
-  const child = parentSource.createChild(producedBy, producedAs, parentTarget);
+  const child = parentNode.createChild(producedBy, producedAs, parentTarget);
 
   // eslint-disable-next-line @typescript-eslint/no-use-before-define
   cloneInternal(child);
 
   if (!child.isItMissed) {
-    cloneKaPProcessors[producedAs](parentSource, child);
+    cloneKaPProcessors[producedAs](parentNode, child);
   }
 }
 
-function copyKeysAndProperties(parentSource: Source, children: ChildrenKeys, parentTarget?: Source): void {
-  const value: object = <object>parentSource.value;
-  const target: object = <object>parentSource.target;
+function copyKeysAndProperties(parentNode: Node, children: ChildrenKeys, parentTarget?: Node): void {
+  const value: object = <object>parentNode.value;
+  const target: object = <object>parentNode.target;
 
   for (const producedAs of ProducedAsIntSet) {
     for (const producedBy of children[producedAs]) {
-      copyKaPInternal({ parentSource, parentTarget, producedBy, producedAs, value, target });
+      copyKaPInternal({ parentNode, parentTarget, producedBy, producedAs, value, target });
     }
   }
 }
 
 
-function cloneInternal(source: Source): void {
-  const finalOptions = source.summary.cloneOptions;
+function cloneInternal(node: Node): void {
+  const finalOptions = node.summary.cloneOptions;
 
   if (finalOptions.customizer) {
-    source.target = finalOptions.customizer(new CustomizerParams(source));
+    node.target = finalOptions.customizer(new CustomizerParams(node));
   }
 
-  source.setFlags();
-  source.addToSourcesToLabels();
+  node.setFlags();
+  node.addToNodesToLabels();
 
-  if (!source.isItProcessed) {
-    source.createInstance();
-    copyKeysAndProperties(source, source.childKeys);
+  if (!node.isItProcessed) {
+    node.createInstance();
+    copyKeysAndProperties(node, node.childKeys);
   }
 }
 
@@ -113,21 +113,21 @@ export function clone<
   SOURCE, OPT extends CloneOptions
 >(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE,OPT> {
   const summary = new Summary([original], 'clone', rawOptions);
-  const source = summary.roots[0];
+  const node = summary.roots[0];
 
-  cloneInternal(source);
+  cloneInternal(node);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return rawOptions?.output === 'verbose'
-    ? summary.setAndGetResult(source.target)
-    : source.target;
+    ? summary.setAndGetResult(node.target)
+    : node.target;
 }
 
 type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
-  ? Results : Source['target']
+  ? Results : Node['target']
 
 // export function combine<OPT extends RawCombineOptions>(
-//   originals: Source['value'][],
+//   originals: node['value'][],
 //   rawOptions?: OPT,
 // ): CombineReturnType<OPT> {
 //   if (!Array.isArray(originals)) {

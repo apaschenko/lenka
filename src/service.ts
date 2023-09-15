@@ -154,9 +154,9 @@ const restrictedProperties: Record<PieceTypeWithRP, Set<string>> = {
   ]),
 };
 
-type ChildrenProducedByArr = Source['_producedBy'][];
+type ChildrenProducedByArr = Node['_producedBy'][];
 
-type ChildrenList = Map<Source['_producedBy'], Child[]>;
+type ChildrenList = Map<Node['_producedBy'], Child[]>;
 
 type Children<T> = Record<ProducedAsInt, T>;
 
@@ -168,8 +168,8 @@ function quotedListFromArray(array: readonly string[]) {
   return array.map((keyName) => { return '"' + keyName + '"' }).join(', ');
 }
 
-export class Source {
-  constructor(value: Source['_value'], summary: Summary) {
+export class Node {
+  constructor(value: Node['_value'], summary: Summary) {
     this._summary = summary;
 
     this.setValueAndType(value);
@@ -180,25 +180,25 @@ export class Source {
     this._isItADouble = summary.hasValue(value); 
   }
 
-  static createRootSource(params: {
-    value: Source['_value'];
-    summary: Source['summary'];
-    index: Source['_index'];
-  }): Source {
+  static createRootNode(params: {
+    value: Node['_value'];
+    summary: Node['summary'];
+    index: Node['_index'];
+  }): Node {
     const { value, summary, index } = params;
 
-    const source = new Source(value, summary);
+    const node = new Node(value, summary);
 
-    source._parentSource = null;
-    source._root = source;
-    source._index = index;
-    source._level = 0;
-    source._producedAs = 'root';
-    source._summary = summary;
-    source._isItADouble = summary.hasValue(value);
-    summary.addToAllSources(source);
+    node._parentNode = null;
+    node._root = node;
+    node._index = index;
+    node._level = 0;
+    node._producedAs = 'root';
+    node._summary = summary;
+    node._isItADouble = summary.hasValue(value);
+    summary.addToAllNodes(node);
 
-    return source;
+    return node;
   }
 
   static emptyChildrenSet<T>(init: () => T): Children<T> {
@@ -208,8 +208,8 @@ export class Source {
     }, {} as Children<T>);
   }
 
-  addToSourcesToLabels() {
-    this._summary.addToSourcesToLabels(this);
+  addToNodesToLabels() {
+    this._summary.addToNodesToLabels(this);
   }
 
   setFlags() {
@@ -229,7 +229,7 @@ export class Source {
     }
   }
 
-  createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Source) {
+  createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: Node) {
     const summary = this._summary;
     let value;
 
@@ -247,16 +247,16 @@ export class Source {
         throw new TypeError(`Internal error S01`);
     }
 
-    const child = new Source(value, summary);
+    const child = new Node(value, summary);
 
-    child._parentSource = this;
+    child._parentNode = this;
     child._parentTarget = parentTarget || this;
     child._root = this._root;
     child._index = this._index;
     child._level = this._level + 1;
     child._producedBy = producedBy;
     child._producedAs = producedAs;
-    summary.addToAllSources(child);
+    summary.addToAllNodes(child);
 
     return child;
   }
@@ -275,7 +275,7 @@ export class Source {
   }
 
   get childKeys() {
-    const childKeys: ChildrenKeys = Source.emptyChildrenSet<ChildrenProducedByArr>(() => {
+    const childKeys: ChildrenKeys = Node.emptyChildrenSet<ChildrenProducedByArr>(() => {
       return [];
     });
 
@@ -300,19 +300,19 @@ export class Source {
     return childKeys;
   }
 
-  get parentSource() {
-    return this._parentSource;
+  get parentNode() {
+    return this._parentNode;
   }
 
-  set parentSource(parent: Source) {
-    this._parentSource = parent;
+  set parentNode(parent: Node) {
+    this._parentNode = parent;
   }
 
   get parentTarget() {
     return this._parentTarget;
   }
 
-  set parentTarget(parent: Source) {
+  set parentTarget(parent: Node) {
     this._parentTarget = parent;
   }
 
@@ -320,7 +320,7 @@ export class Source {
     return this._root;
   }
 
-  set root(root: Source) {
+  set root(root: Node) {
     this._root = root;
   }
 
@@ -442,11 +442,11 @@ export class Source {
 
   private _type: ExtendedPieceType;
 
-  private _parentSource: Source;
+  private _parentNode: Node;
 
-  private _parentTarget: Source;
+  private _parentTarget: Node;
 
-  private _root: Source;
+  private _root: Node;
 
   private _target: any;
 
@@ -591,7 +591,7 @@ export class Action {
 export class Summary {
   constructor(rawData: unknown[], operation: OperationType, rawOptions?: RawOptions) {
     this._valuesToLabels = new Map();
-    this._allSources = new Map();
+    this._allNodes = new Map();
     this._roots = [];
     this._label = 0;
     this._operation = operation;
@@ -601,18 +601,18 @@ export class Summary {
     this.initRoots(rawData);
   }
 
-  addToAllSources(source: Source) {
-    source.label = this.getAndIncreaceLabel();
-    this._allSources.set(source.label, source);
+  addToAllNodes(node: Node) {
+    node.label = this.getAndIncreaceLabel();
+    this._allNodes.set(node.label, node);
   }
 
-  addToSourcesToLabels(source: Source) {
+  addToNodesToLabels(node: Node) {
     if (!(
-      this._valuesToLabels.has(source.value)
-        || source.isItAPrimitive
-        || source.isItMissed
+      this._valuesToLabels.has(node.value)
+        || node.isItAPrimitive
+        || node.isItMissed
       )) {
-      this._valuesToLabels.set(source.value, source.label);
+      this._valuesToLabels.set(node.value, node.label);
     }
   }
 
@@ -632,77 +632,77 @@ export class Summary {
   setByLabel(label: number, rawData: unknown) {
     this.checkLabel(label);
 
-    const source = this._allSources.get(label);
+    const node = this._allNodes.get(label);
 
-    if (source.producedAs === 'root') {
+    if (node.producedAs === 'root') {
       throw new TypeError(
         "You can't change a root node value (the whole cloning result) with" +
         " setByLabel method! Instead, use new value directly in your code."
       );
     }
 
-    const parentTarget = source.parentTarget.target;
+    const parentTarget = node.parentTarget.target;
 
-    switch (source.producedAs) {
+    switch (node.producedAs) {
       case 'key':
-        (parentTarget as Map<unknown, unknown>).set(source.producedBy, rawData);
+        (parentTarget as Map<unknown, unknown>).set(node.producedBy, rawData);
         break;
 
       case 'property':
-        (parentTarget as object)[source.producedBy] = rawData;
+        (parentTarget as object)[node.producedBy] = rawData;
         break;
 
       case 'value':
-        (parentTarget as Set<unknown>).delete(source.target);
+        (parentTarget as Set<unknown>).delete(node.target);
         (parentTarget as Set<unknown>).add(rawData);
         break;
     }
 
-    source.target = rawData;
+    node.target = rawData;
   }
 
   deleteByLabel(label: number): void {
     this.checkLabel(label);
 
-    const source = this._allSources.get(label);
+    const node = this._allNodes.get(label);
 
-    if (source.producedAs === 'root') {
+    if (node.producedAs === 'root') {
       throw new TypeError("You can't delete a root node (the whole cloning result)!");
     }
 
-    const parentTarget = source.parentTarget.target;
+    const parentTarget = node.parentTarget.target;
 
-    switch (source.producedAs) {
+    switch (node.producedAs) {
       case 'key':
-        (parentTarget as Map<unknown, unknown>).delete(source.producedBy);
+        (parentTarget as Map<unknown, unknown>).delete(node.producedBy);
         break;
 
       case 'property':
-        delete (parentTarget as object)[source.producedBy];
+        delete (parentTarget as object)[node.producedBy];
         break;
 
       case 'value':
-        (parentTarget as Set<unknown>).delete(source.target);
+        (parentTarget as Set<unknown>).delete(node.target);
         break;
     }
 
-    source.target = MISSING;
+    node.target = MISSING;
   }
 
-  createTargetInstance(source: Source) {
-    switch (source.type) {
+  createTargetInstance(node: Node) {
+    switch (node.type) {
       case 'array':
-        this.constructSourceInstance(source, [(source.value as any[]).length]);
+        this.constructInstance(node, [(node.value as any[]).length]);
         break;
   
       case 'arraybuffer':
-        if (typeof (source.value as DCArrayBuffer).slice === 'function') {
+        if (typeof (node.value as DCArrayBuffer).slice === 'function') {
           // eslint-disable-next-line unicorn/prefer-spread
-          source.target = (source.value as DCArrayBuffer).slice(0);
+          node.target = (node.value as DCArrayBuffer).slice(0);
         } else {
-          const originalUnit8Array = new Uint8Array(source.value as DCArrayBuffer);
-          this.constructSourceInstance(source, [originalUnit8Array.length]);
-          const copyUnit8Array = new Uint8Array(<DCArrayBuffer>source.target);
+          const originalUnit8Array = new Uint8Array(node.value as DCArrayBuffer);
+          this.constructInstance(node, [originalUnit8Array.length]);
+          const copyUnit8Array = new Uint8Array(<DCArrayBuffer>node.target);
       
           for (const [index, value] of originalUnit8Array.entries()) {
             copyUnit8Array[index] = value;
@@ -711,19 +711,19 @@ export class Summary {
         break;
   
       case 'date':
-        this.constructSourceInstance(source, [+source.value]);
+        this.constructInstance(node, [+node.value]);
         break;
   
       case 'dataview':
-        this.constructSourceInstance(source, [(source.value as DataView).buffer]);
+        this.constructInstance(node, [(node.value as DataView).buffer]);
         break;
   
       case 'regexp':
-        this.constructSourceInstance(source, [(source.value as RegExp).source, (source.value as RegExp).flags]);
+        this.constructInstance(node, [(node.value as RegExp).source, (node.value as RegExp).flags]);
         break;
   
       default:
-        this.constructSourceInstance(source);
+        this.constructInstance(node);
         break;
     }
   }
@@ -748,13 +748,13 @@ export class Summary {
     return this._roots;
   }
 
-  private constructSourceInstance(
-    source: Source, 
+  private constructInstance(
+    node: Node, 
     params: unknown[] = []
     ): void {
-    source.target = source.isItAPrimitive
-      ? source.value
-      : Reflect.construct(source.value.constructor, params);
+    node.target = node.isItAPrimitive
+      ? node.value
+      : Reflect.construct(node.value.constructor, params);
   }
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -832,13 +832,13 @@ export class Summary {
 
   private initRoots(rawData: any[]): void {
     for (const [index, value] of rawData.entries()) {
-      const source = Source.createRootSource({
+      const node = Node.createRootNode({
         value,
         index,
         summary: this,
       });
 
-      this._roots.push(source);
+      this._roots.push(node);
     }
   }
 
@@ -847,7 +847,7 @@ export class Summary {
       throw new TypeError('Parameter of setByLabel/deleteByLabel functions must be a number.');
     }
 
-    if (!this._allSources.has(label)) {
+    if (!this._allNodes.has(label)) {
       throw new TypeError('Invalid parameter of setByLabel/deleteByLabel functions (unknown label).');
     }
   }
@@ -858,9 +858,9 @@ export class Summary {
 
   private _valuesToLabels: Map<unknown, number>;
 
-  private _allSources: Map<Source['_label'], Source>;
+  private _allNodes: Map<Node['_label'], Node>;
 
-  private _roots: Source[];
+  private _roots: Node[];
 
   private _result: unknown;
 
@@ -868,77 +868,77 @@ export class Summary {
 }
 
 export class CustomizerParams {
-  constructor(source: Source) {
-    this._source = source;
+  constructor(node: Node) {
+    this._node = node;
   }
 
   get value() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._source.value;
+    return this._node.value;
   }
 
   get key() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._source.producedBy;
+    return this._node.producedBy;
   }
 
   get parent() {
-    return this._source.parentSource 
-      ? new CustomizerParams(this._source.parentSource)
+    return this._node.parentNode
+      ? new CustomizerParams(this._node.parentNode)
       : null;
   }
 
   get root() {
-    return new CustomizerParams(this._source.root);
+    return new CustomizerParams(this._node.root);
   }
 
   get index() {
-    return this._source.index;
+    return this._node.index;
   }
 
   get level() {
-    return this._source.level;
+    return this._node.level;
   }
 
   get label() {
-    return this._source.label;
+    return this._node.label;
   }
 
   get isItAdouble() {
-    return this._source.isItADouble;
+    return this._node.isItADouble;
   }
 
   get isItAPrimitive() {
-    return this._source.isItAPrimitive;
+    return this._node.isItAPrimitive;
   }
 
   get accumulator() {
-    return this._source.summary.accumulator;
+    return this._node.summary.accumulator;
   }
 
   get options() {
-    return this._source.summary.combineOptions;
+    return this._node.summary.combineOptions;
   }
 
-  protected _source: Source;
+  protected _node: Node;
 }
 
 export class CombineSource extends CustomizerParams {
-  constructor(source: Source, combineParams: CombineParams) {
-    super(source);
+  constructor(node: Node, combineParams: CombineParams) {
+    super(node);
     this._combineParams = combineParams;
   }
 
   select() {
-
+    this._combineParams.selectBase(this);
   }
 
   get _internalType() {
-    return this._source.type;
+    return this._node.type;
   }
 
   get childKeys() {
-    return this._source.childKeys;
+    return this._node.childKeys;
   }
 
   private _combineParams: CombineParams;
@@ -948,7 +948,7 @@ export class Child {
   constructor(
     combineParams: CombineParams,
     index: number,
-    producedBy: Source['_producedBy'],
+    producedBy: Node['_producedBy'],
     producedAs: ProducedAsInt,
   ) {
     this._combineParams = combineParams;
@@ -984,20 +984,20 @@ export class Child {
 
   private _index: number;
 
-  private _key: Source['_producedBy'];
+  private _key: Node['_producedBy'];
 
   private _producedAs: ProducedAsInt;
 
-  private _label: Source['_label'];
+  private _label: Node['_label'];
 }
 
 export class CombineParams {
-  constructor(summary: Summary, sources: Source[]) {
+  constructor(summary: Summary, nodes: Node[]) {
     this._summary = summary;
-    this._sources = sources;
+    this._nodes = nodes;
     // eslint-disable-next-line @typescript-eslint/no-this-alias, unicorn/no-this-assignment
     const combineParams = this;
-    this._combineSources = sources.map((source) => { return new CombineSource(source, combineParams); });
+    this._combineSources = nodes.map((node) => { return new CombineSource(node, combineParams); });
     this.buildSchemeAndResult();
   }
 
@@ -1017,23 +1017,27 @@ export class CombineParams {
     return this._summary.getAndIncreaceLabel();
   }
 
+  selectBase(combineSource: CombineSource) {
+    this._selectedBase = combineSource;
+  }
+
   get bases() {
     return this._combineSources;
   }
 
   private buildSchemeAndResult() {
-    this._scheme = Source.emptyChildrenSet<ChildrenList>(() => {
+    this._scheme = Node.emptyChildrenSet<ChildrenList>(() => {
       return new Map();
     });
 
-    this._result = Source.emptyChildrenSet<ChildrenList>(() => {
+    this._result = Node.emptyChildrenSet<ChildrenList>(() => {
       return new Map();
     });
 
     for (const keyType of ProducedAsIntSet) {
       const schemeTyped = this._scheme[keyType];
 
-      for (const base of this._sources) {
+      for (const base of this._nodes) {
         for (const producedBy of base[keyType]) {
           const child = new Child(this, base.index, producedBy, keyType);
 
@@ -1047,11 +1051,13 @@ export class CombineParams {
     }
   }
 
-  private _sources: Source[];
+  private _nodes: Node[];
 
   private _combineSources: CombineSource[];
 
   private _summary: Summary;
+
+  private _selectedBase: CombineSource;
 
   private _scheme: CombineChildren;
 
