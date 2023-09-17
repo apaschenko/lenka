@@ -1,4 +1,5 @@
 import { Results, CustomizerParams, CloneOptions, FinalCloneOptions } from './service';
+export { BY_DEFAULT, MISSING } from './lib/symbols';
 export interface CustParamsAccSoft<ACC> extends CustomizerParams {
     accumulator: ACC & {
         [key: PropertyKey]: unknown;
@@ -23,4 +24,3 @@ export declare type CloneReturnType<SOURCE, OPT> = OPT extends {
     output: 'verbose';
 } ? CloneVerboseReturnType<SOURCE, OPT> : SOURCE;
 export declare function clone<SOURCE, OPT extends CloneOptions>(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE, OPT>;
-export {};

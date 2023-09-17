@@ -1,0 +1,17 @@
+import { MISSING } from './symbols';
+declare type Extends<T, U extends T> = U;
+export declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null"];
+export declare type PrimitiveType = typeof PrimitiveTypesSet[number];
+export declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
+export declare const VocabulariesSet: readonly ["array", "map", "object"];
+export declare type VocabulariesTypes = typeof VocabulariesSet[number];
+export declare const CollectionsSet: readonly ["array", "map", "object", "set"];
+export declare type CollectionsTypes = typeof CollectionsSet[number];
+export declare const Vocabulary: "vocabulary";
+export declare const Collection: "collection";
+export declare type ReducedObjType = typeof ReducedObjTypesSet[number];
+export declare type InternalExtendedObjType = typeof CollectionsSet[number];
+export declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
+export declare type ExtendedPieceType = PieceType | typeof MISSING;
+export declare type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
+export {};

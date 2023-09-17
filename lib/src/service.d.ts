@@ -1,43 +1,38 @@
-export declare const BY_DEFAULT: unique symbol;
-export declare const MISSING: unique symbol;
-declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null"];
-declare type PrimitiveType = typeof PrimitiveTypesSet[number];
-declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
-declare const CollectionsSet: readonly ["array", "map", "object", "set"];
+import { ProducedAs, ProducedAsInt } from './lib/general_types';
+import { ExtendedPieceType } from './lib/piece_types';
+import { BY_DEFAULT } from './lib/symbols';
+export declare type OperationType = 'combine' | 'clone';
 declare const PredefActCoverSet: readonly ["array", "map", "object", "set", "vocabulary", "collection", "all", "*"];
 declare type PredefActCoverTypes = typeof PredefActCoverSet[number];
 declare const PredefinedActorsSet: readonly ["replace", "merge", "union", "diff"];
-export declare type PredefinedActors = typeof PredefinedActorsSet[number];
-declare type ReducedObjType = typeof ReducedObjTypesSet[number];
-declare type InternalExtendedObjType = typeof CollectionsSet[number];
-declare const MetaTypeSet: readonly ["vocabulary", "collection", "primitive"];
-export declare type MetaType = typeof MetaTypeSet[number];
-declare type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
-declare type ExtendedPieceType = PieceType | typeof MISSING;
+declare type PredefinedActors = typeof PredefinedActorsSet[number];
 declare type AccumulatorType = Record<PropertyKey, any>;
 declare const OutputTypeSet: readonly ["simple", "verbose"];
 declare type OutputType = typeof OutputTypeSet[number];
-interface GeneralOptions {
+export declare type Coverage = ActionCoverageSingle | ActionCoverageArr;
+export declare type ActorFunction = (params: CombineParams) => typeof BY_DEFAULT;
+export declare type Actor = ActorFunction | PredefinedActors;
+export interface Action {
+    coverage: Coverage;
+    actor: Actor;
+}
+export interface FinalCloneOptions {
     accumulator: AccumulatorType;
     output: OutputType;
     descriptors: boolean;
-}
-export interface FinalCloneOptions extends GeneralOptions {
     customizer: ((params: CustomizerParams) => unknown) | null;
 }
-export interface FinalCombineOptions extends GeneralOptions {
-    actions: Action[];
+interface FinalCombineOptions extends FinalCloneOptions {
+    actions: FinalAction[];
 }
 export declare type CloneOptions = Partial<FinalCloneOptions>;
-export declare type CombineOptions = Partial<FinalCombineOptions>;
+export interface CombineOptions extends Partial<Omit<FinalCombineOptions, 'actions'>> {
+    actions?: Action[];
+}
 declare type RawOptions = CloneOptions | CombineOptions;
-export declare type OperationType = 'combine' | 'clone';
-export declare type TypeChecker = (combineSource: CombineSource) => boolean;
-export declare type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
-export declare type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
-export declare const ProducedAsIntSet: readonly ["key", "property", "value"];
-declare type ProducedAsInt = typeof ProducedAsIntSet[number];
-export declare type ProducedAs = ProducedAsInt | 'root';
+declare type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
+declare type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
+declare type TypeChecker = (combineSource: CombineSource) => boolean;
 declare type ChildrenProducedByArr = Node['_producedBy'][];
 declare type ChildrenList = Map<Node['_producedBy'], Child[]>;
 declare type Children<T> = Record<ProducedAsInt, T>;
@@ -112,14 +107,11 @@ export declare class Results {
     private _setByLabel;
     private _summary;
 }
-export declare type Actor = (params: CombineParams) => typeof BY_DEFAULT;
-export declare class Action {
-    constructor(coverage: ActionCoverageSingle | ActionCoverageArr, actor: Actor | PredefinedActors);
-    tryToRun(params: CombineParams): {
-        skipped: boolean;
-        result: symbol;
-    };
+export declare class FinalAction {
+    constructor(rawAction: Action);
+    tryToRun(params: CombineParams): boolean;
     private singleCoverageCheck;
+    private throwError;
     private _coverage;
     private _actor;
 }
@@ -135,8 +127,10 @@ export declare class Summary {
     createTargetInstance(node: Node): void;
     get accumulator(): AccumulatorType;
     get result(): unknown;
-    get cloneOptions(): FinalCloneOptions;
-    get combineOptions(): FinalCombineOptions;
+    get rawCloneOptions(): Partial<FinalCloneOptions>;
+    get rawCombineOptions(): CombineOptions;
+    get finalCloneOptions(): FinalCloneOptions;
+    get finalCombineOptions(): FinalCombineOptions;
     get roots(): Node[];
     private constructInstance;
     private validateAndBuildOptions;
@@ -148,6 +142,7 @@ export declare class Summary {
     private _allNodes;
     private _roots;
     private _result;
+    private _rawOptions;
     private _finalOptions;
 }
 export declare class CustomizerParams {
@@ -162,7 +157,7 @@ export declare class CustomizerParams {
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
     get accumulator(): AccumulatorType;
-    get options(): FinalCombineOptions;
+    get options(): Partial<FinalCloneOptions>;
     protected _node: Node;
 }
 export declare class CombineSource extends CustomizerParams {
@@ -190,7 +185,11 @@ export declare class CombineParams {
     addChild(child: Child): number;
     getNextLabel(): number;
     selectBase(combineSource: CombineSource): void;
+    postCheck(): void;
     get bases(): CombineSource[];
+    get selectedBase(): CombineSource;
+    get result(): CombineChildren;
+    _createChild(child: Child): Node;
     private buildSchemeAndResult;
     private _nodes;
     private _combineSources;

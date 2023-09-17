@@ -5,15 +5,47 @@ import {
   CustomizerParams,
   CloneOptions,
   FinalCloneOptions,
-  ProducedAs,
-  ProducedAsIntSet,
   ChildrenKeys,
+  CombineParams
 } from './service';
+import { ProducedAs, ProducedAsIntSet } from './lib/general_types';
+
+export { BY_DEFAULT, MISSING } from './lib/symbols';
+
+function combineInternal(summary: Summary, nodes: Node[]) {
+  const actions = summary.finalCombineOptions.actions;
+
+  const combineParams = new CombineParams(summary, nodes);
+
+  actions.every((action) => { return action.tryToRun(combineParams); });
+  combineParams.postCheck();
+
+  for (const keyType of ProducedAsIntSet) {
+    for (const childrenByKey of combineParams.result[keyType].values()) {
+      const childNodes = childrenByKey.map((child) => {
+        return combineParams._createChild(child);
+      });
+
+      switch (childNodes.length) {
+        case 1:
+          // TODO: call clone
+          break;
+
+        case 2:
+          combineInternal(summary, childNodes);
+          break;
+
+        default:
+          throw new TypeError('E02: Internal error');
+      }
+    };
+  }
+}
 
 function cloneProperty(parent: Node, child: Node): void {
   const key = <PropertyKey>child.producedBy;
 
-  if (child.summary.cloneOptions.descriptors) {
+  if (child.summary.finalCloneOptions.descriptors) {
     // eslint-disable-next-line prettier/prettier
     const descr = Object.getOwnPropertyDescriptor(parent.value, key);
 
@@ -71,7 +103,7 @@ function copyKeysAndProperties(parentNode: Node, children: ChildrenKeys, parentT
 
 
 function cloneInternal(node: Node): void {
-  const finalOptions = node.summary.cloneOptions;
+  const finalOptions = node.summary.finalCloneOptions;
 
   if (finalOptions.customizer) {
     node.target = finalOptions.customizer(new CustomizerParams(node));

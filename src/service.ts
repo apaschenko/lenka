@@ -1,44 +1,12 @@
-// eslint-disable-next-line prettier/prettier
-type Extends<T, U extends T> = U;
+import { ProducedAs, ProducedAsInt, ProducedAsIntSet } from './lib/general_types';
+import { Collection, CollectionsSet, CollectionsTypes, ExtendedPieceType, PieceTypeWithRP, PrimitiveType, PrimitiveTypesSet, VocabulariesSet, VocabulariesTypes, Vocabulary } from './lib/piece_types';
+import { BY_DEFAULT, MISSING } from './lib/symbols';
 
-export const BY_DEFAULT = Symbol('BY_DEFAULT');
-export const MISSING = Symbol('MISSING');
+export type OperationType = 'combine' | 'clone';
 
-const PrimitiveTypesSet = [
-  'boolean',
-  'undefined',
-  'symbol',
-  'string',
-  'number',
-  'bigint',
-  'null',
-] as const;
+const All = 'all';
 
-type PrimitiveType = typeof PrimitiveTypesSet[number];
-
-const ReducedObjTypesSet = [
-  'date',
-  'regexp',
-  'function',
-  'dataview',
-  'arraybuffer',
-] as const;
-
-const VocabulariesSet = ['array', 'map', 'object'] as const;
-
-type VocabulariesTypes = typeof VocabulariesSet[number];
-
-const CollectionsSet = [...VocabulariesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
-
-type CollectionsTypes = typeof CollectionsSet[number];
-
-const Vocabulary = 'vocabulary' as const;
-
-const Collection = 'collection' as const;
-
-const All = 'all' as const;
-
-const Asterisk = '*' as const;
+const Asterisk = '*';
 
 const PredefActCoverSet = [...CollectionsSet, Vocabulary, Collection, All, Asterisk] as const;
 
@@ -46,19 +14,7 @@ type PredefActCoverTypes = typeof PredefActCoverSet[number];
 
 const PredefinedActorsSet = ['replace', 'merge', 'union', 'diff'] as const;
 
-export type PredefinedActors = typeof PredefinedActorsSet[number];
-
-type ReducedObjType = typeof ReducedObjTypesSet[number];
-
-type InternalExtendedObjType = typeof CollectionsSet[number];
-
-const MetaTypeSet = ['vocabulary', 'collection', 'primitive'] as const;
-
-export type MetaType = typeof MetaTypeSet[number];
-
-type PieceType = PrimitiveType | ReducedObjType | InternalExtendedObjType;
-
-type ExtendedPieceType = PieceType | typeof MISSING;
+type PredefinedActors = typeof PredefinedActorsSet[number];
 
 type AccumulatorType = Record<PropertyKey, any>;
 
@@ -66,35 +22,45 @@ const OutputTypeSet = ['simple', 'verbose'] as const;
 
 type OutputType = typeof OutputTypeSet[number];
 
-interface GeneralOptions {
+export type Coverage = ActionCoverageSingle | ActionCoverageArr;
+
+export type ActorFunction = (params: CombineParams) => typeof BY_DEFAULT;
+
+export type Actor = ActorFunction | PredefinedActors;
+
+export interface Action {
+  coverage: Coverage;
+  actor: Actor;
+}
+
+const ActionKeys: (keyof Action)[] = ['coverage', 'actor'];
+
+export interface FinalCloneOptions {
   accumulator: AccumulatorType;
   output: OutputType;
   descriptors: boolean;
-}
-
-export interface FinalCloneOptions extends GeneralOptions {
   customizer: ((params: CustomizerParams) => unknown) | null;
 }
 
-export interface FinalCombineOptions extends GeneralOptions {
-  actions: Action[];
+interface FinalCombineOptions extends FinalCloneOptions {
+  actions: FinalAction[];
 }
 
 export type CloneOptions = Partial<FinalCloneOptions>;
 
-export type CombineOptions = Partial<FinalCombineOptions>;
+export interface CombineOptions extends Partial<Omit<FinalCombineOptions, 'actions'>> {
+  actions?: Action[];
+};
 
 type RawOptions = CloneOptions | CombineOptions;
 
 type FinalOptions = FinalCloneOptions | FinalCombineOptions;
 
-export type OperationType = 'combine' | 'clone';
+type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
 
-export type TypeChecker = (combineSource: CombineSource) => boolean;
+type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
 
-export type ActionCoverageSingle = PredefActCoverTypes | TypeChecker;
-
-export type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
+type TypeChecker = (combineSource: CombineSource) => boolean;
 
 interface DCArrayBuffer extends ArrayBuffer {
   prototype: {
@@ -117,7 +83,7 @@ const TypeCheckers: Record<PredefActCoverTypes, TypeChecker> = {
   [Asterisk]: () => { return true; },
 };
 
-const PredefinedActorFunctions: Record<PredefinedActors, Actor> = {
+const PredefinedActorFunctions: Record<PredefinedActors, ActorFunction> = {
   merge: () => { return BY_DEFAULT; },
   replace: () => { return BY_DEFAULT; },
   union: () => { return BY_DEFAULT; },
@@ -132,18 +98,9 @@ const DefaultCloneOptions: FinalCloneOptions = {
 };
 
 const DefaultCombineOptions: FinalCombineOptions = {
-  accumulator: {},
+  ...DefaultCloneOptions,
   actions: [],
-  output: 'simple',
-  descriptors: false,
 };
-
-export const ProducedAsIntSet = ['key', 'property', 'value'] as const;
-
-type ProducedAsInt = typeof ProducedAsIntSet[number];
-export type ProducedAs = ProducedAsInt | 'root';
-
-type PieceTypeWithRP = Extends<PieceType, 'array' | 'arraybuffer' | 'dataview' | 'regexp'>;
 
 const restrictedProperties: Record<PieceTypeWithRP, Set<string>> = {
   array: new Set(['length']),
@@ -216,7 +173,7 @@ export class Node {
     this._isItMissed = this._target === MISSING;
     this._isItADouble = this._summary.hasValue(this._value);
 
-    this._isItCustomized = this.summary.cloneOptions.customizer
+    this._isItCustomized = this.summary.finalCloneOptions.customizer
       && this.target !== BY_DEFAULT;
 
     this._isItProcessed = this._isItCustomized
@@ -488,15 +445,15 @@ export class Results {
 
   // deprecated
   get options() {
-    return this._summary.cloneOptions;
+    return this._summary.finalCloneOptions;
   }
 
   get cloneOptions() {
-    return this._summary.cloneOptions;
+    return this._summary.finalCloneOptions;
   }
 
   get combineOptions() {
-    return this._summary.combineOptions;
+    return this._summary.finalCombineOptions;
   }
 
   get result() {
@@ -514,14 +471,24 @@ export class Results {
   private _summary: Summary;
 }
 
-export type Actor = (params: CombineParams) => typeof BY_DEFAULT;
+export class FinalAction {
+  constructor(rawAction: Action) {
+    if (typeof rawAction !== 'object') {
+      this.throwError();
+    }
 
-export class Action {
-  constructor(coverage: ActionCoverageSingle | ActionCoverageArr, actor: Actor | PredefinedActors) {
+    const keys = Object.keys(rawAction);
+
+    if (keys.length !== 2 || !keys.every((key) => { return ActionKeys.includes(key as keyof Action )})) {
+      this.throwError();
+    }
+  
+    const { coverage, actor } = rawAction;
+
     if (Array.isArray(coverage)) {
       if (coverage.length !== 2) {
         throw new TypeError(
-          'When stock coverage is specified as an array, that array must include exactly two elements: ' +
+          'When stock coverage is specified as an array, that array must contains exactly two elements: ' +
           'coverage for the first and second parameters.');
       }
 
@@ -556,9 +523,11 @@ export class Action {
   }
 
   tryToRun(params: CombineParams) {
-    return params.bases.every((source, index) => { return this._coverage[index](source); })
-      ? { skipped: false, result: this._actor(params), }
-      : { skipped: true, result: null, };
+    const condition = params.bases.every((source, index) => { return this._coverage[index](source); });
+    if (condition) {
+      this._actor(params);
+    }
+    return !condition;
   }
 
   private singleCoverageCheck(coverage: ActionCoverageSingle) {
@@ -583,9 +552,17 @@ export class Action {
     }
   }
 
+  private throwError() {
+    throw new TypeError(
+      'Each item of options.actions array must be an object with exactly two properties: ' +
+      quotedListFromArray(ActionKeys) +
+      '.'
+    );
+  }
+
   private _coverage: TypeChecker[];
 
-  private _actor: Actor;
+  private _actor: ActorFunction;
 }
 
 export class Summary {
@@ -596,6 +573,7 @@ export class Summary {
     this._label = 0;
     this._operation = operation;
 
+    this._rawOptions = rawOptions || {};
     this._finalOptions = this.validateAndBuildOptions(operation, rawOptions);
 
     this.initRoots(rawData);
@@ -736,11 +714,19 @@ export class Summary {
     return this._result;
   }
 
-  get cloneOptions() {
+  get rawCloneOptions() {
+    return this._rawOptions as CloneOptions;
+  }
+
+  get rawCombineOptions() {
+    return this._rawOptions as CombineOptions;
+  }
+
+  get finalCloneOptions() {
     return this._finalOptions as FinalCloneOptions;
   }
 
-  get combineOptions() {
+  get finalCombineOptions() {
     return this._finalOptions as FinalCombineOptions;
   }
 
@@ -793,30 +779,26 @@ export class Summary {
           finalOptions.output = optionValue as RawOptions['output'];
           break;
 
+        case 'customizer':
+          if (typeof optionValue !== 'function') {
+            throw new TypeError(
+              `If optional ${operation}() option "customizer" is present, it must be a function.`
+            );
+          }
+          finalOptions.customizer = optionValue as FinalCloneOptions['customizer'];
+          break;
+
         default:
-          if (optionName === 'customizer' && operation === 'clone') {
-            if (typeof optionValue !== 'function') {
-              throw new TypeError(
-                `If optional ${operation}() option "customizer" is present, it must be a function.`
-              );
-            }
-            (finalOptions as FinalCloneOptions).customizer = optionValue as FinalCloneOptions['customizer'];
-          } else if (optionName === 'actions' && operation === 'combine') {
+          if (optionName === 'actions' && operation === 'combine') {
             if (!Array.isArray(optionValue)) {
               throw new TypeError(
                 `If optional ${operation}() option "actions" is present, it must be an array.`
               );
             }
 
-            for (const action of optionValue) {
-              if (!(action instanceof Action)) {
-                throw new TypeError(
-                  `Each action in the "actions" array must be an Action() instance.`
-                );
-              }
-            }
-
-            (finalOptions as FinalCombineOptions).actions = optionValue;
+            (finalOptions as FinalCombineOptions).actions = optionValue.map((rawAction) => {
+              return new FinalAction(rawAction as Action) 
+            });
           } else {
             throw new TypeError(
               `Unknown ${operation}() "${optionName}" option. Valid options are ${quotedListFromArray(
@@ -825,6 +807,12 @@ export class Summary {
             );
           }
       }
+    }
+
+    if (operation === 'combine') {
+      (finalOptions as FinalCombineOptions).actions.push(
+        new FinalAction({ coverage: 'all', actor: PredefinedActorFunctions.replace })
+      );
     }
 
     return finalOptions;
@@ -863,6 +851,8 @@ export class Summary {
   private _roots: Node[];
 
   private _result: unknown;
+
+  private _rawOptions: RawOptions;
 
   private _finalOptions: FinalOptions;
 }
@@ -917,7 +907,7 @@ export class CustomizerParams {
   }
 
   get options() {
-    return this._node.summary.combineOptions;
+    return this._node.summary.rawCloneOptions;
   }
 
   protected _node: Node;
@@ -1018,11 +1008,38 @@ export class CombineParams {
   }
 
   selectBase(combineSource: CombineSource) {
+    if (this._selectedBase) {
+      throw new TypeError(
+        'You are trying to select a combine base twice, but ' +
+        'you should only select a base once during each iteration.'
+      );
+    }
     this._selectedBase = combineSource;
+  }
+
+  postCheck() {
+    if (!this._selectedBase) {
+      throw new TypeError(
+        `The combine base hasn't been selected, but ` +
+        'you should only select a base once during each iteration.'
+      );
+    }
   }
 
   get bases() {
     return this._combineSources;
+  }
+
+  get selectedBase() {
+    return this._selectedBase;
+  }
+
+  get result() {
+    return this._result;
+  }
+
+  _createChild(child: Child) {
+    return this._nodes[child.index].createChild(child.key, child.producedAs, this._nodes[this.selectedBase.index]);
   }
 
   private buildSchemeAndResult() {
