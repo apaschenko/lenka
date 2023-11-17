@@ -1,5 +1,5 @@
 
-# lenka 1.0.4<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=81.7%25&color=green&style=plastic&logo=github" align="right" /></span>
+# lenka 1.0.4<span><img alt="node-current" src="https://img.shields.io/badge/node-%3E%3D%206.4.0-green?style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img src="https://img.shields.io/static/v1?label=javascript&message=es2015%20%28es6%2b%29&color=green&style=plastic" align="right"/><img src="./docs/blank.png" align="right"><img alt="typescript 3.4" src="https://img.shields.io/static/v1?label=typescript&message=%3E%3D%203.1&color=green&style=plastic" align="right" /><img src="./docs/blank.png" align="right"><img alt="coverage" src="https://img.shields.io/static/v1?label=coverage&message=89.7%25&color=green&style=plastic&logo=github" align="right" /></span>
 
 A set of useful utilities:
 - [**clone()**: customizable cloning of any js objects (plain object, array, buffer etc.) with circular references](#clone)
@@ -286,7 +286,7 @@ console.log(
 
 #### T.2. Customization to prevent redundant cloning
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
+import { clone, LCustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some object...
 const original: any = {
@@ -300,7 +300,7 @@ const original: any = {
   b: 33,
 };
 
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // eslint-disable-next-line prettier/prettier
   console.log(`node ${params.label}: ${
     JSON.stringify(params.value, null, 4)
@@ -328,7 +328,7 @@ console.log(
 
 #### T.3. Customization to limit copy levels
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
+import { clone, LCustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's take the some object:
 const original: any = {
@@ -368,7 +368,7 @@ const MAX_LEVEL = 3;
 // package provides service
 // types to describe the parameters and return the customizer).
 // This function will be called for each node of the original object.
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
   // To solve the task, we need only two fields: the current nesting
@@ -405,7 +405,7 @@ console.log(
 
 #### T.4. Customization to remove circular and duplicate dependencies
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
+import { clone, LCustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some complex object.
 const original: any = {
@@ -430,7 +430,7 @@ original.a.ab[1].abd.abdb = original.a;
 // package provides service types to describe the parameters and return
 // the customizer).
 // This function will be called for each node of the original object.
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
   // To solve the task, we need only one field: boolean flag
@@ -454,7 +454,7 @@ console.log(JSON.stringify(copy, null, 4));
 
 #### T.5. Customization to change value of some field
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
+import { clone, LCustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's define a some object.
 const original: any = {
@@ -475,7 +475,7 @@ const original: any = {
 // package provides service types to describe the parameters and return
 // the customizer).
 // This function will be called for each node of the original object.
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
 
@@ -506,7 +506,7 @@ console.log(JSON.stringify(copy, null, 4));
 
 #### T.6. Using the `accumulator` to calculate the sum of the numeric nodes of the original object.
 ```typescript
-import { clone, CustomizerParams, BY_DEFAULT } from 'lenka';
+import { clone, LCustomizerParams, BY_DEFAULT } from 'lenka';
 
 // Let's say a sports coach gave us his gym inventory results as
 // a Javascript object.
@@ -541,7 +541,7 @@ const original: any = {
 // we get access to the accumulator in which we will accumulate the
 // total number of items.
 
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
 

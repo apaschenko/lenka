@@ -1,4 +1,4 @@
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, LCustomizerParams, BY_DEFAULT } from '../../src';
 
 // Let's say a sports coach gave us his gym inventory results as
 // a Javascript object.
@@ -33,7 +33,7 @@ const original: any = {
 // we get access to the accumulator in which we will accumulate the
 // total number of items.
 
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
 

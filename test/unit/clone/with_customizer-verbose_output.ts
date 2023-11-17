@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 
-import { BY_DEFAULT, MISSING, clone, CustomizerParams } from '../../../src';
+import { BY_DEFAULT, MISSING, clone, LCustomizerParams } from '../../../src';
 
-function trivialCustomizer(_params: CustomizerParams): any {
+function trivialCustomizer(_params: LCustomizerParams): any {
   return BY_DEFAULT;
 }
 
-interface CustParamsToCollectLabels extends CustomizerParams {
+interface CustParamsToCollectLabels extends LCustomizerParams {
   accumulator: {
     labelA: number,
     labelC: number,
@@ -83,7 +83,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
   });
 
   it('object with postprocessing: an accumulator using)', () => {
-    interface CustParams extends CustomizerParams {
+    interface CustParams extends LCustomizerParams {
       accumulator: {
         counter: number,
         description: string,
@@ -195,7 +195,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     ]);
 
     const { setByLabel, result, accumulator } = clone(original, {
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         if (params.value === 6) {
           params.accumulator.label = params.label;
         }
@@ -338,7 +338,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     };
 
     const { deleteByLabel, result, accumulator } = clone(original, {
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         if (params.key === 'b') {
           params.accumulator.label = params.label;
         }
@@ -367,7 +367,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     };
 
     const { deleteByLabel, result, accumulator } = clone(original, {
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         if (params.key === 'bb') {
           params.accumulator.label = params.label;
         }
@@ -396,7 +396,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     };
 
     const { deleteByLabel, result, accumulator } = clone(original, {
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         if (params.key === 'bb') {
           params.accumulator.label = params.label;
         }
@@ -435,7 +435,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     const { accumulator } = clone(original, {
       output: 'verbose',
       accumulator: { root: -1, b: -1 },
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         if (params.label === 0) {
           params.accumulator.root = params.parent;
         }
@@ -475,7 +475,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     const result = clone(original, {
       output: 'verbose',
       accumulator: { ixs: [] },
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         params.accumulator.ixs.push(params.index);
         return ['ab', '9', 'c'].includes(params.key) ? MISSING : BY_DEFAULT;
       },
@@ -492,9 +492,12 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     const options = {
       output: 'verbose',
       accumulator: { options: [] },
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         params.accumulator.options.push(params.options);
 
+        return BY_DEFAULT;
+      },
+      creator: (_params: LCustomizerParams) => {
         return BY_DEFAULT;
       }
     } as const;

@@ -1,4 +1,4 @@
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, LCustomizerParams, BY_DEFAULT } from '../../src';
 
 // Let's define a some object.
 const original: any = {
@@ -19,7 +19,7 @@ const original: any = {
 // package provides service types to describe the parameters and return
 // the customizer).
 // This function will be called for each node of the original object.
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // It takes one parameter: object. A full description of all fields
   // of this object is provided in the README.
 

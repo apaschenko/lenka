@@ -3,8 +3,6 @@ declare type Extends<T, U extends T> = U;
 export declare const PrimitiveTypesSet: readonly ["boolean", "undefined", "symbol", "string", "number", "bigint", "null"];
 export declare type PrimitiveType = typeof PrimitiveTypesSet[number];
 export declare const ReducedObjTypesSet: readonly ["date", "regexp", "function", "dataview", "arraybuffer"];
-export declare const VocabulariesSet: readonly ["array", "map", "object"];
-export declare type VocabulariesTypes = typeof VocabulariesSet[number];
 export declare const CollectionsSet: readonly ["array", "map", "object", "set"];
 export declare type CollectionsTypes = typeof CollectionsSet[number];
 export declare const Vocabulary: "vocabulary";

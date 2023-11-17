@@ -3,16 +3,16 @@ import { expect } from 'chai';
 import {
   BY_DEFAULT,
   clone,
-  CustomizerParams,
-  CloneOptions,
+  LCustomizerParams,
+  LCloneOptions,
   MISSING,
 } from '../../../src';
 
-function trivialCustomizer(_params: CustomizerParams): any {
+function trivialCustomizer(_params: LCustomizerParams): any {
   return BY_DEFAULT;
 }
 
-function customizerToLimitMaxCopyLevel(params: CustomizerParams): any {
+function customizerToLimitMaxCopyLevel(params: LCustomizerParams): any {
   const { value, level } = params;
   return level <= 2 ? BY_DEFAULT : value;
 }
@@ -35,7 +35,7 @@ describe('===== clone [with customizer: simple output] =====', () => {
 
     original.e.bb = original;
 
-    const options: CloneOptions = {
+    const options: LCloneOptions = {
       customizer: trivialCustomizer,
     };
 
@@ -66,7 +66,7 @@ describe('===== clone [with customizer: simple output] =====', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     original.push({ z: original });
 
-    const options: CloneOptions = {
+    const options: LCloneOptions = {
       customizer: trivialCustomizer,
     };
 
@@ -86,7 +86,7 @@ describe('===== clone [with customizer: simple output] =====', () => {
     };
 
     // eslint-disable-next-line unicorn/consistent-function-scoping
-    const customizer = (params: CustomizerParams): any => {
+    const customizer = (params: LCustomizerParams): any => {
       let value;
 
       switch (params.key) {
@@ -267,7 +267,7 @@ describe('===== clone [with customizer: simple output] =====', () => {
     };
 
     const result = clone(original, {
-      customizer: (params: CustomizerParams) => {
+      customizer: (params: LCustomizerParams) => {
         return ['ab', '9', 'c'].includes(params.key) ? MISSING : BY_DEFAULT;
       },
     });

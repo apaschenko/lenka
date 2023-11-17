@@ -1,4 +1,4 @@
-import { clone, CustomizerParams, BY_DEFAULT } from '../../src';
+import { clone, LCustomizerParams, BY_DEFAULT } from '../../src';
 
 // Let's define a some object...
 const original: any = {
@@ -12,7 +12,7 @@ const original: any = {
   b: 33,
 };
 
-function customizer(params: CustomizerParams): any {
+function customizer(params: LCustomizerParams): any {
   // eslint-disable-next-line prettier/prettier
   console.log(`node ${params.label}: ${
     JSON.stringify(params.value, null, 4)

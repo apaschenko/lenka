@@ -1,18 +1,49 @@
-import {
-  Node,
-  Summary,
-  Results,
-  CustomizerParams,
-  CloneOptions,
-  FinalCloneOptions,
-  ChildrenKeys,
-  CombineParams
-} from './service';
-import { ProducedAs, ProducedAsIntSet } from './lib/general_types';
+import { LNode, FinalCloneOptions, LCloneOptions, CombineOptions, ChildrenKeys, LCustomizerParams } from './lib/ifaces';
+import { Summary } from './lib/summary';
+import { CombineParams } from './lib/combine_params';
+import { ProducedAsIntSet } from './lib/general_types';
+import { LResults } from './lib/results';
 
 export { BY_DEFAULT, MISSING } from './lib/symbols';
+export { LCustomizerParams, LCloneOptions, LResults };
 
-function combineInternal(summary: Summary, nodes: Node[]) {
+function copyKeysAndProperties(parentNode: LNode, children: ChildrenKeys, parentTarget?: LNode): void {
+  const value: object = <object>parentNode.value;
+  const target: object = <object>parentNode.target;
+
+  for (const producedAs of ProducedAsIntSet) {
+    for (const producedBy of children[producedAs].values()) {
+      if (!(Object.hasOwnProperty.call(target, producedBy) && value[producedBy] === target[producedBy])) {
+        const child = parentNode.createChild(producedBy, producedAs, parentTarget);
+
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        cloneInternal(child);
+      
+        if (!child.isItMissed) {
+          child.linkTargetToParent();
+        }
+      }
+    }
+  }
+}
+
+function cloneInternal(node: LNode): void {
+  const finalOptions = node.summary.finalCloneOptions;
+
+  if (finalOptions.customizer) {
+    node.target = finalOptions.customizer(node.customizerParams);
+  }
+
+  node.setFlags();
+  node.addToNodesToLabels();
+
+  if (!node.isItProcessed) {
+    node.createInstance();
+    copyKeysAndProperties(node, node.childrenKeys);
+  }
+}
+
+function combineInternal(summary: Summary, nodes: LNode[]) {
   const actions = summary.finalCombineOptions.actions;
 
   const combineParams = new CombineParams(summary, nodes);
@@ -28,7 +59,8 @@ function combineInternal(summary: Summary, nodes: Node[]) {
 
       switch (childNodes.length) {
         case 1:
-          // TODO: call clone
+          cloneInternal(childNodes[0]);
+          childNodes[0].linkTargetToParent();
           break;
 
         case 2:
@@ -42,97 +74,21 @@ function combineInternal(summary: Summary, nodes: Node[]) {
   }
 }
 
-function cloneProperty(parent: Node, child: Node): void {
-  const key = <PropertyKey>child.producedBy;
-
-  if (child.summary.finalCloneOptions.descriptors) {
-    // eslint-disable-next-line prettier/prettier
-    const descr = Object.getOwnPropertyDescriptor(parent.value, key);
-
-    if (!(descr.get || descr.set)) {
-      descr.value = child.target;
-    }
-
-    Object.defineProperty(parent.target, key, { ...descr })
-  } else {
-    parent.target[key] = child.target;
-  }
-}
-
-const cloneKaPProcessors: Record<ProducedAs, (node: Node, child: Node) => void> = {
-  property: (node: Node, child: Node) => { cloneProperty(node, child); },
-  key: (node: Node, child: Node) => { (node.target as Map<any, any>).set(child.producedBy, child.target); },
-  value: (node: Node, child: Node) => { (node.target as Set<any>).add(child.target); },
-  root: (_node: Node, _child: Node) => { throw new TypeError(`Internal error E01.`) },
-} as const;
-
-function copyKaPInternal(params: {
-  parentNode: Node,
-  producedBy: Node['_producedBy'],
-  producedAs: Node['_producedAs'],
-  value: object,
-  target: object,
-  parentTarget?: Node,
-}) {
-  const { parentNode, parentTarget, producedBy, producedAs, value, target } = params;
-
-  if (Object.hasOwnProperty.call(target, producedBy) && value[producedBy] === target[producedBy]) {
-    return;
-  }
-
-  const child = parentNode.createChild(producedBy, producedAs, parentTarget);
-
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  cloneInternal(child);
-
-  if (!child.isItMissed) {
-    cloneKaPProcessors[producedAs](parentNode, child);
-  }
-}
-
-function copyKeysAndProperties(parentNode: Node, children: ChildrenKeys, parentTarget?: Node): void {
-  const value: object = <object>parentNode.value;
-  const target: object = <object>parentNode.target;
-
-  for (const producedAs of ProducedAsIntSet) {
-    for (const producedBy of children[producedAs]) {
-      copyKaPInternal({ parentNode, parentTarget, producedBy, producedAs, value, target });
-    }
-  }
-}
-
-
-function cloneInternal(node: Node): void {
-  const finalOptions = node.summary.finalCloneOptions;
-
-  if (finalOptions.customizer) {
-    node.target = finalOptions.customizer(new CustomizerParams(node));
-  }
-
-  node.setFlags();
-  node.addToNodesToLabels();
-
-  if (!node.isItProcessed) {
-    node.createInstance();
-    copyKeysAndProperties(node, node.childKeys);
-  }
-}
-
-export interface CustParamsAccSoft<ACC> extends CustomizerParams {
+export interface CustParamsAccSoft<ACC> extends LCustomizerParams {
   accumulator: ACC & { [key: PropertyKey]: unknown }
 }
 
-export interface CustParamsAccStrict<ACC> extends CustomizerParams {
+export interface CustParamsAccStrict<ACC> extends LCustomizerParams {
   accumulator: ACC
 }
 
-type CloneAccumulator<OPT> = OPT extends { accumulator: Results['accumulator']}
+type CloneAccumulator<OPT> = OPT extends { accumulator: LResults['accumulator']}
   ? OPT['accumulator'] & { [key: PropertyKey]: unknown }
-  : Results['accumulator'];
+  : LResults['accumulator'];
 
 type CloneResult<SOURCE, OPT> = OPT extends { customizer: FinalCloneOptions['customizer'] } ? any : SOURCE;
 
-interface CloneVerboseReturnType<SOURCE,OPT> extends Results {
+interface CloneVerboseReturnType<SOURCE,OPT> extends LResults {
   result: CloneResult<SOURCE, OPT>,
   accumulator: CloneAccumulator<OPT>,
 }
@@ -142,29 +98,25 @@ export type CloneReturnType<SOURCE, OPT> = OPT extends { output: 'verbose' }
   : SOURCE;
 
 export function clone<
-  SOURCE, OPT extends CloneOptions
+  SOURCE, OPT extends LCloneOptions
 >(original: SOURCE, rawOptions?: OPT): CloneReturnType<SOURCE,OPT> {
   const summary = new Summary([original], 'clone', rawOptions);
-  const node = summary.roots[0];
+  const node = summary.selectedRoot;
 
   cloneInternal(node);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return rawOptions?.output === 'verbose'
-    ? summary.setAndGetResult(node.target)
-    : node.target;
+  return summary.buildResult();
 }
 
 type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
-  ? Results : Node['target']
+  ? LResults : LNode['target']
 
-// export function combine<OPT extends RawCombineOptions>(
-//   originals: node['value'][],
-//   rawOptions?: OPT,
-// ): CombineReturnType<OPT> {
-//   if (!Array.isArray(originals)) {
-//     throw new TypeError('First argument of combine() must be an array of originals.');
-//   }
-
-//   const summary = new Summary(originals, 'combine', rawOptions);
-// }
+export function combine<
+  OPT extends CombineOptions
+>(firstSource: unknown, secondSource: unknown, rawOptions?: OPT): CombineReturnType<OPT> {
+  const summary = new Summary([firstSource, secondSource], 'combine', rawOptions);
+  combineInternal(summary, summary.roots);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return summary.buildResult();
+}

@@ -23,12 +23,7 @@ export const ReducedObjTypesSet = [
   'arraybuffer',
 ] as const;
 
-export const VocabulariesSet = ['array', 'map', 'object'] as const;
-
-export type VocabulariesTypes = typeof VocabulariesSet[number];
-
-export const CollectionsSet = [...VocabulariesSet, 'set'] as const; // Yes, all the vocabularies are collections too.
-
+export const CollectionsSet = ['array', 'map', 'object', 'set'] as const;
 export type CollectionsTypes = typeof CollectionsSet[number];
 
 export const Vocabulary = 'vocabulary' as const;

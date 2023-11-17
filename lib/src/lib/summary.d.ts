@@ -1,0 +1,34 @@
+import { LSummary, LNode, RawOptions, CombineOptions, FinalCloneOptions, FinalCombineOptions } from './ifaces';
+import { OperationType } from './general_types';
+export declare class Summary implements LSummary {
+    constructor(rawData: unknown[], operation: OperationType, rawOptions?: RawOptions);
+    addToAllNodes(node: LNode): void;
+    addToNodesToLabels(node: LNode): void;
+    hasValue(rawData: unknown): boolean;
+    buildResult(): any;
+    getAndIncreaceLabel(): number;
+    setByLabel(label: number, rawData: unknown): void;
+    deleteByLabel(label: number): void;
+    createTargetInstance(node: LNode): void;
+    get accumulator(): import("./general_types").AccumulatorType;
+    get result(): any;
+    get selectedRoot(): LNode;
+    selectRootByIndex(index: number): LNode;
+    get rawCloneOptions(): Partial<FinalCloneOptions>;
+    get rawCombineOptions(): CombineOptions;
+    get finalCloneOptions(): FinalCloneOptions;
+    get finalCombineOptions(): FinalCombineOptions;
+    get roots(): LNode[];
+    private constructInstance;
+    private validateAndBuildOptions;
+    private initRoots;
+    private checkLabel;
+    private _operation;
+    private _label;
+    private _valuesToLabels;
+    private _allNodes;
+    private _roots;
+    private _selectedRoot;
+    private _rawOptions;
+    private _finalOptions;
+}
