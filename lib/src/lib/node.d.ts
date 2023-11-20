@@ -1,5 +1,5 @@
-import { LNode, LSummary, Children, ChildrenKeys, ChildrenValues } from './ifaces';
-import { ProducedAs } from './general_types';
+import { LNode, LSummary, LChildren, LChildrenKeys, LChildrenValues } from './ifaces';
+import { LProducedAs } from './general_types';
 import { ExtendedPieceType } from './piece_types';
 import { LenkaCustomizerParams } from './customizer_params';
 export declare class LenkaNode implements LNode {
@@ -9,17 +9,17 @@ export declare class LenkaNode implements LNode {
         summary: LenkaNode['summary'];
         index: LenkaNode['_index'];
     }): LenkaNode;
-    static emptyChildrenSet<T>(init: () => T): Children<T>;
-    getChildValue(producedBy: unknown, producedAs: ProducedAs): any;
-    createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: LenkaNode): LenkaNode;
+    static emptyChildrenSet<T>(init: () => T): LChildren<T>;
+    getChildValue(producedBy: unknown, producedAs: LProducedAs): any;
+    createChild(producedBy: unknown, producedAs: LProducedAs, parentTarget?: LenkaNode): LenkaNode;
     addToNodesToLabels(): void;
     setFlags(): void;
     createInstance(): void;
     linkTargetToParent(): void;
-    getChildrenValues(valuesFromP: boolean, valuesFromK: boolean, keysPropsMix: boolean): ChildrenValues;
+    getChildrenValues(valuesFromP: boolean, valuesFromK: boolean, keysPropsMix: boolean): LChildrenValues;
     get value(): any;
     get type(): ExtendedPieceType;
-    get childrenKeys(): ChildrenKeys;
+    get childrenKeys(): LChildrenKeys;
     get parentNode(): LenkaNode;
     set parentNode(parent: LenkaNode);
     get parentTarget(): LenkaNode;
@@ -35,15 +35,17 @@ export declare class LenkaNode implements LNode {
     get label(): number;
     set label(label: number);
     get producedBy(): any;
-    get producedAs(): ProducedAs;
+    get producedAs(): LProducedAs;
     get isItADouble(): boolean;
     set isItADouble(isDouble: boolean);
     get isItAPrimitive(): boolean;
+    get isItAnArray(): boolean;
     get isItMissed(): boolean;
     get isItProcessed(): boolean;
     get summary(): LSummary;
     get customizerParams(): LenkaCustomizerParams;
     private setValueAndType;
+    private includeThisValueToParentTarget;
     private _value;
     private _type;
     private _parentNode;
@@ -60,6 +62,7 @@ export declare class LenkaNode implements LNode {
     private _childrenValues;
     private _isItADouble;
     private _isItAPrimitive;
+    private _isItAnArray;
     private _isItCustomized;
     private _isItMissed;
     private _isItProcessed;

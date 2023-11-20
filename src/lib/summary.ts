@@ -1,12 +1,12 @@
-import { LSummary, LNode, Action, RawOptions, FinalOptions, LCloneOptions, CombineOptions, FinalCloneOptions, FinalCombineOptions } from './ifaces';
+import { LSummary, LNode, LAction, RawOptions, FinalOptions, LCloneOptions, LCombineOptions, LFinalCloneOptions, LFinalCombineOptions } from './ifaces';
 import { LResults } from './results';
 import { LenkaNode } from './node';
 import { FinalAction, PredefinedActorFunctions } from './actions';
-import { OperationType, OutputType, OutputTypeSet, DCArrayBuffer } from './general_types';
+import { OperationType, LOutputType, OutputTypeSet, DCArrayBuffer } from './general_types';
 import { MISSING, BY_DEFAULT } from './symbols';
 import { quotedListFromArray } from './utils';
 
-const DefaultCloneOptions: FinalCloneOptions = {
+const DefaultCloneOptions: LFinalCloneOptions = {
   accumulator: {},
   customizer: null,
   creator: null,
@@ -14,7 +14,7 @@ const DefaultCloneOptions: FinalCloneOptions = {
   descriptors: false,
 };
 
-const DefaultCombineOptions: FinalCombineOptions = {
+const DefaultCombineOptions: LFinalCombineOptions = {
   ...DefaultCloneOptions,
   actions: [],
 };
@@ -63,32 +63,33 @@ export class Summary implements LSummary {
   }
 
   setByLabel(label: number, rawData: unknown) {
-    this.checkLabel(label);
-
-    const node = this._allNodes.get(label);
+    const node = this.getNodeByLabel(label);
 
     if (node.producedAs === 'root') {
       throw new TypeError(
-        "You can't change a root node value (the whole cloning result) with" +
+        "You can't change a root node value (the cloning or combine result entirely) with" +
         " setByLabel method! Instead, use new value directly in your code."
       );
     }
 
     const { target } = node.parentTarget;
-
+console.log(`Summary::setByLabel rawData: `, rawData)
     switch (node.producedAs) {
       case 'key':
         (target as Map<unknown, unknown>).set(node.producedBy, rawData);
         break;
 
       case 'property':
-      case 'arrayItem':
         (target as object)[node.producedBy] = rawData;
         break;
 
-      case 'setItem':
-        (target as Set<unknown>).delete(node.target);
-        (target as Set<unknown>).add(rawData);
+      case 'item':
+        if (Array.isArray(target)) {
+          (target as object)[node.producedBy] = rawData;
+        } else {
+          (target as Set<unknown>).delete(node.target);
+          (target as Set<unknown>).add(rawData);  
+        }
         break;
     }
 
@@ -96,12 +97,10 @@ export class Summary implements LSummary {
   }
 
   deleteByLabel(label: number): void {
-    this.checkLabel(label);
-
-    const node = this._allNodes.get(label);
+    const node = this.getNodeByLabel(label);
 
     if (node.producedAs === 'root') {
-      throw new TypeError("You can't delete a root node (the whole cloning result)!");
+      throw new TypeError("You can't delete a root node (the cloning or combine result entirely)!");
     }
 
     const { target } = node.parentTarget;
@@ -112,12 +111,15 @@ export class Summary implements LSummary {
         break;
 
       case 'property':
-      case 'arrayItem':
         delete (target as object)[node.producedBy];
         break;
 
-      case 'setItem':
-        (target as Set<unknown>).delete(node.target);
+      case 'item':
+        if (target.isItAnArray) {
+          delete (target as object)[node.producedBy];
+        } else {
+          (target as Set<unknown>).delete(node.target);
+        }
         break;
     }
 
@@ -186,15 +188,15 @@ export class Summary implements LSummary {
   }
 
   get rawCombineOptions() {
-    return this._rawOptions as CombineOptions;
+    return this._rawOptions as LCombineOptions;
   }
 
   get finalCloneOptions() {
-    return this._finalOptions as FinalCloneOptions;
+    return this._finalOptions as LFinalCloneOptions;
   }
 
   get finalCombineOptions() {
-    return this._finalOptions as FinalCombineOptions;
+    return this._finalOptions as LFinalCombineOptions;
   }
 
   get roots() {
@@ -243,7 +245,7 @@ export class Summary implements LSummary {
           break;
 
         case 'output':
-          if (!OutputTypeSet.includes(optionValue as OutputType)) {
+          if (!OutputTypeSet.includes(optionValue as LOutputType)) {
             throw new TypeError(
               `Invalid value of the optional ${operation}() option "output". ` +
               `Possible values are ${quotedListFromArray(OutputTypeSet)}.`
@@ -259,7 +261,7 @@ export class Summary implements LSummary {
               `If optional ${operation}() option "${optionName}" is present, it must be a function.`
             );
           }
-          finalOptions[optionName] = optionValue as FinalCloneOptions['customizer'];
+          finalOptions[optionName] = optionValue as LFinalCloneOptions['customizer'];
           break;
 
         default:
@@ -270,8 +272,8 @@ export class Summary implements LSummary {
               );
             }
 
-            (finalOptions as FinalCombineOptions).actions = optionValue.map((rawAction) => {
-              return new FinalAction(rawAction as Action) 
+            (finalOptions as LFinalCombineOptions).actions = optionValue.map((rawAction) => {
+              return new FinalAction(rawAction as LAction) 
             });
           } else {
             throw new TypeError(
@@ -284,7 +286,7 @@ export class Summary implements LSummary {
     }
 
     if (operation === 'combine') {
-      (finalOptions as FinalCombineOptions).actions.push(
+      (finalOptions as LFinalCombineOptions).actions.push(
         new FinalAction({ coverage: 'all', actor: PredefinedActorFunctions.replace.actor })
       );
     }
@@ -308,7 +310,7 @@ export class Summary implements LSummary {
     }
   }
 
-  private checkLabel(label: number): void {
+  private getNodeByLabel(label: number) {
     if (typeof label !== 'number') {
       throw new TypeError('Parameter of setByLabel/deleteByLabel functions must be a number.');
     }
@@ -316,6 +318,8 @@ export class Summary implements LSummary {
     if (!this._allNodes.has(label)) {
       throw new TypeError('Invalid parameter of setByLabel/deleteByLabel functions (unknown label).');
     }
+
+    return this._allNodes.get(label);
   }
 
   private _operation: OperationType;

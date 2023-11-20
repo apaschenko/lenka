@@ -1,19 +1,19 @@
 import { LChild, LCombineParams, LNode } from './ifaces';
-import { ProducedAsInt } from './general_types';
+import { LProducedAsInt } from './general_types';
 export declare class LenkaChild implements LChild {
     constructor(params: {
         combineParams: LCombineParams;
         producedBy: LNode['producedBy'];
-        producedAs: ProducedAsInt;
+        producedAs: LProducedAsInt;
         parentNode: LNode;
     });
     add(): number;
     setKey(keyOrPropName: unknown): this;
-    setProducedAs(keyType: ProducedAsInt): this;
+    setProducedAs(keyType: LProducedAsInt): this;
     setValue(value: unknown): this;
     get index(): number;
     get key(): any;
-    get producedAs(): "key" | "property" | "setItem" | "arrayItem";
+    get producedAs(): "key" | "property" | "item";
     get value(): any;
     get label(): number;
     private _combineParams;

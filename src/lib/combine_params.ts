@@ -1,5 +1,5 @@
 import { LCombineParams, LSummary, LNode, CombineChildren, LChild, ChildrenList } from './ifaces';
-import { ProducedAs, ProducedAsInt, ProducedAsIntSet } from './general_types';
+import { LProducedAs, LProducedAsInt, ProducedAsIntSet } from './general_types';
 import { CombineSource } from './combine_source';
 import { LenkaNode } from './node';
 import { LenkaChild } from './child';
@@ -17,8 +17,8 @@ export class CombineParams implements LCombineParams {
     });
   }
 
-  addChild(child: LenkaChild, producedAs?: ProducedAs) {
-    const resultTyped: CombineChildren[ProducedAsInt] = this._result[producedAs || child.producedAs];
+  addChild(child: LenkaChild, producedAs?: LProducedAs) {
+    const resultTyped: CombineChildren[LProducedAsInt] = this._result[producedAs || child.producedAs];
 
     if (resultTyped.has(child.key)) {
       resultTyped.get(child.key).push(child);

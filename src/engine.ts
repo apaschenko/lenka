@@ -1,4 +1,4 @@
-import { LNode, FinalCloneOptions, LCloneOptions, CombineOptions, ChildrenKeys, LCustomizerParams } from './lib/ifaces';
+import { LNode, LFinalCloneOptions, LCloneOptions, LCombineOptions, LChildrenKeys, LCustomizerParams } from './lib/ifaces';
 import { Summary } from './lib/summary';
 import { CombineParams } from './lib/combine_params';
 import { ProducedAsIntSet } from './lib/general_types';
@@ -7,7 +7,7 @@ import { LResults } from './lib/results';
 export { BY_DEFAULT, MISSING } from './lib/symbols';
 export { LCustomizerParams, LCloneOptions, LResults };
 
-function copyKeysAndProperties(parentNode: LNode, children: ChildrenKeys, parentTarget?: LNode): void {
+function copyKeysAndProperties(parentNode: LNode, children: LChildrenKeys, parentTarget?: LNode): void {
   const value: object = <object>parentNode.value;
   const target: object = <object>parentNode.target;
 
@@ -86,7 +86,7 @@ type CloneAccumulator<OPT> = OPT extends { accumulator: LResults['accumulator']}
   ? OPT['accumulator'] & { [key: PropertyKey]: unknown }
   : LResults['accumulator'];
 
-type CloneResult<SOURCE, OPT> = OPT extends { customizer: FinalCloneOptions['customizer'] } ? any : SOURCE;
+type CloneResult<SOURCE, OPT> = OPT extends { customizer: LFinalCloneOptions['customizer'] } ? any : SOURCE;
 
 interface CloneVerboseReturnType<SOURCE,OPT> extends LResults {
   result: CloneResult<SOURCE, OPT>,
@@ -113,7 +113,7 @@ type CombineReturnType<OPT> = OPT extends { output: 'verbose' }
   ? LResults : LNode['target']
 
 export function combine<
-  OPT extends CombineOptions
+  OPT extends LCombineOptions
 >(firstSource: unknown, secondSource: unknown, rawOptions?: OPT): CombineReturnType<OPT> {
   const summary = new Summary([firstSource, secondSource], 'combine', rawOptions);
   combineInternal(summary, summary.roots);

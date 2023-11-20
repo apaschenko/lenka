@@ -1,4 +1,4 @@
-import { LNode, FinalCloneOptions, LCloneOptions, CombineOptions, LCustomizerParams } from './lib/ifaces';
+import { LNode, LFinalCloneOptions, LCloneOptions, LCombineOptions, LCustomizerParams } from './lib/ifaces';
 import { LResults } from './lib/results';
 export { BY_DEFAULT, MISSING } from './lib/symbols';
 export { LCustomizerParams, LCloneOptions, LResults };
@@ -16,7 +16,7 @@ declare type CloneAccumulator<OPT> = OPT extends {
     [key: PropertyKey]: unknown;
 } : LResults['accumulator'];
 declare type CloneResult<SOURCE, OPT> = OPT extends {
-    customizer: FinalCloneOptions['customizer'];
+    customizer: LFinalCloneOptions['customizer'];
 } ? any : SOURCE;
 interface CloneVerboseReturnType<SOURCE, OPT> extends LResults {
     result: CloneResult<SOURCE, OPT>;
@@ -29,4 +29,4 @@ export declare function clone<SOURCE, OPT extends LCloneOptions>(original: SOURC
 declare type CombineReturnType<OPT> = OPT extends {
     output: 'verbose';
 } ? LResults : LNode['target'];
-export declare function combine<OPT extends CombineOptions>(firstSource: unknown, secondSource: unknown, rawOptions?: OPT): CombineReturnType<OPT>;
+export declare function combine<OPT extends LCombineOptions>(firstSource: unknown, secondSource: unknown, rawOptions?: OPT): CombineReturnType<OPT>;

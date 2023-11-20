@@ -229,8 +229,8 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.setByLabel.bind(result, 0, 'bbb')).to.throw(
-      "You can't change a root node value (the whole cloning result) with" +
-                " setByLabel method! Instead, use new value directly in your code."
+      `You can't change a root node value (the cloning or combine result entirely) with setByLabel method! ` +
+        `Instead, use new value directly in your code.`
     );
   });
 
@@ -425,7 +425,7 @@ describe('===== clone [with customizer: verbose output] =====', () => {
     });
 
     expect(result.deleteByLabel.bind(result, 0)).to.throw(
-      "You can't delete a root node (the whole cloning result)!"
+      `You can't delete a root node (the cloning or combine result entirely)!`
     );
   });
 

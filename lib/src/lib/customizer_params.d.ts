@@ -10,7 +10,7 @@ export declare class LenkaCustomizerParams implements LCustomizerParams {
     get label(): number;
     get isItAdouble(): boolean;
     get isItAPrimitive(): boolean;
-    get accumulator(): import("./general_types").AccumulatorType;
-    get options(): Partial<import("./ifaces").FinalCloneOptions>;
+    get accumulator(): import("./general_types").LAccumulatorType;
+    get options(): Partial<import("./ifaces").LFinalCloneOptions>;
     protected _node: LNode;
 }

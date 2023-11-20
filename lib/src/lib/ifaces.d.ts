@@ -1,66 +1,66 @@
 import { ExtendedPieceType } from './piece_types';
-import { ProducedAs, ProducedAsInt, AccumulatorType, OutputType, DefaultActionParamsDiff } from './general_types';
+import { LProducedAs, LProducedAsInt, LAccumulatorType, LOutputType, DefaultActionParamsDiff } from './general_types';
 export declare const PredefActCoverSet: readonly ["array", "map", "object", "set", "boolean", "undefined", "symbol", "string", "number", "bigint", "null", "collection", "primitive", "vocabulary", "keyholder", "all", "*"];
 export declare type PredefActCoverTypes = typeof PredefActCoverSet[number];
 export declare const PredefinedActorsSet: readonly ["replace", "merge", "diff"];
-export declare type PredefinedActors = typeof PredefinedActorsSet[number];
-export declare type Coverage = ActionCoverageSingle | ActionCoverageArr;
-export declare type ActorFunction = (params: LCombineParams, actorParams: ActionParams) => void;
-export declare type Actor = ActorFunction | PredefinedActors;
-export declare type ActionParams = Record<string, unknown>;
-export declare type ActionParamsDiff = typeof DefaultActionParamsDiff;
-interface ActionGeneral {
-    coverage: Coverage;
+export declare type LPredefinedActors = typeof PredefinedActorsSet[number];
+export declare type LCoverage = LActionCoverageSingle | LActionCoverageArr;
+export declare type LActorFunction = (params: LCombineParams, actorParams: LActionParams) => void;
+export declare type LActor = LActorFunction | LPredefinedActors;
+export declare type LActionParams = Record<string, unknown>;
+export declare type LActionParamsDiff = typeof DefaultActionParamsDiff;
+interface LActionGeneral {
+    coverage: LCoverage;
     params?: Record<string, never>;
 }
-export interface ActionMerge extends ActionGeneral {
+export interface LActionMerge extends LActionGeneral {
     actor: 'merge';
 }
-export interface ActionReplace extends ActionGeneral {
+export interface LActionReplace extends LActionGeneral {
     actor: 'replace';
 }
-export interface ActionDiff extends Omit<ActionGeneral, 'params'> {
+export interface LActionDiff extends Omit<LActionGeneral, 'params'> {
     actor: 'diff';
-    params?: Partial<ActionParamsDiff>;
+    params?: Partial<LActionParamsDiff>;
 }
-export interface ActionCustom extends Omit<ActionGeneral, 'params'> {
-    actor: ActorFunction;
-    params?: ActionParams;
+export interface LActionCustom extends Omit<LActionGeneral, 'params'> {
+    actor: LActorFunction;
+    params?: LActionParams;
 }
 export declare type TypeChecker = (combineSource: LCombineSource) => boolean;
-export declare type Action = ActionMerge | ActionReplace | ActionDiff | ActionCustom;
-export declare type ActionCoverageSingle = string | TypeChecker;
-declare type ActionCoverageArr = [ActionCoverageSingle, ActionCoverageSingle];
-export interface FinalCloneOptions {
-    accumulator: AccumulatorType;
-    output: OutputType;
+export declare type LAction = LActionMerge | LActionReplace | LActionDiff | LActionCustom;
+export declare type LActionCoverageSingle = string | TypeChecker;
+declare type LActionCoverageArr = [LActionCoverageSingle, LActionCoverageSingle];
+export interface LFinalCloneOptions {
+    accumulator: LAccumulatorType;
+    output: LOutputType;
     descriptors: boolean;
     customizer: ((params: LCustomizerParams) => unknown) | null;
     creator: ((params: LCustomizerParams) => unknown) | null;
 }
-export interface FinalCombineOptions extends FinalCloneOptions {
+export interface LFinalCombineOptions extends LFinalCloneOptions {
     actions: LFinalAction[];
 }
-export declare type LCloneOptions = Partial<FinalCloneOptions>;
-export interface CombineOptions extends Partial<Omit<FinalCombineOptions, 'actions'>> {
-    actions?: Action[];
+export declare type LCloneOptions = Partial<LFinalCloneOptions>;
+export interface LCombineOptions extends Partial<Omit<LFinalCombineOptions, 'actions'>> {
+    actions?: LAction[];
 }
-export declare type RawOptions = LCloneOptions | CombineOptions;
-export declare type FinalOptions = FinalCloneOptions | FinalCombineOptions;
+export declare type RawOptions = LCloneOptions | LCombineOptions;
+export declare type FinalOptions = LFinalCloneOptions | LFinalCombineOptions;
 export declare type ChildrenProducedBySet = Set<LNode['producedBy']>;
 export declare type ChildrenList = Map<LNode['producedBy'], LChild[]>;
-export declare type Children<T> = Record<ProducedAsInt, T>;
-export declare type ChildrenKeys = Children<ChildrenProducedBySet>;
-export declare type ChildrenValues = Children<Set<unknown>>;
-export declare type CombineChildren = Children<ChildrenList>;
+export declare type LChildren<T> = Record<LProducedAsInt, T>;
+export declare type LChildrenKeys = LChildren<ChildrenProducedBySet>;
+export declare type LChildrenValues = LChildren<Set<unknown>>;
+export declare type CombineChildren = LChildren<ChildrenList>;
 export interface LNode {
-    getChildValue: (producedBy: LNode['producedBy'], producedAs: ProducedAs) => LNode['value'];
-    createChild: (producedBy: LNode['producedBy'], producedAs: ProducedAs, parentTarget?: LNode) => LNode;
+    getChildValue: (producedBy: LNode['producedBy'], producedAs: LProducedAs) => LNode['value'];
+    createChild: (producedBy: LNode['producedBy'], producedAs: LProducedAs, parentTarget?: LNode) => LNode;
     addToNodesToLabels: () => void;
     setFlags: () => void;
     createInstance: () => void;
     linkTargetToParent: () => void;
-    getChildrenValues: (valuesFromProps: boolean, valuesFromKeys: boolean, keysPropsMix: boolean) => ChildrenValues;
+    getChildrenValues: (valuesFromProps: boolean, valuesFromKeys: boolean, keysPropsMix: boolean) => LChildrenValues;
     value: any;
     type: ExtendedPieceType;
     parentNode: LNode;
@@ -71,23 +71,24 @@ export interface LNode {
     level: number;
     label: number;
     producedBy: any;
-    producedAs: ProducedAs;
+    producedAs: LProducedAs;
     isItADouble: boolean;
     isItAPrimitive: boolean;
+    isItAnArray: boolean;
     isItMissed: boolean;
     isItProcessed: boolean;
     summary: LSummary;
     customizerParams: LCustomizerParams;
-    childrenKeys: ChildrenKeys;
+    childrenKeys: LChildrenKeys;
 }
 export interface LChild {
     add: () => LNode['label'];
     setKey: (keyOrPropName: unknown) => LChild;
-    setProducedAs: (keyType: ProducedAsInt) => LChild;
+    setProducedAs: (keyType: LProducedAsInt) => LChild;
     setValue: (value: unknown) => LChild;
     readonly index: LNode['index'];
     readonly key: LNode['producedBy'];
-    readonly producedAs: ProducedAsInt;
+    readonly producedAs: LProducedAsInt;
     readonly value: LNode['value'];
     readonly label: LNode['label'];
 }
@@ -100,14 +101,14 @@ export interface LSummary {
     setByLabel: (label: LNode['label'], rawData: unknown) => void;
     deleteByLabel: (label: LNode['label']) => void;
     createTargetInstance: (node: LNode) => void;
-    accumulator: AccumulatorType;
+    accumulator: LAccumulatorType;
     result: LNode['target'];
     selectedRoot: LNode;
     selectRootByIndex: (index: LNode['index']) => LNode;
     rawCloneOptions: LCloneOptions;
-    rawCombineOptions: CombineOptions;
-    finalCloneOptions: FinalCloneOptions;
-    finalCombineOptions: FinalCombineOptions;
+    rawCombineOptions: LCombineOptions;
+    finalCloneOptions: LFinalCloneOptions;
+    finalCombineOptions: LFinalCombineOptions;
     roots: LNode[];
 }
 export interface LCustomizerParams {
@@ -124,7 +125,7 @@ export interface LCustomizerParams {
     options: LSummary['rawCloneOptions'];
 }
 export interface LCombineParams {
-    addChild: (child: LChild, producedAs?: ProducedAs) => LChild['label'];
+    addChild: (child: LChild, producedAs?: LProducedAs) => LChild['label'];
     getNextLabel: () => ReturnType<LSummary['getAndIncreaceLabel']>;
     selectBase: (combineSource: LCombineSource) => void;
     postCheck: () => void;
@@ -137,7 +138,7 @@ export interface LCombineParams {
 export interface LCombineSource extends LCustomizerParams {
     select: () => void;
     getChildrenValues: (valuesFromP: boolean, valuesFromK: boolean, keysPropsMix: boolean) => ReturnType<LNode['getChildrenValues']>;
-    childrenKeys: ChildrenKeys;
+    childrenKeys: LChildrenKeys;
     _internalType: ExtendedPieceType;
     _isPrimitive: boolean;
 }

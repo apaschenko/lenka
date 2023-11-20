@@ -1,5 +1,5 @@
-import { LNode, LSummary, Children, ChildrenKeys, ChildrenProducedBySet, ChildrenValues } from './ifaces';
-import { ProducedAs, ProducedAsInt, ProducedAsIntSet } from './general_types';
+import { LNode, LSummary, LChildren, LChildrenKeys, ChildrenProducedBySet, LChildrenValues } from './ifaces';
+import { LProducedAs, LProducedAsInt, ProducedAsIntSet } from './general_types';
 import { PieceTypeWithRP, ExtendedPieceType, PrimitiveType, PrimitiveTypesSet } from './piece_types';
 import { MISSING, BY_DEFAULT } from './symbols';
 import { LenkaCustomizerParams } from './customizer_params';
@@ -46,32 +46,31 @@ export class LenkaNode implements LNode {
     return node;
   }
 
-  static emptyChildrenSet<T>(init: () => T): Children<T> {
+  static emptyChildrenSet<T>(init: () => T): LChildren<T> {
     return ProducedAsIntSet.reduce((acc, keyType) => {
       acc[keyType] = init();
       return acc;
-    }, {} as Children<T>);
+    }, {} as LChildren<T>);
   }
 
-  getChildValue(producedBy: unknown, producedAs: ProducedAs): any {
+  getChildValue(producedBy: unknown, producedAs: LProducedAs): any {
     switch (producedAs) {
       case 'key':
         return (this.value as Map<unknown, unknown>).get(producedBy);
 
       case 'property':
-      case 'arrayItem':
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (this.value as object)[producedBy as string];
 
-      case 'setItem':
-        return producedBy;
+      case 'item':
+        return this._isItAnArray ? (this.value as object)[producedBy as string] : producedBy;
 
       default:
         throw new TypeError(`Internal error S01`);
     }
   }
 
-  createChild(producedBy: unknown, producedAs: ProducedAs, parentTarget?: LenkaNode) {
+  createChild(producedBy: unknown, producedAs: LProducedAs, parentTarget?: LenkaNode) {
     const summary = this._summary;
 
     const child = new LenkaNode(this.getChildValue(producedBy, producedAs), summary);
@@ -116,26 +115,20 @@ export class LenkaNode implements LNode {
   linkTargetToParent(): void {
     switch (this.producedAs) {
       case 'property':
-      case 'arrayItem':
-        if (this.summary.finalCloneOptions.descriptors) {
-          const descr = Object.getOwnPropertyDescriptor(this.parentTarget.value, <PropertyKey>this.producedBy);
-      
-          if (!(descr.get || descr.set)) {
-            descr.value = this.target;
-          }
-      
-          Object.defineProperty(this.parentTarget.target, <PropertyKey>this.producedBy, { ...descr })
-        } else {
-          this.parentTarget.target[<PropertyKey>this.producedBy] = this.target;
-        }
+        this.includeThisValueToParentTarget();
         break;
   
       case 'key':
         (this.parentTarget.target as Map<any, any>).set(this.producedBy, this.target);
         break;
   
-      case 'setItem':
-        (this.parentTarget.target as Set<any>).add(this.target);
+      case 'item':
+console.log(`LNode::linkTargetToParent: level: `, this._level, `, producedBy: `, this._producedBy, `, value:`, this._value, `isItAnArray: ${this._isItAnArray ? 'true' : 'false'} `)
+        if (this._parentTarget._isItAnArray) {
+          this.includeThisValueToParentTarget();
+        } else {
+          (this.parentTarget.target as Set<any>).add(this.target);
+        }
         break;
   
       case 'root':
@@ -145,7 +138,7 @@ export class LenkaNode implements LNode {
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   getChildrenValues(valuesFromP: boolean, valuesFromK: boolean, keysPropsMix: boolean) {
-    const allowedTypes = new Set<ProducedAsInt>(['arrayItem', 'setItem']);
+    const allowedTypes = new Set<LProducedAsInt>(['key', 'item']);
     if (valuesFromP) {
       allowedTypes.add('property');
     }
@@ -207,7 +200,7 @@ export class LenkaNode implements LNode {
           if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
             this._childrenKeys[
               // eslint-disable-next-line unicorn/prefer-number-properties
-              (this._type !== 'array') || isNaN(producedBy as unknown as number) ? 'property' : 'arrayItem'
+              (!this._isItAnArray) || isNaN(producedBy as unknown as number) ? 'property' : 'item'
             ].add(producedBy);
           }
         }
@@ -216,12 +209,12 @@ export class LenkaNode implements LNode {
     
         if (isSet || this._type === 'map') {
           for (const producedBy of (this.value as Set<any>).keys()) {
-            this._childrenKeys[isSet ? 'setItem' : 'key'].add(producedBy);
+            this._childrenKeys[isSet ? 'item' : 'key'].add(producedBy);
           }
         }
       }
     }
-
+console.log(`LNode::getChildrenKeys value: `,this._value, `\n---> _childrenKeys: `, this._childrenKeys,)
     return this._childrenKeys;
   }
 
@@ -303,6 +296,10 @@ export class LenkaNode implements LNode {
     return this._isItAPrimitive;
   }
 
+  get isItAnArray() {
+    return this._isItAnArray;
+  }
+
   // get isItCustomized(): boolean {
   //   return this._isItCustomized;
   // }
@@ -326,18 +323,6 @@ export class LenkaNode implements LNode {
 
     return this._customizerParams;
   }
-
-  // set summary(summary: Summary) {
-  //   this._summary = summary;
-  // }
-
-  // get rawOptions(): RawCloneOptions {
-  //   return this._summary.rawOptions;
-  // }
-
-  // get finalOptions(): FinalCloneOptions {
-  //   return this._summary.finalOptions;
-  // }
 
   private setValueAndType(value: unknown) {
     this._value = value;
@@ -365,6 +350,21 @@ export class LenkaNode implements LNode {
     }
 
     this._isItAPrimitive = PrimitiveTypesSet.includes(this._type as PrimitiveType);
+    this._isItAnArray = this._type === 'array';
+  }
+
+  private includeThisValueToParentTarget() {
+    if (this._summary.finalCloneOptions.descriptors) {
+      const descr = Object.getOwnPropertyDescriptor(this._parentTarget._value, <PropertyKey>this._producedBy);
+  
+      if (!(descr.get || descr.set)) {
+        descr.value = this._target;
+      }
+  
+      Object.defineProperty(this._parentTarget._target, <PropertyKey>this._producedBy, { ...descr })
+    } else {
+      this._parentTarget._target[<PropertyKey>this._producedBy] = this._target;
+    }
   }
 
   private _value: any;
@@ -387,17 +387,19 @@ export class LenkaNode implements LNode {
 
   private _producedBy: any;
 
-  private _producedAs: ProducedAs;
+  private _producedAs: LProducedAs;
 
   private _summary: LSummary;
 
-  private _childrenKeys: ChildrenKeys;
+  private _childrenKeys: LChildrenKeys;
 
-  private _childrenValues: ChildrenValues;
+  private _childrenValues: LChildrenValues;
 
   private _isItADouble: boolean;
 
   private _isItAPrimitive: boolean;
+
+  private _isItAnArray: boolean;
 
   private _isItCustomized: boolean;
 

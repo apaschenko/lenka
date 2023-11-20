@@ -1,28 +1,30 @@
 import {
-  Action,
-  ActionCustom,
-  Actor,
-  ActorFunction,
+  LAction,
+  LActionCustom,
+  LActionParams,
+  LActionParamsDiff,
+  LActionCoverageSingle, 
+  LActor,
+  LActorFunction,
   PredefinedActorsSet,
-  PredefinedActors,
+  LPredefinedActors,
   PredefActCoverTypes,
   PredefActCoverSet,
-  ActionParams,
-  ActionParamsDiff,
-  ActionCoverageSingle, 
   TypeChecker,
   LFinalAction,
   LCombineSource,
   LCombineParams, 
-  Children,
-  ChildrenProducedBySet
+  LChildren,
+  ChildrenProducedBySet,
+  LChildrenValues
 } from './ifaces';
 import { PrimitiveTypesSet, CollectionsTypes, ExtendedPieceType } from './piece_types';
-import { ProducedAsIntSet, DefaultActionParamsDiff, ProducedAsInt } from './general_types';
+import { ProducedAsIntSet, DefaultActionParamsDiff, LProducedAsInt } from './general_types';
 import { quotedListFromArray } from './utils';
 import { CombineSource } from './combine_source';
+import { LenkaNode } from './node';
 
-const ActionKeys = ['coverage', 'actor', 'params'];
+const ActionKeys = new Set(['coverage', 'actor', 'params']);
 
 const extendVocabulary: readonly PredefActCoverTypes[] =
   ['object', 'array', 'map', 'set', 'collection', 'keyholder', 'vocabulary'] as const;
@@ -109,20 +111,20 @@ const TypeCheckers: Record<PredefActCoverTypes, { extend: readonly PredefActCove
 } as const;
 
 type PredefinedActorType = {
-  actor: ActorFunction;
+  actor: LActorFunction;
   coverage: [PredefActCoverTypes[], PredefActCoverTypes[]];
-  defaultParams: ActionParams;
+  defaultParams: LActionParams;
   paramsValidatorAndBuilder:
-    (rawAction: Action, predefinedActor: PredefinedActorType, actorName: PredefinedActors) => ActionParams;
+    (rawAction: LAction, predefinedActor: PredefinedActorType, actorName: LPredefinedActors) => LActionParams;
   extendedCoverage?: [Set<PredefActCoverTypes>, Set<PredefActCoverTypes>];
 };
 
 function generalValidatorAndBuilder(
-  rawAction: Action,
+  rawAction: LAction,
   predefinedActor: PredefinedActorType,
-  actorName: PredefinedActors
+  actorName: LPredefinedActors
 ) {
-  const { params } = rawAction as ActionCustom;
+  const { params } = rawAction as LActionCustom;
   const { defaultParams } = predefinedActor;
 
   if (typeof params === 'undefined') {
@@ -187,7 +189,7 @@ const defaultAction: PredefinedActorType = {
   }
 }
 
-export const PredefinedActorFunctions: Record<PredefinedActors, PredefinedActorType> = {
+export const PredefinedActorFunctions: Record<LPredefinedActors, PredefinedActorType> = {
   merge: defaultAction,
 
   replace: defaultAction,
@@ -196,15 +198,15 @@ export const PredefinedActorFunctions: Record<PredefinedActors, PredefinedActorT
     coverage: [['vocabulary'], ['all']],
     defaultParams: DefaultActionParamsDiff,
     paramsValidatorAndBuilder: function(
-      rawAction: Action,
+      rawAction: LAction,
       predefinedActor: PredefinedActorType,
-      actorName: PredefinedActors,
+      actorName: LPredefinedActors,
     ) {
       const resultParams = generalValidatorAndBuilder(rawAction, predefinedActor, actorName);
 
-      if (!(resultParams.byProperties || resultParams.byKeys || resultParams.byArrayItems || resultParams.byValues)) {
+      if (!(resultParams.byProperties || resultParams.byKeys || resultParams.byArrayKeys || resultParams.byValues)) {
         throw new TypeError(
-          `Calling "diff" actor is meaningless when all "byProperties", "byKeys", "byArrayItems"` +
+          `Calling "diff" actor is meaningless when all "byProperties", "byKeys", "byArrayKeys"` +
             ` and "byValues" parameters are false.`
         );
       }
@@ -212,27 +214,27 @@ export const PredefinedActorFunctions: Record<PredefinedActors, PredefinedActorT
       return { ...resultParams, keysPropsMix: resultParams.keysPropsMix || resultParams.propsKeysMix };
     },
     // eslint-disable-next-line sonarjs/cognitive-complexity
-    actor: function(combineParams: LCombineParams, actorParams: ActionParams) {
+    actor: function(combineParams: LCombineParams, actorParams: LActionParams) {
       const { bases, scheme } = combineParams;
       const {
         byProperties,
         byKeys,
         byValues,
-        byArrayItems,
+        byArrayKeys,
         keysPropsMix,
         valuesFromProps,
         valuesFromKeys,
-      } = actorParams as unknown as ActionParamsDiff;
+      } = actorParams as unknown as LActionParamsDiff;
   
       combineParams.selectBase(bases[0]);
 
       const KPNeedsToBeMixed = keysPropsMix && !TypeCheckers.keyholder.run(bases[0]);
 
-      const secondBaseKPINames: Children<ChildrenProducedBySet> = { ...bases[1].childrenKeys };
+      const secondBaseKPINames: LChildren<ChildrenProducedBySet> = { ...bases[1].childrenKeys };
       if (byProperties) {
         if (KPNeedsToBeMixed) {
           secondBaseKPINames.property = new Set();
-          for (const keyType of (['property', 'key'] as ProducedAsInt[])) {
+          for (const keyType of (['property', 'key'] as LProducedAsInt[])) {
             for (const producedBy of bases[1].childrenKeys[keyType].values()) {
               secondBaseKPINames.property.add(producedBy);
             }
@@ -244,20 +246,19 @@ export const PredefinedActorFunctions: Record<PredefinedActors, PredefinedActorT
       if (!byKeys) {
         secondBaseKPINames.key = emptySet;
       }
-      if (!byArrayItems) {
-        secondBaseKPINames.arrayItem = emptySet;
+      if (!byArrayKeys) {
+        secondBaseKPINames.key = emptySet;
       }
 
       const secondBaseValues = byValues 
         ? bases[1].getChildrenValues(valuesFromProps, valuesFromKeys, KPNeedsToBeMixed) 
-        : new Set<unknown>();
+        : LenkaNode.emptyChildrenSet<LChildrenValues['property']>(() => { return emptySet; })
 
       for (const keyType of ProducedAsIntSet) {
         const secBaseKPINamesTyped = secondBaseKPINames[keyType];
         const secBaseValuesTyped = secondBaseValues[keyType];
 
         for (const [child0] of scheme[keyType].values()) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           if (child0.index === 0 && !secBaseKPINamesTyped.has(child0.key) && !secBaseValuesTyped.has(child0.value)) {
             child0.add();
           }
@@ -267,7 +268,7 @@ export const PredefinedActorFunctions: Record<PredefinedActors, PredefinedActorT
   },
 }
 
-function lazyGetExtendedCoverage(actorName: PredefinedActors, sourceIndex: number): Set<PredefActCoverTypes> {
+function lazyGetExtendedCoverage(actorName: LPredefinedActors, sourceIndex: number): Set<PredefActCoverTypes> {
   const actorDescriptor = PredefinedActorFunctions[actorName];
 
   if (!actorDescriptor.extendedCoverage) {
@@ -285,14 +286,14 @@ function lazyGetExtendedCoverage(actorName: PredefinedActors, sourceIndex: numbe
 }
 
 export class FinalAction implements LFinalAction {
-  constructor(rawAction: Action) {
+  constructor(rawAction: LAction) {
     if (typeof rawAction !== 'object') {
       this.throwError();
     }
 
     const keys = Object.keys(rawAction);
 
-    if (keys.length !== 2 || !keys.every((key) => { return ActionKeys.includes(key as keyof Action )})) {
+    if (keys.length !== 2 || !keys.every((key) => { return ActionKeys.has(key as keyof LAction); })) {
       this.throwError();
     }
   
@@ -351,7 +352,7 @@ export class FinalAction implements LFinalAction {
     return !condition;
   }
 
-  private singleCoverageValidatorAndBuilder(coverage: ActionCoverageSingle, index: number, actor: Actor) {
+  private singleCoverageValidatorAndBuilder(coverage: LActionCoverageSingle, index: number, actor: LActor) {
     switch (typeof coverage) {
       case 'function':
         return [coverage];
@@ -395,7 +396,7 @@ export class FinalAction implements LFinalAction {
 
   private _coverage: [TypeChecker[], TypeChecker[]];
 
-  private _actor: ActorFunction;
+  private _actor: LActorFunction;
 
-  private _params: ActionParams;
+  private _params: LActionParams;
 }
