@@ -73,7 +73,7 @@ export class Summary implements LSummary {
     }
 
     const { target } = node.parentTarget;
-console.log(`Summary::setByLabel rawData: `, rawData)
+
     switch (node.producedAs) {
       case 'key':
         (target as Map<unknown, unknown>).set(node.producedBy, rawData);
@@ -115,7 +115,7 @@ console.log(`Summary::setByLabel rawData: `, rawData)
         break;
 
       case 'item':
-        if (target.isItAnArray) {
+        if (Array.isArray(target)) {
           delete (target as object)[node.producedBy];
         } else {
           (target as Set<unknown>).delete(node.target);

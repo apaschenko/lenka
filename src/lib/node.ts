@@ -123,7 +123,6 @@ export class LenkaNode implements LNode {
         break;
   
       case 'item':
-console.log(`LNode::linkTargetToParent: level: `, this._level, `, producedBy: `, this._producedBy, `, value:`, this._value, `isItAnArray: ${this._isItAnArray ? 'true' : 'false'} `)
         if (this._parentTarget._isItAnArray) {
           this.includeThisValueToParentTarget();
         } else {
@@ -214,7 +213,7 @@ console.log(`LNode::linkTargetToParent: level: `, this._level, `, producedBy: `,
         }
       }
     }
-console.log(`LNode::getChildrenKeys value: `,this._value, `\n---> _childrenKeys: `, this._childrenKeys,)
+
     return this._childrenKeys;
   }
 
