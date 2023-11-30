@@ -1,4 +1,4 @@
-import { ExtendedPieceType, PrimitiveTypesSet, CollectionsSet } from './piece_types';
+import { ExtendedPieceType } from './piece_types';
 import {
   LProducedAs,
   LProducedAsInt,
@@ -6,12 +6,6 @@ import {
   LOutputType,
   DefaultActionParamsDiff,
 } from './general_types';
-
-
-export const PredefActCoverSet = [
-  ...CollectionsSet, ...PrimitiveTypesSet, 'collection', 'primitive', 'vocabulary', 'keyholder', 'all', '*'
-] as const;
-export type PredefActCoverTypes = typeof PredefActCoverSet[number];
 
 export const PredefinedActorsSet = ['replace', 'merge', 'diff'] as const;
 export type LPredefinedActors = typeof PredefinedActorsSet[number];

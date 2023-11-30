@@ -55,14 +55,14 @@ export class LenkaNode implements LNode {
 
   getChildValue(producedBy: unknown, producedAs: LProducedAs): any {
     switch (producedAs) {
-      case 'key':
+      case 'keys':
         return (this.value as Map<unknown, unknown>).get(producedBy);
 
-      case 'property':
+      case 'properties':
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (this.value as object)[producedBy as string];
 
-      case 'item':
+      case 'items':
         return this._isItAnArray ? (this.value as object)[producedBy as string] : producedBy;
 
       default:
@@ -114,15 +114,15 @@ export class LenkaNode implements LNode {
 
   linkTargetToParent(): void {
     switch (this.producedAs) {
-      case 'property':
+      case 'properties':
         this.includeThisValueToParentTarget();
         break;
   
-      case 'key':
+      case 'keys':
         (this.parentTarget.target as Map<any, any>).set(this.producedBy, this.target);
         break;
   
-      case 'item':
+      case 'items':
         if (this._parentTarget._isItAnArray) {
           this.includeThisValueToParentTarget();
         } else {
@@ -137,12 +137,12 @@ export class LenkaNode implements LNode {
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   getChildrenValues(valuesFromP: boolean, valuesFromK: boolean, keysPropsMix: boolean) {
-    const allowedTypes = new Set<LProducedAsInt>(['key', 'item']);
+    const allowedTypes = new Set<LProducedAsInt>(['keys', 'items']);
     if (valuesFromP) {
-      allowedTypes.add('property');
+      allowedTypes.add('properties');
     }
     if (valuesFromK) {
-      allowedTypes.add('key');
+      allowedTypes.add('keys');
     }
 
     if (!this._childrenValues) {
@@ -167,11 +167,11 @@ export class LenkaNode implements LNode {
       }
 
       if (keysPropsMix) {
-        for (const valuesByKeys of this._childrenValues.key.values()) {
-          this._childrenValues.property.add(valuesByKeys);
+        for (const valuesByKeys of this._childrenValues.keys.values()) {
+          this._childrenValues.properties.add(valuesByKeys);
         }
 
-        this._childrenValues.key = this._childrenValues.property;
+        this._childrenValues.keys = this._childrenValues.properties;
       }
     }
 
@@ -199,7 +199,7 @@ export class LenkaNode implements LNode {
           if (!restrictedProperties[this._type as PieceTypeWithRP]?.has(producedBy as string)) {
             this._childrenKeys[
               // eslint-disable-next-line unicorn/prefer-number-properties
-              (!this._isItAnArray) || isNaN(producedBy as unknown as number) ? 'property' : 'item'
+              (!this._isItAnArray) || isNaN(producedBy as unknown as number) ? 'properties' : 'items'
             ].add(producedBy);
           }
         }
@@ -208,7 +208,7 @@ export class LenkaNode implements LNode {
     
         if (isSet || this._type === 'map') {
           for (const producedBy of (this.value as Set<any>).keys()) {
-            this._childrenKeys[isSet ? 'item' : 'key'].add(producedBy);
+            this._childrenKeys[isSet ? 'items' : 'keys'].add(producedBy);
           }
         }
       }

@@ -25,10 +25,11 @@ const secondObject = {
   not_c: 'not-c string',
 };
 
-const invalidAction ='Each item of options.actions array must be an object with mandatory "coverage" and "actor" ' +
+const invalidAction =
+  'Each item of options.actions array must be an object with mandatory "coverage" and "actor" ' +
   'properties, and optional "params" property.';
 
-describe('===== combine [without options and errors] =====', () => {
+describe('===== combine [default options and errors] =====', () => {
   it('Successful run: objects', () => {
     const expectedResult = { ...firstObject, ...secondObject };
 
@@ -190,8 +191,8 @@ describe('===== combine [without options and errors] =====', () => {
         ],
       })
     ).to.throw(
-      "When action's coverage is specified as an array, that array must contains " +
-        'exactly two elements: coverage for the first and second parameters.'
+      `Invalid "merge" actor description. When actor's coverage is specified as an array, that array must contains ` +
+        `exactly two elements: coverages for the first and second parameters.`
     );
   });
 
@@ -204,8 +205,8 @@ describe('===== combine [without options and errors] =====', () => {
         ],
       })
     ).to.throw(
-      "When action's coverage is specified as an array, that array must contains " +
-        'exactly two elements: coverage for the first and second parameters.'
+      `Invalid "merge" actor description. When actor's coverage is specified as an array, that array must contains ` +
+        `exactly two elements: coverages for the first and second parameters.`
     );
   });
 
@@ -218,10 +219,11 @@ describe('===== combine [without options and errors] =====', () => {
         ],
       })
     ).to.throw(
-      `Unknown action's coverage value "unknown". Valid coverage options for the second source of "merge" actor are ` +
-        `function or string which contains comma separated list of "boolean", "undefined", "symbol", "string", ` +
-        `"number", "bigint", "null", "primitive", "object", "array", "map", "set", "collection", "keyholder", ` +
-        `"vocabulary", "all", "*" in any combinations.`
+      `Unknown type "unknown" as second source of "merge" actor. Possible values for this parameter are function or ` +
+        `string which contains comma separated list of "a", "r", "y", "collection", "primitive", "all", "*", ` +
+        `"!collection", "!primitive", "vocabulary", "!vocabulary", "array", "!array", "map", "!map", ` +
+        `"object", "!object", "set", "!set", "boolean", "!boolean", "undefined", "!undefined", "symbol", "!symbol", ` +
+        `"string", "!string", "number", "!number", "bigint", "!bigint", "null", "!null" in any combinations.`
     );
   });
 
@@ -234,8 +236,8 @@ describe('===== combine [without options and errors] =====', () => {
         ],
       })
     ).to.throw(
-      `Action coverage can't be a boolean. It must be either a function ` +
-        `or a string representing one of the preset values.`
+      `Invalid "merge" actor description. The coverage can't be a boolean. It must be either a function or a ` +
+        `string representing one of the preset values ("replace", "merge", "diff").`
     );
   });
 

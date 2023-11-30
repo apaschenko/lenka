@@ -75,15 +75,15 @@ export class Summary implements LSummary {
     const { target } = node.parentTarget;
 
     switch (node.producedAs) {
-      case 'key':
+      case 'keys':
         (target as Map<unknown, unknown>).set(node.producedBy, rawData);
         break;
 
-      case 'property':
+      case 'properties':
         (target as object)[node.producedBy] = rawData;
         break;
 
-      case 'item':
+      case 'items':
         if (Array.isArray(target)) {
           (target as object)[node.producedBy] = rawData;
         } else {
@@ -106,15 +106,15 @@ export class Summary implements LSummary {
     const { target } = node.parentTarget;
 
     switch (node.producedAs) {
-      case 'key':
+      case 'keys':
         (target as Map<unknown, unknown>).delete(node.producedBy);
         break;
 
-      case 'property':
+      case 'properties':
         delete (target as object)[node.producedBy];
         break;
 
-      case 'item':
+      case 'items':
         if (Array.isArray(target)) {
           delete (target as object)[node.producedBy];
         } else {
@@ -287,7 +287,7 @@ export class Summary implements LSummary {
 
     if (operation === 'combine') {
       (finalOptions as LFinalCombineOptions).actions.push(
-        new FinalAction({ coverage: 'all', actor: PredefinedActorFunctions.replace.actor })
+        new FinalAction({ coverage: 'all', actor: 'merge' })
       );
     }
 

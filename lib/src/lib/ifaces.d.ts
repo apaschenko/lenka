@@ -1,7 +1,5 @@
 import { ExtendedPieceType } from './piece_types';
 import { LProducedAs, LProducedAsInt, LAccumulatorType, LOutputType, DefaultActionParamsDiff } from './general_types';
-export declare const PredefActCoverSet: readonly ["array", "map", "object", "set", "boolean", "undefined", "symbol", "string", "number", "bigint", "null", "collection", "primitive", "vocabulary", "keyholder", "all", "*"];
-export declare type PredefActCoverTypes = typeof PredefActCoverSet[number];
 export declare const PredefinedActorsSet: readonly ["replace", "merge", "diff"];
 export declare type LPredefinedActors = typeof PredefinedActorsSet[number];
 export declare type LCoverage = LActionCoverageSingle | LActionCoverageArr;

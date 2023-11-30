@@ -13,7 +13,7 @@ export declare class LenkaChild implements LChild {
     setValue(value: unknown): this;
     get index(): number;
     get key(): any;
-    get producedAs(): "key" | "property" | "item";
+    get producedAs(): "keys" | "properties" | "items";
     get value(): any;
     get label(): number;
     private _combineParams;
