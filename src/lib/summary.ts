@@ -1,7 +1,7 @@
 import { LSummary, LNode, LAction, RawOptions, FinalOptions, LCloneOptions, LCombineOptions, LFinalCloneOptions, LFinalCombineOptions } from './ifaces';
 import { LResults } from './results';
 import { LenkaNode } from './node';
-import { FinalAction, PredefinedActorFunctions } from './actions';
+import { FinalAction } from './action';
 import { OperationType, LOutputType, OutputTypeSet, DCArrayBuffer } from './general_types';
 import { MISSING, BY_DEFAULT } from './symbols';
 import { quotedListFromArray } from './utils';

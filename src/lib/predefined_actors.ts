@@ -1,28 +1,19 @@
+import { FinalCoverSet, coverageBuilder, extendedAll } from './coverage';
+import { DefaultActionParamsDiff, LProducedAsInt, ProducedAsIntSet } from './general_types';
 import {
+  ChildrenProducedBySet,
   LAction,
   LActionCustom,
   LActionParams,
   LActionParamsDiff,
   LActorFunction,
-  PredefinedActorsSet,
-  LPredefinedActors,
-  LFinalAction,
-  LCombineParams, 
   LChildren,
-  ChildrenProducedBySet,
   LChildrenValues,
-  TypeChecker
+  LCombineParams,
+  LPredefinedActors
 } from './ifaces';
-import { ProducedAsIntSet, DefaultActionParamsDiff, LProducedAsInt } from './general_types';
-import { quotedListFromArray } from './utils';
 import { LenkaNode } from './node';
-import { LCoverage, FinalCoverSet } from './coverage';
-
-const actionCoverage = new LCoverage();
-const ActionKeys = new Set(['coverage', 'actor', 'params']);
-
-const extendedAll = actionCoverage.extendType('all');
-const maxCoverage: [FinalCoverSet, FinalCoverSet] = [extendedAll, extendedAll];
+import { quotedListFromArray } from './utils';
 
 type PredefinedActorType = {
   actor: LActorFunction;
@@ -108,7 +99,7 @@ export const PredefinedActorFunctions: Record<LPredefinedActors, PredefinedActor
   replace: defaultAction,
 
   diff: {
-    coverage: [actionCoverage.extendType('vocabulary'), extendedAll],
+    coverage: [coverageBuilder.extendType('vocabulary'), extendedAll],
     defaultParams: DefaultActionParamsDiff,
     paramsValidatorAndBuilder: function(
       rawAction: LAction,
@@ -178,89 +169,4 @@ export const PredefinedActorFunctions: Record<LPredefinedActors, PredefinedActor
       }
     },
   },
-}
-
-export class FinalAction implements LFinalAction {
-  constructor(rawAction: LAction) {
-    let maximalCoverage: [FinalCoverSet, FinalCoverSet];
-    let paramsName: string;
-
-    if (typeof rawAction !== 'object') {
-      this.throwError();
-    }
-
-    const { coverage, actor, params } = rawAction;
-    const keys = Object.keys(rawAction);
-
-    if (
-      typeof coverage === 'undefined' || 
-      typeof actor === 'undefined' || 
-      !keys.every((key) => { return ActionKeys.has(key as keyof LAction); })
-    ) {
-      this.throwError();
-    }
-  
-    switch (typeof actor) {
-      case 'function':
-        this._actor = actor;
-        this._params = params;
-        maximalCoverage = maxCoverage;
-        paramsName = 'custom';
-
-        break;
-
-      case 'string':
-        if (!PredefinedActorsSet.includes(actor)) {
-          throw new TypeError(
-            `Unknown predefined actor "${actor}". Valid values are ${quotedListFromArray(PredefinedActorsSet)}.`
-          );
-        }
-        // eslint-disable-next-line no-case-declarations
-        const predefinedActor = PredefinedActorFunctions[actor];
-        this._actor = predefinedActor.actor;
-        this._params = predefinedActor.paramsValidatorAndBuilder(rawAction, predefinedActor, actor);
-        maximalCoverage = predefinedActor.coverage;
-        paramsName = actor;
-
-        break;
-
-      default:
-        throw new TypeError(
-          `Actor can't be a ${typeof actor}. It must be either a ` +
-          `function or a string representing one of the preset values.`
-        );
-    }
-
-    this._coverage = actionCoverage.buildCoverage(
-      coverage,
-      maximalCoverage,
-      { 
-        paramsName,
-        paramsType: 'actor',
-      }
-    );
-  }
-
-  tryToRun(params: LCombineParams) {
-    const condition = params.bases.every((source, index) => { 
-      return this._coverage[index].some((typeChecker) => typeChecker(source))
-    });
-    if (condition) {
-      this._actor(params, this._params);
-    }
-    return !condition;
-  }
-
-  private throwError() {
-    throw new TypeError(
-      'Each item of options.actions array must be an object with mandatory "coverage" and "actor" properties, and ' +
-        'optional "params" property.'
-    );
-  }
-
-  private _coverage: [TypeChecker[], TypeChecker[]];
-
-  private _actor: LActorFunction;
-
-  private _params: LActionParams;
 }

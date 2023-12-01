@@ -100,7 +100,7 @@ export class LCoverage {
 
         if (resultCoverageArr.length === 0) {
           throw new TypeError(
-            `Coverage declaration for the "${errorData.place}" of "${errorData.paramsName}"` +
+            `Coverage declaration for the "${errorData.place}" of "${errorData.paramsName}" ` +
               `${errorData.paramsType} does not contain any types.`
           );
         }
@@ -228,3 +228,8 @@ export class LCoverage {
 
   private _extendedCoverage: Partial<Record<PredefActCoverTypes, FinalCoverSet>>;
 }
+
+export const coverageBuilder = new LCoverage();
+
+export const extendedAll = coverageBuilder.extendType('all');
+

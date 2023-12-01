@@ -23,3 +23,5 @@ export declare class LCoverage {
     private _typeCheckers;
     private _extendedCoverage;
 }
+export declare const coverageBuilder: LCoverage;
+export declare const extendedAll: FinalCoverSet;
