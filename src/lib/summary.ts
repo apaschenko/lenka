@@ -272,8 +272,8 @@ export class Summary implements LSummary {
               );
             }
 
-            (finalOptions as LFinalCombineOptions).actions = optionValue.map((rawAction) => {
-              return new FinalAction(rawAction as LAction) 
+            (finalOptions as LFinalCombineOptions).actions = optionValue.map((rawAction, index) => {
+              return new FinalAction(rawAction as LAction, index) 
             });
           } else {
             throw new TypeError(
@@ -287,7 +287,7 @@ export class Summary implements LSummary {
 
     if (operation === 'combine') {
       (finalOptions as LFinalCombineOptions).actions.push(
-        new FinalAction({ coverage: 'all', actor: 'merge' })
+        new FinalAction({ coverage: 'all', actor: 'merge' }, -1)
       );
     }
 

@@ -16,25 +16,25 @@ const ActionKeys = new Set(['coverage', 'actor', 'params']);
 const maxCoverage: [FinalCoverSet, FinalCoverSet] = [extendedAll, extendedAll];
 
 export class FinalAction implements LFinalAction {
-  constructor(rawAction: LAction) {
+  constructor(rawAction: LAction, index: number) {
     let maximalCoverage: [FinalCoverSet, FinalCoverSet];
     let paramsName: string;
 
     if (typeof rawAction !== 'object') {
-      this.throwError();
+      this.throwError(index);
     }
 
     const { coverage, actor, params } = rawAction;
     const keys = Object.keys(rawAction);
 
     if (
-      typeof coverage === 'undefined' || 
+      typeof coverage === 'undefined' || // we can't use "!coverage" here
       typeof actor === 'undefined' || 
       !keys.every((key) => { return ActionKeys.has(key as keyof LAction); })
     ) {
-      this.throwError();
+      this.throwError(index);
     }
-  
+
     switch (typeof actor) {
       case 'function':
         this._actor = actor;
@@ -47,7 +47,8 @@ export class FinalAction implements LFinalAction {
       case 'string':
         if (!PredefinedActorsSet.includes(actor)) {
           throw new TypeError(
-            `Unknown predefined actor "${actor}". Valid values are ${quotedListFromArray(PredefinedActorsSet)}.`
+            this.errorHead(index) +
+              `Unknown predefined actor "${actor}". Valid values are ${quotedListFromArray(PredefinedActorsSet)}.`
           );
         }
         // eslint-disable-next-line no-case-declarations
@@ -61,8 +62,9 @@ export class FinalAction implements LFinalAction {
 
       default:
         throw new TypeError(
-          `Actor can't be a ${typeof actor}. It must be either a ` +
-          `function or a string representing one of the preset values.`
+          this.errorHead(index) +
+            `Actor can't be a ${typeof actor}. It must be either a ` +
+            `function or a string representing one of the preset values.`
         );
     }
 
@@ -86,11 +88,16 @@ export class FinalAction implements LFinalAction {
     return !condition;
   }
 
-  private throwError() {
+  private throwError(index: number) {
     throw new TypeError(
-      'Each item of options.actions array must be an object with mandatory "coverage" and "actor" properties, and ' +
+      this.errorHead(index) +
+        'Each item of options.actions array must be an object with mandatory "coverage" and "actor" properties, and ' +
         'optional "params" property.'
     );
+  }
+
+  private errorHead(index: number) {
+    return `Invalid action (params.actions[${index}]). `;
   }
 
   private _coverage: [TypeChecker[], TypeChecker[]];

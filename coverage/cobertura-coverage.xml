@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="1438" lines-covered="1318" line-rate="0.9165000000000001" branches-valid="437" branches-covered="397" branch-rate="0.9084" timestamp="1701414147446" complexity="0" version="0.1">
+<coverage lines-valid="1444" lines-covered="1324" line-rate="0.9168000000000001" branches-valid="438" branches-covered="398" branch-rate="0.9086" timestamp="1701420171880" complexity="0" version="0.1">
   <sources>
     <source>/media/a/f8422fd2-b1bb-457f-a700-9f56bdc2ca14/Dropbox/code/lenka</source>
   </sources>
@@ -397,9 +397,9 @@
         </class>
       </classes>
     </package>
-    <package name="src.lib" line-rate="0.9048999999999999" branch-rate="0.9311">
+    <package name="src.lib" line-rate="0.9054000000000001" branch-rate="0.9312999999999999">
       <classes>
-        <class name="action.js" filename="lib/src/lib/action.js" line-rate="0.8923000000000001" branch-rate="0.875">
+        <class name="action.js" filename="lib/src/lib/action.js" line-rate="0.9014" branch-rate="0.8823000000000001">
           <methods>
             <method name="FinalAction" hits="27" signature="()V">
               <lines>
@@ -408,12 +408,17 @@
             </method>
             <method name="tryToRun" hits="6" signature="()V">
               <lines>
-                <line number="51" hits="6"/>
+                <line number="53" hits="6"/>
               </lines>
             </method>
             <method name="throwError" hits="4" signature="()V">
               <lines>
-                <line number="60" hits="4"/>
+                <line number="62" hits="4"/>
+              </lines>
+            </method>
+            <method name="errorHead" hits="6" signature="()V">
+              <lines>
+                <line number="67" hits="6"/>
               </lines>
             </method>
           </methods>
@@ -452,37 +457,43 @@
             <line number="32" hits="22" branch="true" condition-coverage="100% (1/1)"/>
             <line number="33" hits="1" branch="false"/>
             <line number="34" hits="1" branch="false"/>
-            <line number="35" hits="22" branch="false"/>
+            <line number="35" hits="1" branch="false"/>
             <line number="36" hits="22" branch="false"/>
             <line number="37" hits="22" branch="false"/>
             <line number="38" hits="22" branch="false"/>
             <line number="39" hits="22" branch="false"/>
             <line number="40" hits="22" branch="false"/>
             <line number="41" hits="22" branch="false"/>
-            <line number="42" hits="27" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="43" hits="1" branch="false"/>
+            <line number="42" hits="22" branch="false"/>
+            <line number="43" hits="27" branch="true" condition-coverage="100% (1/1)"/>
             <line number="44" hits="1" branch="false"/>
-            <line number="45" hits="27" branch="false"/>
-            <line number="46" hits="21" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="47" hits="21" branch="false"/>
-            <line number="48" hits="21" branch="false"/>
+            <line number="45" hits="1" branch="false"/>
+            <line number="46" hits="1" branch="false"/>
+            <line number="47" hits="27" branch="false"/>
+            <line number="48" hits="21" branch="true" condition-coverage="100% (1/1)"/>
             <line number="49" hits="21" branch="false"/>
-            <line number="50" hits="27" branch="false"/>
-            <line number="51" hits="1" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="52" hits="6" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="53" hits="12" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="54" hits="6" branch="false"/>
-            <line number="55" hits="6" branch="false"/>
+            <line number="50" hits="21" branch="false"/>
+            <line number="51" hits="21" branch="false"/>
+            <line number="52" hits="27" branch="false"/>
+            <line number="53" hits="1" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="54" hits="6" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="55" hits="12" branch="true" condition-coverage="100% (1/1)"/>
             <line number="56" hits="6" branch="false"/>
             <line number="57" hits="6" branch="false"/>
             <line number="58" hits="6" branch="false"/>
             <line number="59" hits="6" branch="false"/>
-            <line number="60" hits="1" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="61" hits="4" branch="false"/>
-            <line number="62" hits="4" branch="false"/>
+            <line number="60" hits="6" branch="false"/>
+            <line number="61" hits="6" branch="false"/>
+            <line number="62" hits="1" branch="true" condition-coverage="100% (1/1)"/>
             <line number="63" hits="4" branch="false"/>
-            <line number="64" hits="1" branch="false"/>
-            <line number="65" hits="1" branch="false"/>
+            <line number="64" hits="4" branch="false"/>
+            <line number="65" hits="4" branch="false"/>
+            <line number="66" hits="4" branch="false"/>
+            <line number="67" hits="1" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="68" hits="6" branch="false"/>
+            <line number="69" hits="6" branch="false"/>
+            <line number="70" hits="1" branch="false"/>
+            <line number="71" hits="1" branch="false"/>
           </lines>
         </class>
         <class name="child.js" filename="lib/src/lib/child.js" line-rate="0.875" branch-rate="1">
